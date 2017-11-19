@@ -1,7 +1,4 @@
-﻿using UnityEngine;
-using UnityEditor;
-
-namespace HeightMapInterfaces
+﻿namespace HeightMapInterfaces
 {
     /// Creates the initial HeightMap or simulates natur forces on heightmap.
     interface IHeightManipulator

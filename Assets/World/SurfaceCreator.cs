@@ -151,9 +151,10 @@ public class SurfaceCreator : MonoBehaviour {
 
     private TerrainData CreateTerrainData()
     {
-        TerrainData terrainData = new TerrainData();
-        terrainData.heightmapResolution = Resolution;
-        terrainData.size = new Vector3(Size, Depth, Size);
+        if (terrain.terrainData == null)
+            terrain.terrainData = new TerrainData();
+        terrain.terrainData.heightmapResolution = Resolution;
+        terrain.terrainData.size = new Vector3(Size, Depth, Size);
         float[,] heights = new float[Resolution, Resolution];
         float[,] heights2 = new float[Resolution, Resolution];
         if (Enable)
@@ -167,7 +168,7 @@ public class SurfaceCreator : MonoBehaviour {
                 heights[x, y] = .4f * heights2[x, y] + .6f * heights[x,y];
             }
         }
-        terrainData.SetHeights(0, 0, heights);
-        return terrainData;
+        terrain.terrainData.SetHeights(0, 0, heights);
+        return terrain.terrainData;
     }
 }

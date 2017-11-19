@@ -138,7 +138,7 @@ TerrainCollider:
   m_GameObject: {fileID: 355964817}
   m_Material: {fileID: 0}
   m_Enabled: 1
-  m_TerrainData: {fileID: 15600000, guid: 3480500cd308c4d46a62964c5e8b4509, type: 2}
+  m_TerrainData: {fileID: 15600000, guid: 61abdd755e4ed1b4692e805247448163, type: 2}
   m_EnableTreeColliders: 1
 --- !u!218 &355964819
 Terrain:
@@ -148,7 +148,7 @@ Terrain:
   m_GameObject: {fileID: 355964817}
   m_Enabled: 1
   serializedVersion: 3
-  m_TerrainData: {fileID: 15600000, guid: 3480500cd308c4d46a62964c5e8b4509, type: 2}
+  m_TerrainData: {fileID: 15600000, guid: 61abdd755e4ed1b4692e805247448163, type: 2}
   m_TreeDistance: 2000
   m_TreeBillboardDistance: 50
   m_TreeCrossFadeLength: 5
@@ -240,6 +240,7 @@ GameObject:
   - component: {fileID: 425568041}
   - component: {fileID: 425568040}
   - component: {fileID: 425568044}
+  - component: {fileID: 425568045}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -326,6 +327,14 @@ MonoBehaviour:
   camSens: 0.25
   rotateOnlyIfMousedown: 1
   movementStaysFlat: 1
+--- !u!45 &425568045
+Skybox:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 425568039}
+  m_Enabled: 1
+  m_CustomSkybox: {fileID: 2100000, guid: 39cace2863926444a9a78daa8ae26413, type: 2}
 --- !u!1 &1194882776
 GameObject:
   m_ObjectHideFlags: 0
