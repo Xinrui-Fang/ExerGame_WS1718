@@ -4,7 +4,10 @@ using HeightMapInterfaces;
 using HeightPostProcessors;
 
 public class SurfaceCreator : MonoBehaviour {
-    
+
+    [Range(0f, 1f)]
+    public float Weight;
+
     [Range(2, 1024)]
     public int Resolution = 513;
 
@@ -29,6 +32,9 @@ public class SurfaceCreator : MonoBehaviour {
     public bool Enable = true;
 
     public Fractal2DNoise.NoiseBase NoiseType = Fractal2DNoise.NoiseBase.OpenSimplex;
+
+    [Range(0f, 1f)]
+    public float Weight2;
 
     [Range(1, 2048)]
     public long Seed2 = 42;
@@ -75,11 +81,14 @@ public class SurfaceCreator : MonoBehaviour {
     public Texture2D PathNormalMap;
     public Texture2D CliffNormalMap;
 
+    public DetailPrototype Gras;
+    public DetailPrototype Bush;
+    public DetailPrototype Rock;
+
     private VegetationGenerator vGen;
     private PathFinder paths;
     private Terrain terrain;
-    private IHeightSource heigthCreator;
-    private IHeightSource heigthCreator2;
+    private ComposedHeightMap HeightMapCreator;
 
     void OnEnable()
     {
@@ -88,18 +97,22 @@ public class SurfaceCreator : MonoBehaviour {
 
     public void Refresh()
     {
-        // Prepare HeightMap Generation
+        // Prepare HeightMap Generation: TODO: Create ChunkManager. Make ChunkManager manage Heightmap Settings.
         INoise2DProvider noise = new Fractal2DNoise(Persistance, Lacunarity, Octaves, Seed, NoiseType);
         ComposedPostProcessor postProcessor = new ComposedPostProcessor();
         postProcessor.AddProcessor(new ExponentialPostProcessor(exponent));
         postProcessor.AddProcessor(new HeightRescale(0f, Mathf.Pow(.8f, exponent)));
         postProcessor.AddProcessor(new SmoothTerracingPostProcessor(.15f, 4f, .15f));
-        heigthCreator = new HeightMapFromNoise(noise, FeatureFrequency, new Vector2Int(0,0));
+        IScannableHeightSource heigthCreator = new HeightMapFromNoise(noise, FeatureFrequency, new Vector2Int(0,0));
         heigthCreator.SetPostProcessor(postProcessor);
 
         INoise2DProvider noise2 = new Fractal2DNoise(Persistance2, Lacunarity2, Octaves2, Seed2, NoiseType2);
-        heigthCreator2 = new HeightMapFromNoise(noise2, FeatureFrequency2, new Vector2Int(0, 0));
+        IScannableHeightSource heigthCreator2 = new HeightMapFromNoise(noise2, FeatureFrequency2, new Vector2Int(0, 0));
         heigthCreator2.SetPostProcessor(new HeightRescale(.2f, .9f));
+
+        HeightMapCreator = new ComposedHeightMap();
+        HeightMapCreator.AddSource(heigthCreator, Weight);
+        HeightMapCreator.AddSource(heigthCreator2, Weight2);
 
         vGen = new VegetationGenerator(0);
         terrain = GetComponent<Terrain>();
@@ -160,18 +173,11 @@ public class SurfaceCreator : MonoBehaviour {
         terrain.terrainData.heightmapResolution = Resolution;
         terrain.terrainData.size = new Vector3(Size, Depth, Size);
         float[,] heights = new float[Resolution, Resolution];
-        float[,] heights2 = new float[Resolution, Resolution];
-        if (Enable)
-            heights = heigthCreator.ManipulateHeight(heights, Resolution, Size);
-        if (Enable2)
-            heights2 = heigthCreator2.ManipulateHeight(heights2, Resolution, Size);
-        for (int x=0; x < Resolution; x++)
-        {
-            for (int y=0; y < Resolution; y++)
-            {
-                heights[x, y] = .4f * heights2[x, y] + .6f * heights[x,y];
-            }
-        }
+        heights = HeightMapCreator.ManipulateHeight(
+            heights,
+            Resolution, 
+            Size
+        );
         terrain.terrainData.SetHeights(0, 0, heights);
         return terrain.terrainData;
     }
