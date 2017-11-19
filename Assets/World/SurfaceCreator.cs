@@ -78,8 +78,8 @@ public class SurfaceCreator : MonoBehaviour {
     private VegetationGenerator vGen;
     private PathFinder paths;
     private Terrain terrain;
-    private IHeightManipulator heigthCreator;
-    private IHeightManipulator heigthCreator2;
+    private IHeightSource heigthCreator;
+    private IHeightSource heigthCreator2;
 
     void OnEnable()
     {
@@ -88,15 +88,19 @@ public class SurfaceCreator : MonoBehaviour {
 
     public void Refresh()
     {
+        // Prepare HeightMap Generation
         INoise2DProvider noise = new Fractal2DNoise(Persistance, Lacunarity, Octaves, Seed, NoiseType);
         ComposedPostProcessor postProcessor = new ComposedPostProcessor();
         postProcessor.AddProcessor(new ExponentialPostProcessor(exponent));
         postProcessor.AddProcessor(new HeightRescale(0f, Mathf.Pow(.8f, exponent)));
-        postProcessor.AddProcessor(new SmoothTerracingPostProcessor(.1f, 3f, .1f));
-        heigthCreator = new HeightMapFromNoise(noise, FeatureFrequency, new Vector2Int(0,0), postProcessor);
+        postProcessor.AddProcessor(new SmoothTerracingPostProcessor(.15f, 4f, .15f));
+        heigthCreator = new HeightMapFromNoise(noise, FeatureFrequency, new Vector2Int(0,0));
+        heigthCreator.SetPostProcessor(postProcessor);
 
         INoise2DProvider noise2 = new Fractal2DNoise(Persistance2, Lacunarity2, Octaves2, Seed2, NoiseType2);
-        heigthCreator2 = new HeightMapFromNoise(noise2, FeatureFrequency2, new Vector2Int(0, 0), new HeightRescale(.2f, .9f));
+        heigthCreator2 = new HeightMapFromNoise(noise2, FeatureFrequency2, new Vector2Int(0, 0));
+        heigthCreator2.SetPostProcessor(new HeightRescale(.2f, .9f));
+
         vGen = new VegetationGenerator(0);
         terrain = GetComponent<Terrain>();
         terrain.terrainData = CreateTerrainData();
@@ -138,9 +142,9 @@ public class SurfaceCreator : MonoBehaviour {
         paths = new PathFinder(terrain.terrainData, Depth);
         if (EnableExperimentalPaths)
         {
-            paths.MakePath(new Vector2Int(0, 0), new Vector2Int(512, 512), 0, 1);
-            paths.MakePath(new Vector2Int(0, 0), new Vector2Int(512, 256), 0, 1);
-            //paths.MakePath(new Vector2Int(0, 0), new Vector2Int(256, 512), 0, 1);
+            paths.MakePath(new Vector2Int(0, 0), new Vector2Int(512, 512), 0, 512);
+            paths.MakePath(new Vector2Int(0, 0), new Vector2Int(512, 256), 0, 512);
+            paths.MakePath(new Vector2Int(0, 0), new Vector2Int(256, 512), 0, 512);
         }
 
         terrain.terrainData.SetHeights(0, 0, paths.Heights);

@@ -195,6 +195,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fe68c0f5253c784fb88f8ed937c0f59, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Weight: 0.6
   Resolution: 513
   Size: 1024
   Seed: 42
@@ -204,6 +205,7 @@ MonoBehaviour:
   FeatureFrequency: 4
   Enable: 1
   NoiseType: 0
+  Weight2: 0.4
   Seed2: 123
   Octaves2: 4
   Lacunarity2: 1.66

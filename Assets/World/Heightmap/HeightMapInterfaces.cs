@@ -1,9 +1,18 @@
-﻿namespace HeightMapInterfaces
+﻿using UnityEngine;
+
+namespace HeightMapInterfaces
 {
     /// Creates the initial HeightMap or simulates natur forces on heightmap.
-    interface IHeightManipulator
+    public interface IHeightSource
     {
         float[,] ManipulateHeight(float[,] heights, int Resolution, int UnitSize);
+        void SetPostProcessor(IHeightPostProcessor processor);
+    }
+
+    public interface IScannableHeightSource: IHeightSource
+    {
+        // Performs the Height generation for a certain position. Vector2 should be scaled according to target resolution.
+        float ScanHeight(Vector2 position);
     }
 
     public interface IHeightPostProcessor

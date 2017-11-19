@@ -2,7 +2,7 @@
 using HeightMapInterfaces;
 using NoiseInterfaces;
 
-public class HeightMapFromNoise : IHeightManipulator
+public class HeightMapFromNoise : IScannableHeightSource
 {
     private float FeatureFrequency { get; set; }
     private Vector2Int TerrainOffset { get; set; }
@@ -14,13 +14,6 @@ public class HeightMapFromNoise : IHeightManipulator
         this.Noise = noise;
         this.FeatureFrequency = featureFrequency;
         this.TerrainOffset = TerrainOffset;
-    }
-    public HeightMapFromNoise(INoise2DProvider noise, float featureFrequency, Vector2Int TerrainOffset, IHeightPostProcessor PostProcessor)
-    {
-        this.Noise = noise;
-        this.FeatureFrequency = featureFrequency;
-        this.TerrainOffset = TerrainOffset;
-        this.PostProcessor = PostProcessor;
     }
 
     public float[,] ManipulateHeight(float[,] heights, int Resolution, int UnitSize)
@@ -39,5 +32,19 @@ public class HeightMapFromNoise : IHeightManipulator
             }
         }
         return heights;
+    }
+
+    public float ScanHeight(Vector2 position)
+    {
+        float val = 0.5f + Noise.Evaluate(position * FeatureFrequency + TerrainOffset) / 2f;
+        if (this.PostProcessor == null)
+           return val;
+        else
+            return PostProcessor.PostProcess(val);
+    }
+
+    public void SetPostProcessor(IHeightPostProcessor processor)
+    {
+        this.PostProcessor = processor;
     }
 }
