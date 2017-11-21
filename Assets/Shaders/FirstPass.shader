@@ -1,7 +1,7 @@
 // Modification of Unity's built-in shader source. Copyright (c) 2016 Unity Technologies. MIT license (see license.txt)
 // Got idea from https://forum.unity.com/threads/improved-terrain-texture-tiling.116509/
 
-Shader "ExerGame/Nature/Terrain/Diffuse" {
+Shader "ExerGame/Nature/Terrain/Diffuse-UVMix" {
     Properties {
         [HideInInspector] _Control ("Control (RGBA)", 2D) = "red" {}
         [HideInInspector] _Splat3 ("Layer 3 (A)", 2D) = "white" {}
@@ -52,7 +52,7 @@ Shader "ExerGame/Nature/Terrain/Diffuse" {
         }
     }
 
-    Dependency "AddPassShader" = "Hidden/TerrainEngine/Splatmap/Diffuse-AddPass"
+    Dependency "AddPassShader" = "Hidden/ExerGame/TerrainEngine/Splatmap/Diffuse-AddPass-UVMix"
     Dependency "BaseMapShader" = "Diffuse"
     Dependency "Details0"      = "Hidden/TerrainEngine/Details/Vertexlit"
     Dependency "Details1"      = "Hidden/TerrainEngine/Details/WavingDoublePass"

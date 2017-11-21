@@ -3,7 +3,7 @@ using System.Collections;
 
 public class GameSettings
 {
-    public enum SpikyNess
+    public enum Spikyness
     {
         Normal,
         Rigid,
@@ -29,7 +29,7 @@ public class GameSettings
     public int MaxMountainHeight { get; set; }
 
     // How spikey the mountains should be
-    public SpikyNess MountainSpikyNess { get; set; }
+    public Spikyness MountainSpikyNess { get; set; }
 
     // Is the world made up more of mountains or more of valleys?
     public TerrainType WorldTerrainType { get; set; }

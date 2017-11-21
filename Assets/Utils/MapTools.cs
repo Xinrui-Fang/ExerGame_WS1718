@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using MapToolsInterfaces;
 
 public class MapTools
 {
@@ -37,39 +38,39 @@ public class MapTools
     // Gets all coordinates adjacednt to a given nodes on a grid. gridSize is the resolution of the grid.
     // optionally use: StepSize to jump over direct adjacent nodes. width: How many neighbours of neighbours to include.
     // includeSelf: if true include node in the list of neighbours.
-    public static IEnumerable<Vector2Int> GetNeighbours(Vector2Int node, Vector2Int gridSize, int StepSize=1, int width=1, bool includeSelf=false)
+    public static IEnumerable<Vector2Int> GetNeighbours(Vector2Int node, Vector2Int upperLimit, Vector2Int lowerLimit, int StepSize=1, int width=1, bool includeSelf=false)
     {
         if (includeSelf)
             yield return node;
         for (int i = 1; i <= width; i++)
         {
-            if (0 <= node.x - i * StepSize)
+            if (lowerLimit.x <= node.x - i * StepSize)
             {
                 int xCoord = node.x - i * StepSize;
                 yield return new Vector2Int(xCoord, node.y);
                 for (int j = 1; j <= width; j++)
                 {
-                    if (0 <= node.y - j * StepSize)
+                    if (lowerLimit.y <= node.y - j * StepSize)
                         yield return new Vector2Int(xCoord, node.y - j * StepSize);
-                    if (gridSize.y > node.y + j * StepSize)
+                    if (upperLimit.y > node.y + j * StepSize)
                         yield return new Vector2Int(xCoord, node.y + j * StepSize);
                 }
             }
 
-            if (0 <= node.y - i * StepSize)
+            if (lowerLimit.y <= node.y - i * StepSize)
                 yield return new Vector2Int(node.x, node.y - i * StepSize);
-            if (gridSize.y > node.y + i * StepSize)
+            if (upperLimit.y > node.y + i * StepSize)
                 yield return new Vector2Int(node.x, node.y + i * StepSize);
 
-            if (gridSize.x > node.x + i * StepSize)
+            if (upperLimit.x > node.x + i * StepSize)
             {
                 int xCoord = node.x + i * StepSize;
                 yield return new Vector2Int(xCoord, node.y);
                 for (int j = 1; j <= width; j++)
                 {
-                    if (0 <= node.y - j * StepSize)
+                    if (lowerLimit.y <= node.y - j * StepSize)
                         yield return new Vector2Int(xCoord, node.y - j * StepSize);
-                    if (gridSize.y > node.y + j * StepSize)
+                    if (upperLimit.y > node.y + j * StepSize)
                         yield return new Vector2Int(xCoord, node.y + j * StepSize);
                 }
             }
@@ -78,12 +79,62 @@ public class MapTools
     }
 
     // Gets All Nodes in a circle of given radius around a node.
-    public static IEnumerable<Vector2Int> GetCircleNodes(Vector2Int node, Vector2Int gridSize, int stepSize, int radius, bool includeSelf = false)
+    public static IEnumerable<Vector2Int> GetCircleNodes(Vector2Int node, Vector2Int upperLimit, Vector2Int lowerLimit, int stepSize, int radius, bool includeSelf = false)
     {
-        foreach (Vector2Int neighbour in GetNeighbours(node, gridSize, radius, stepSize, includeSelf))
+        foreach (Vector2Int neighbour in GetNeighbours(node, upperLimit, lowerLimit, stepSize, radius, includeSelf))
         {
             if (Mathf.Pow(neighbour.x - node.x, 2) + Mathf.Pow(neighbour.y - node.y, 2) <= Mathf.Pow(radius,2))
                 yield return neighbour;
         }
+    }
+
+    public static void SmoothCircular(Vector2Int node, Vector2Int upperLimit, Vector2Int lowerLimit, int radius, float[,] heights, IKernel kernel)
+    {
+        foreach (Vector2Int circleNode in GetCircleNodes(node, upperLimit, lowerLimit, 1, radius, true))
+        {
+            heights[circleNode.x, circleNode.y] = kernel.ApplyKernel(circleNode, GetCircleNodes(circleNode, upperLimit, lowerLimit, 1, 1, true), heights);
+        }
+    }
+
+    public static void SmoothRectangle(Vector2Int node, Vector2Int upperLimit, Vector2Int lowerLimit, int width, float[,] heights, IKernel kernel)
+    {
+        foreach (Vector2Int circleNode in GetNeighbours(node, upperLimit, lowerLimit, 1, width, true))
+        {
+            heights[circleNode.x, circleNode.y] = kernel.ApplyKernel(circleNode, GetCircleNodes(circleNode, upperLimit, lowerLimit, 1, 1, true), heights);
+        }
+    }
+
+    public static IEnumerable<Vector2Int> EnumNotInList(IEnumerable<Vector2Int> original, IList<Vector2Int> list)
+    {
+        foreach (Vector2Int node in original)
+        {
+            if (!list.Contains(node))
+            {
+                yield return node;
+            }
+        }
+    }
+
+    public static void FlattenCircular(Vector2Int node, Vector2Int upperLimit, Vector2Int lowerLimit, int radius, float[,] heights)
+    {
+        float avg = 0f;
+        float normalizer = 0f;
+        foreach (Vector2Int point in GetCircleNodes(node, upperLimit, lowerLimit, 1, radius, true))
+        {
+            avg += heights[point.x, point.y];
+            normalizer += 1f;
+        }
+        avg /= normalizer;
+        foreach (Vector2Int point in GetCircleNodes(node, upperLimit, lowerLimit, 1, radius, true))
+        {
+            heights[point.x, point.y] = avg;
+        }
+    }
+
+    public static float OctileDistance(Vector2Int a, Vector2Int b)
+    {
+        float dx = Mathf.Abs(a.x - b.x);
+        float dy = Mathf.Abs(a.y - b.y);
+        return (dx + dy) + (Mathf.Sqrt(2) - 2f) * Mathf.Min(dx, dy);
     }
 }

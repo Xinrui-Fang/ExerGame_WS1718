@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using Priority_Queue;
 using System.Collections.Generic;
+using MapToolsInterfaces;
 
 public class PathFinder
 {
@@ -88,30 +89,26 @@ public class PathFinder
         AddToStreetMap(path);
     }
 
+    public void RoadSmooth(Vector2Int linePoint, IKernel outerKernel, Vector2Int upperLimits, Vector2Int lowerLimits)
+    {
+        MapTools.FlattenCircular(linePoint, upperLimits, lowerLimits, 4, Heights);
+        MapTools.SmoothCircular(linePoint, upperLimits, lowerLimits, 5, Heights, outerKernel);
+    }
+
     public void AddToStreetMap(List<Vector2Int> path, int width=1)
     {
         bool has_old = false;
         Vector2Int old_point = new Vector2Int();
+        IKernel octDistKernel = new OctileDistKernel();
         foreach (Vector2Int point in path)
         {
             if (has_old)
             {
                 foreach (Vector2Int line_point in MapTools.BresenhamLine(old_point, point))
                 {
-                    List<Vector2Int> nodes_in_radius = new List<Vector2Int>(MapTools.GetNeighbours(line_point, limits, 1, 4, false));
-                    float Avg = 0; // nodes_in_radius.Count/2f * Heights[line_point.x, line_point.y];
                     StreetMap[line_point.x, line_point.y] = true;
-
-                    foreach (Vector2Int neighbour in nodes_in_radius)
-                    {
-                        Avg += Heights[neighbour.x, neighbour.y];
-                    }
-                    Avg /=  nodes_in_radius.Count;
-                    foreach (Vector2Int neighbour in nodes_in_radius)
-                    {
-                        Heights[neighbour.x, neighbour.y] = Avg;
-                    }
-                    foreach (Vector2Int neighbour in MapTools.GetCircleNodes(line_point, limits, 1, 2, true))
+                    RoadSmooth(line_point, octDistKernel, limits, new Vector2Int(0, 0));
+                    foreach (Vector2Int neighbour in MapTools.GetCircleNodes(line_point, limits, new Vector2Int(0, 0), 1, 2, true))
                     {
                         StreetMap[neighbour.x, neighbour.y] = true;
                     }
@@ -139,7 +136,7 @@ public class PathFinder
 
     public List<Vector2Int> AStar(Vector2Int start, Vector2Int end, int stepSize)
     {
-        int expectedDepth = Mathf.CeilToInt(OctileDistance(start, end) * epsilon);
+        int expectedDepth = Mathf.CeilToInt(MapTools.OctileDistance(start, end) * epsilon);
         gScore = new float[limits[0], limits[1]];
         float[,] fScore = new float[limits[0], limits[1]];
         float TargetDelta = Mathf.Sqrt(2 * Mathf.Pow(stepSize, 2));
@@ -174,7 +171,7 @@ public class PathFinder
             if (CameFrom.ContainsKey(current))
                 neighbours = GetNeighboursOfInterest(current, CameFrom[current], stepSize);
             else
-                neighbours = MapTools.GetNeighbours(current, limits, stepSize);
+                neighbours = MapTools.GetNeighbours(current, limits, new Vector2Int(0, 0), stepSize);
             foreach (Vector2Int neighbour in neighbours)
             {
                 if (closed.Contains(neighbour))
@@ -204,7 +201,7 @@ public class PathFinder
 
     private IEnumerable<Vector2Int> GetNeighboursOfInterest(Vector2Int self, Vector2Int predecessor, int StepSize)
     {
-        foreach (Vector2Int neighbour in MapTools.GetNeighbours(self, limits, StepSize))
+        foreach (Vector2Int neighbour in MapTools.GetNeighbours(self, limits, new Vector2Int(0, 0), StepSize))
         {
             if (Mathf.Abs(neighbour.x - predecessor.x) > StepSize
                 || Mathf.Abs(neighbour.y - predecessor.y) > StepSize)
@@ -222,7 +219,7 @@ public class PathFinder
             StreetBuildingCosts *= .25f;
 
         float h = (Heights[a.x, a.y] - Heights[b.x, b.y]) * terrainData.size[1];
-        float d = OctileDistance(a, b);
+        float d = MapTools.OctileDistance(a, b);
         float slope = Mathf.InverseLerp(0, .5f, h * h );
         float costs = d * StreetBuildingCosts * (1 + slope);
         //if (a.x == a.y)
@@ -236,13 +233,6 @@ public class PathFinder
     {
         if (a == b) return 0f;
         // Vector3 normal = terrainData.GetInterpolatedNormal(a.x / terrainData.heightmapWidth, a.y / terrainData.heightmapWidth);
-        return OctileDistance(a, b);
-    }
-
-    private float OctileDistance(Vector2Int a, Vector2Int b)
-    {
-        float dx = Mathf.Abs(a.x - b.x);
-        float dy = Mathf.Abs(a.y - b.y);
-        return (dx + dy) + (Mathf.Sqrt(2) - 2f) * Mathf.Min(dx, dy);
+        return MapTools.OctileDistance(a, b);
     }
 }

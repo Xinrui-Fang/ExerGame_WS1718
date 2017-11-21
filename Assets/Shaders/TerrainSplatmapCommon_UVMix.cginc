@@ -54,23 +54,23 @@ void SplatmapMix(Input IN, out half4 splat_control, out half weight, out fixed4 
 
     mixedDiffuse = 0.0f;
     #ifdef TERRAIN_STANDARD_SHADER
-        mixedDiffuse += splat_control.r * (.25 * tex2D(_Splat0, IN.uv_Splat0 * -0.25) + 0.75 * tex2D(_Splat0, IN.uv_Splat0)) * half4(1.0, 1.0, 1.0, defaultAlpha.r);
-        mixedDiffuse += splat_control.g * (.25 * tex2D(_Splat1, IN.uv_Splat1 * -0.25) + 0.75 * tex2D(_Splat1, IN.uv_Splat1)) * half4(1.0, 1.0, 1.0, defaultAlpha.g);
-        mixedDiffuse += splat_control.b * (.25 * tex2D(_Splat2, IN.uv_Splat2 * -0.25) + 0.75 * tex2D(_Splat2, IN.uv_Splat2)) * half4(1.0, 1.0, 1.0, defaultAlpha.b);
-        mixedDiffuse += splat_control.a * (.25 * tex2D(_Splat3, IN.uv_Splat3 * -0.25) + 0.75 * tex2D(_Splat3, IN.uv_Splat3)) * half4(1.0, 1.0, 1.0, defaultAlpha.a);
+        mixedDiffuse += splat_control.r * (.4 * tex2D(_Splat0, IN.uv_Splat0 * -0.4) + 0.6 * tex2D(_Splat0, IN.uv_Splat0)) * half4(1.0, 1.0, 1.0, defaultAlpha.r);
+        mixedDiffuse += splat_control.g * (.4 * tex2D(_Splat1, IN.uv_Splat1 * -0.4) + 0.6 * tex2D(_Splat1, IN.uv_Splat1)) * half4(1.0, 1.0, 1.0, defaultAlpha.g);
+        mixedDiffuse += splat_control.b * (.4 * tex2D(_Splat2, IN.uv_Splat2 * -0.4) + 0.6 * tex2D(_Splat2, IN.uv_Splat2)) * half4(1.0, 1.0, 1.0, defaultAlpha.b);
+        mixedDiffuse += splat_control.a * (.4 * tex2D(_Splat3, IN.uv_Splat3 * -0.4) + 0.6 * tex2D(_Splat3, IN.uv_Splat3)) * half4(1.0, 1.0, 1.0, defaultAlpha.a);
     #else
-        mixedDiffuse += splat_control.r * (.25 * tex2D(_Splat0, IN.uv_Splat0 * -0.25) + 0.75 * tex2D(_Splat0, IN.uv_Splat0));
-        mixedDiffuse += splat_control.g * (.25 * tex2D(_Splat1, IN.uv_Splat1 * -0.25) + 0.75 * tex2D(_Splat1, IN.uv_Splat1));
-        mixedDiffuse += splat_control.b * (.25 * tex2D(_Splat2, IN.uv_Splat2 * -0.25) + 0.75 * tex2D(_Splat2, IN.uv_Splat2));
-        mixedDiffuse += splat_control.a * (.25 * tex2D(_Splat3, IN.uv_Splat3 * -0.25) + 0.75 * tex2D(_Splat3, IN.uv_Splat3));
+        mixedDiffuse += splat_control.r * (.4 * tex2D(_Splat0, IN.uv_Splat0 * -0.4) + 0.6 * tex2D(_Splat0, IN.uv_Splat0));
+        mixedDiffuse += splat_control.g * (.4 * tex2D(_Splat1, IN.uv_Splat1 * -0.4) + 0.6 * tex2D(_Splat1, IN.uv_Splat1));
+        mixedDiffuse += splat_control.b * (.4 * tex2D(_Splat2, IN.uv_Splat2 * -0.4) + 0.6 * tex2D(_Splat2, IN.uv_Splat2));
+        mixedDiffuse += splat_control.a * (.4 * tex2D(_Splat3, IN.uv_Splat3 * -0.4) + 0.6 * tex2D(_Splat3, IN.uv_Splat3));
     #endif
 
     #ifdef _TERRAIN_NORMAL_MAP
         fixed4 nrm = 0.0f;
-        nrm += splat_control.r * (0.25 * tex2D(_Normal0, IN.uv_Splat0 * -0.25) + .75 * tex2D(_Normal0, IN.uv_Splat0));
-        nrm += splat_control.g * (0.25 * tex2D(_Normal1, IN.uv_Splat1 * -0.25) + .75 * tex2D(_Normal1, IN.uv_Splat1));
-        nrm += splat_control.b * (0.25 * tex2D(_Normal2, IN.uv_Splat2 * -0.25) + .75 * tex2D(_Normal2, IN.uv_Splat2));
-        nrm += splat_control.a * (0.25 * tex2D(_Normal3, IN.uv_Splat3 * -0.25) + .75 * tex2D(_Normal3, IN.uv_Splat3));
+        nrm += splat_control.r * (0.4 * tex2D(_Normal0, IN.uv_Splat0 * -0.4) + .6 * tex2D(_Normal0, IN.uv_Splat0));
+        nrm += splat_control.g * (0.4 * tex2D(_Normal1, IN.uv_Splat1 * -0.4) + .6 * tex2D(_Normal1, IN.uv_Splat1));
+        nrm += splat_control.b * (0.4 * tex2D(_Normal2, IN.uv_Splat2 * -0.4) + .6 * tex2D(_Normal2, IN.uv_Splat2));
+        nrm += splat_control.a * (0.4 * tex2D(_Normal3, IN.uv_Splat3 * -0.4) + .6 * tex2D(_Normal3, IN.uv_Splat3));
         mixedNormal = UnpackNormal(nrm);
     #endif
 }

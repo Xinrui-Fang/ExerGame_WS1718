@@ -155,9 +155,9 @@ public class SurfaceCreator : MonoBehaviour {
         paths = new PathFinder(terrain.terrainData, Depth);
         if (EnableExperimentalPaths)
         {
-            paths.MakePath(new Vector2Int(0, 0), new Vector2Int(512, 512), 0, 512);
-            paths.MakePath(new Vector2Int(0, 0), new Vector2Int(512, 256), 0, 512);
-            paths.MakePath(new Vector2Int(0, 0), new Vector2Int(256, 512), 0, 512);
+            paths.MakePath(new Vector2Int(0, 0), new Vector2Int(512, 512), 0, 256);
+            //paths.MakePath(new Vector2Int(0, 0), new Vector2Int(512, 256), 0, 24);
+            //paths.MakePath(new Vector2Int(0, 0), new Vector2Int(256, 512), 0, 24);
         }
 
         terrain.terrainData.SetHeights(0, 0, paths.Heights);

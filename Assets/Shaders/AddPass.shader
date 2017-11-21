@@ -1,7 +1,7 @@
 // Modification of Unity's built-in shader source. Copyright (c) 2016 Unity Technologies. MIT license (see license.txt)
 // Got idea from https://forum.unity.com/threads/improved-terrain-texture-tiling.116509/
 
-Shader "Hidden/ExerGame/Splatmap/Diffuse-AddPass" {
+Shader "Hidden/ExerGame/Splatmap/Diffuse-AddPass-UVMix" {
     Properties {
         [HideInInspector] _Control ("Control (RGBA)", 2D) = "black" {}
         [HideInInspector] _Splat3 ("Layer 3 (A)", 2D) = "white" {}
