@@ -92,7 +92,14 @@ public class SurfaceCreator : MonoBehaviour {
 
     void OnEnable()
     {
-        Refresh();   
+        Refresh();
+        //Time.timeScale = 0.3f;
+        // TODO Decide where to launch player!
+        GameObject player = GameObject.Find("Player");
+        
+        float height = terrain.terrainData.GetInterpolatedHeight(150, 150);
+        Debug.Log(height);
+        player.transform.position = new Vector3(150, height, 150);
     }
 
     public void Refresh()
@@ -163,6 +170,10 @@ public class SurfaceCreator : MonoBehaviour {
         terrain.terrainData.SetHeights(0, 0, paths.Heights);
         terrain.terrainData = TerrainLabeler.MapTerrain(noise, terrain.terrainData, paths.StreetMap, WaterLevel, VegeationMaxLevel);
         terrain.terrainData = vGen.PaintGras(noise2, terrain.terrainData);
+        
+        TerrainCollider collider = terrain.GetComponent<TerrainCollider>();
+        collider.terrainData = terrain.terrainData;
+        
         terrain.Flush();
     }
 
