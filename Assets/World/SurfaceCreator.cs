@@ -104,6 +104,8 @@ public class SurfaceCreator : MonoBehaviour {
 
     public void Refresh()
     {
+        Debug.Log(PlayerPrefs.GetString("Test", "No Parameter 1"));
+        Debug.Log(PlayerPrefs.GetString("Parameter2", "No Parameter 2"));
         // Prepare HeightMap Generation: TODO: Create ChunkManager. Make ChunkManager manage Heightmap Settings.
         INoise2DProvider noise = new Fractal2DNoise(Persistance, Lacunarity, Octaves, Seed, NoiseType);
         ComposedPostProcessor postProcessor = new ComposedPostProcessor();
