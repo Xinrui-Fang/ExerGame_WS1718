@@ -25,34 +25,34 @@ public class Bicycle : MonoBehaviour {
 		Rigidbody rb = GetComponent<Rigidbody>();
 		if(Input.GetKey("up"))
 		{
-			//backWheel.brakeTorque = 0.0f;
-			//backWheel.motorTorque = 20.0f * speedMultiplier;
+			backWheel.brakeTorque = 0.0f;
+			backWheel.motorTorque = 20.0f * speedMultiplier;
 
-			rb.AddRelativeForce(new Vector3(0, 0, speedMultiplier));
+			//rb.AddRelativeForce(new Vector3(0, 0, speedMultiplier));
 		}
 		else if(Input.GetKey("down"))
 		{
-			//backWheel.motorTorque = 0.0f;
-			//backWheel.brakeTorque = 40.0f * speedMultiplier;
+			backWheel.motorTorque = 0.0f;
+			backWheel.brakeTorque = 40.0f * speedMultiplier;
 			//frontWheel.motorTorque = 0.0f;
-			rb.AddRelativeForce(new Vector3(0, 0, -speedMultiplier));
+			//rb.AddRelativeForce(new Vector3(0, 0, -speedMultiplier));
 		}
 		else
 		{
-			//backWheel.brakeTorque = 40.0f * speedMultiplier;
-			//backWheel.motorTorque = 0.0f;
+			backWheel.brakeTorque = 40.0f * speedMultiplier;
+			backWheel.motorTorque = 0.0f;
 		}
 		
 		if(Input.GetKey("left"))
 		{
 
-			transform.Rotate(new Vector3(0, -4, 0));
-			//frontWheel.steerAngle = -1f;
+			//transform.Rotate(new Vector3(0, -4, 0));
+			frontWheel.steerAngle = -10f;
 		}
 		else if(Input.GetKey("right"))
 		{
-			transform.Rotate(new Vector3(0, 4, 0));
-			//frontWheel.steerAngle = 1f;
+			//transform.Rotate(new Vector3(0, 4, 0));
+			frontWheel.steerAngle = 10f;
 		}
 		else
 		{
@@ -62,7 +62,8 @@ public class Bicycle : MonoBehaviour {
 		//frontWheel.motorTorque = backWheel.motorTorque;
 		//frontWheel.brakeTorque = backWheel.brakeTorque;
 
-		GetComponent<Rigidbody>().AddForce(Vector3.down*downForce);
+		//GetComponent<Rigidbody>().AddForce(Vector3.down*downForce);
+		
 		Vector3 rotation = transform.rotation.eulerAngles;
 		rotation.z = 0;
 		transform.rotation = Quaternion.Euler(rotation);
