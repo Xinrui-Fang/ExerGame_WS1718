@@ -15,7 +15,7 @@ public class Bicycle : MonoBehaviour {
 	void Start () 
 	{
 		Rigidbody rb = GetComponent<Rigidbody>();
-		rb.centerOfMass = new Vector3(0, -20, 0);
+		rb.centerOfMass = new Vector3(0, -2f, -0.25f);
 	}
 	
 	// Update is called once per frame
@@ -47,20 +47,20 @@ public class Bicycle : MonoBehaviour {
 		{
 
 			//transform.Rotate(new Vector3(0, -4, 0));
-			frontWheel.steerAngle = -10f;
+			frontWheel.steerAngle = -20f;
 		}
 		else if(Input.GetKey("right"))
 		{
 			//transform.Rotate(new Vector3(0, 4, 0));
-			frontWheel.steerAngle = 10f;
+			frontWheel.steerAngle = 20f;
 		}
 		else
 		{
 			frontWheel.steerAngle = 0.0f;
 		}	
      		
-		//frontWheel.motorTorque = backWheel.motorTorque;
-		//frontWheel.brakeTorque = backWheel.brakeTorque;
+		frontWheel.motorTorque = backWheel.motorTorque;
+		frontWheel.brakeTorque = backWheel.brakeTorque;
 
 		//GetComponent<Rigidbody>().AddForce(Vector3.down*downForce);
 		
