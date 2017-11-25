@@ -91,8 +91,8 @@ public class PathFinder
 
     public void RoadSmooth(Vector2Int linePoint, IKernel outerKernel, Vector2Int upperLimits, Vector2Int lowerLimits)
     {
-        MapTools.FlattenCircular(linePoint, upperLimits, lowerLimits, 4, Heights);
-        MapTools.SmoothCircular(linePoint, upperLimits, lowerLimits, 5, Heights, outerKernel);
+        MapTools.FlattenCircular(linePoint, upperLimits, lowerLimits, 1, Heights);
+        MapTools.SmoothCircular(linePoint, upperLimits, lowerLimits, 2, Heights, outerKernel);
     }
 
     public void AddToStreetMap(List<Vector2Int> path, int width=1)
