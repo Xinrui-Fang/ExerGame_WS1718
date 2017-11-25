@@ -112,6 +112,48 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1001 &36939602
+Prefab:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4623794713261384, guid: 8edb852259cff4384b742d550915a0aa, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4623794713261384, guid: 8edb852259cff4384b742d550915a0aa, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4623794713261384, guid: 8edb852259cff4384b742d550915a0aa, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4623794713261384, guid: 8edb852259cff4384b742d550915a0aa, type: 2}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4623794713261384, guid: 8edb852259cff4384b742d550915a0aa, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4623794713261384, guid: 8edb852259cff4384b742d550915a0aa, type: 2}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4623794713261384, guid: 8edb852259cff4384b742d550915a0aa, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4623794713261384, guid: 8edb852259cff4384b742d550915a0aa, type: 2}
+      propertyPath: m_RootOrder
+      value: 2
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: 8edb852259cff4384b742d550915a0aa, type: 2}
+  m_IsPrefabParent: 0
 --- !u!1 &355964817
 GameObject:
   m_ObjectHideFlags: 0
@@ -138,7 +180,7 @@ TerrainCollider:
   m_GameObject: {fileID: 355964817}
   m_Material: {fileID: 0}
   m_Enabled: 1
-  m_TerrainData: {fileID: 15600000, guid: 61abdd755e4ed1b4692e805247448163, type: 2}
+  m_TerrainData: {fileID: 15600000, guid: 7acc4bdbdf3df58499e09a97b2258bf0, type: 2}
   m_EnableTreeColliders: 1
 --- !u!218 &355964819
 Terrain:
@@ -148,7 +190,7 @@ Terrain:
   m_GameObject: {fileID: 355964817}
   m_Enabled: 1
   serializedVersion: 3
-  m_TerrainData: {fileID: 15600000, guid: 61abdd755e4ed1b4692e805247448163, type: 2}
+  m_TerrainData: {fileID: 15600000, guid: 7acc4bdbdf3df58499e09a97b2258bf0, type: 2}
   m_TreeDistance: 2000
   m_TreeBillboardDistance: 50
   m_TreeCrossFadeLength: 5
@@ -182,7 +224,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &355964821
 MonoBehaviour:
@@ -196,21 +238,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Weight: 0.6
-  Resolution: 513
+  Resolution: 257
   Size: 1024
   Seed: 42
-  Octaves: 5
+  Octaves: 3
   Lacunarity: 2
   Persistance: 0.5
-  FeatureFrequency: 4
+  FeatureFrequency: 2
   Enable: 1
   NoiseType: 0
   Weight2: 0.4
   Seed2: 123
-  Octaves2: 4
+  Octaves2: 2
   Lacunarity2: 1.66
   Persistance2: 0.5
-  FeatureFrequency2: 6
+  FeatureFrequency2: 3
   NoiseType2: 0
   Enable2: 1
   Depth: 240
@@ -230,113 +272,6 @@ MonoBehaviour:
   SandNormalMap: {fileID: 2800000, guid: 32cf70478fb7dad48838fdb26204be22, type: 3}
   PathNormalMap: {fileID: 0}
   CliffNormalMap: {fileID: 2800000, guid: 11a83d38eeab664408cb7d088abe5a49, type: 3}
---- !u!1 &425568039
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 425568043}
-  - component: {fileID: 425568042}
-  - component: {fileID: 425568041}
-  - component: {fileID: 425568040}
-  - component: {fileID: 425568044}
-  - component: {fileID: 425568045}
-  m_Layer: 0
-  m_Name: Main Camera
-  m_TagString: MainCamera
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!81 &425568040
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 425568039}
-  m_Enabled: 1
---- !u!124 &425568041
-Behaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 425568039}
-  m_Enabled: 1
---- !u!20 &425568042
-Camera:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 425568039}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
-  m_NormalizedViewPortRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 1
-    height: 1
-  near clip plane: 0.3
-  far clip plane: 1000
-  field of view: 60
-  orthographic: 0
-  orthographic size: 5
-  m_Depth: -1
-  m_CullingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_RenderingPath: -1
-  m_TargetTexture: {fileID: 0}
-  m_TargetDisplay: 0
-  m_TargetEye: 3
-  m_HDR: 1
-  m_AllowMSAA: 1
-  m_ForceIntoRT: 0
-  m_OcclusionCulling: 1
-  m_StereoConvergence: 10
-  m_StereoSeparation: 0.022
---- !u!4 &425568043
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 425568039}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 596.6, y: 138.85, z: 100}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &425568044
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 425568039}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b2ddb70c3222774419bdb4e3d1064ddb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  mainSpeed: 100
-  shiftAdd: 250
-  maxShift: 1000
-  camSens: 0.25
-  rotateOnlyIfMousedown: 1
-  movementStaysFlat: 1
---- !u!45 &425568045
-Skybox:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 425568039}
-  m_Enabled: 1
-  m_CustomSkybox: {fileID: 2100000, guid: 39cace2863926444a9a78daa8ae26413, type: 2}
 --- !u!1 &1194882776
 GameObject:
   m_ObjectHideFlags: 0
@@ -400,5 +335,5 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 60, y: 0, z: 0}
