@@ -7,8 +7,8 @@ public class Bicycle : MonoBehaviour {
 	public WheelCollider frontWheel;
 	public WheelCollider backWheel;
 
-	public float speedMultiplier = 10.0f;
-	public float maxSpeed = 1000.0f;
+	public float speedMultiplier = 1.0f;
+	public float maxSpeed = 20.0f;
 	public float downForce = 100.0f;
 	
 	// Use this for initialization
@@ -62,7 +62,7 @@ public class Bicycle : MonoBehaviour {
 		frontWheel.motorTorque = backWheel.motorTorque;
 		frontWheel.brakeTorque = backWheel.brakeTorque;
 
-		//GetComponent<Rigidbody>().AddForce(Vector3.down*downForce);
+		GetComponent<Rigidbody>().AddForce(Vector3.down*downForce);
 		
 		Vector3 rotation = transform.rotation.eulerAngles;
 		rotation.z = 0;
