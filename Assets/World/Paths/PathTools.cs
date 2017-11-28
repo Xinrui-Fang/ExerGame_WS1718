@@ -154,13 +154,11 @@ public static class PathTools
 
     public class Octile8GridHeightStepCost
     {
-        private readonly float StepWidth;
         private readonly int Steps, Weight;
         public readonly float[,] Heights;
 
         public Octile8GridHeightStepCost(int steps, int weight, float[,] heights)
         {
-            StepWidth = 1f / steps;
             Steps = steps;
             Heights = heights;
             Weight = weight;

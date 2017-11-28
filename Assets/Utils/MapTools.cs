@@ -21,7 +21,7 @@ public class MapTools
             error += delta_r;
             while (error > .5f)
             {
-                y += (int)Mathf.Sign(delta_y);
+                y += y_step;
                 error--;
             }
         }
@@ -111,7 +111,7 @@ public class MapTools
         float target = radius * radius;
         foreach (Vector2Int next in GetNeighbours(node, upperLimit, lowerLimit, stepSize, radius, includeSelf))
         {
-            if ((next.x - node.x) * (next.x - node.x) + (next.y - node.y) * (next.y - node.y) <= radius * radius)
+            if ((next.x - node.x) * (next.x - node.x) + (next.y - node.y) * (next.y - node.y) <= target)
                 yield return next;
         }
     }

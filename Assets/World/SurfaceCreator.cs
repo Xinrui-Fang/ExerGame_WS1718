@@ -104,14 +104,12 @@ public class SurfaceCreator : MonoBehaviour {
 
     public void Refresh()
     {
-        Debug.Log(PlayerPrefs.GetString("Test", "No Parameter 1"));
-        Debug.Log(PlayerPrefs.GetString("Parameter2", "No Parameter 2"));
         // Prepare HeightMap Generation: TODO: Create ChunkManager. Make ChunkManager manage Heightmap Settings.
         INoise2DProvider noise = new Fractal2DNoise(Persistance, Lacunarity, Octaves, Seed, NoiseType);
         ComposedPostProcessor postProcessor = new ComposedPostProcessor();
         postProcessor.AddProcessor(new ExponentialPostProcessor(exponent));
         postProcessor.AddProcessor(new HeightRescale(0f, Mathf.Pow(.8f, exponent)));
-        postProcessor.AddProcessor(new SmoothTerracingPostProcessor(.15f, 4f, .15f));
+        postProcessor.AddProcessor(new SmoothTerracingPostProcessor(.08f, 2f, .08f));
         IScannableHeightSource heigthCreator = new HeightMapFromNoise(noise, FeatureFrequency, new Vector2Int(0,0));
         heigthCreator.SetPostProcessor(postProcessor);
 
@@ -164,13 +162,13 @@ public class SurfaceCreator : MonoBehaviour {
         Vector2Int lowerBound = new Vector2Int(0, 0);
         Vector2Int upperBound = new Vector2Int(Resolution - 1, Resolution - 1);
         PathTools.Bounded8Neighbours neighbours = new PathTools.Bounded8Neighbours(lowerBound, upperBound);
-        PathTools.NormalZThresholdWalkable walkable_src = new PathTools.NormalZThresholdWalkable(Mathf.Cos(Mathf.Deg2Rad * 40), terrain.terrainData, Resolution, lowerBound, upperBound);
+        PathTools.NormalZThresholdWalkable walkable_src = new PathTools.NormalZThresholdWalkable(Mathf.Cos(Mathf.Deg2Rad * 30), terrain.terrainData, Resolution, lowerBound, upperBound);
         PathTools.CachedWalkable walkable = new PathTools.CachedWalkable(walkable_src.IsWalkable, lowerBound, upperBound, Resolution);
-        PathTools.Octile8GridSlopeStepCost AStarStepCost = new PathTools.Octile8GridSlopeStepCost(1000, 5, heights);
+        PathTools.Octile8GridSlopeStepCost AStarStepCost = new PathTools.Octile8GridSlopeStepCost(5000, 2, heights);
         //SubgoalGraph search = new SubgoalGraph(Resolution, walkable.IsWalkable);
 
         paths = new PathFinder(AStarStepCost.StepCosts, Resolution, heights);
-        AStar search = new AStar(walkable.IsWalkable, neighbours.GetNeighbors, paths.StepCostsRoad, MapTools.OctileDistance, 6.01f);
+        AStar search = new AStar(walkable.IsWalkable, neighbours.GetNeighbors, paths.StepCostsRoad, MapTools.OctileDistance, 2.01f);
         paths.SetSearch(search);
         search.PrepareSearch(Resolution * Resolution);
         //SubgoalGraph metaSearch = new SubgoalGraph(Resolution, walkable.IsWalkable, paths);
@@ -179,7 +177,7 @@ public class SurfaceCreator : MonoBehaviour {
             System.Random prng = new System.Random((int)Seed);
             Vector2Int start = new Vector2Int();
             Vector2Int end = new Vector2Int();
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 5; i++)
             {
                 start = MapTools.UnfoldToPerimeter(prng.Next(0, 4 * (Resolution - 1)), Resolution - 1);
                 end = MapTools.UnfoldToPerimeter(prng.Next(0, 4 * (Resolution - 1)), Resolution - 1);

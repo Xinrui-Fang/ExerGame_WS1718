@@ -237,25 +237,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fe68c0f5253c784fb88f8ed937c0f59, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Weight: 0.6
+  Weight: 0.5
   Resolution: 513
-  Size: 1024
+  Size: 256
   Seed: 42
-  Octaves: 3
-  Lacunarity: 2
-  Persistance: 0.5
+  Octaves: 4
+  Lacunarity: 1.6
+  Persistance: 0.4
   FeatureFrequency: 2
   Enable: 1
   NoiseType: 0
-  Weight2: 0.4
+  Weight2: 0.6
   Seed2: 123
-  Octaves2: 1
+  Octaves2: 3
   Lacunarity2: 1.66
-  Persistance2: 0.5
-  FeatureFrequency2: 3
+  Persistance2: 0.3
+  FeatureFrequency2: 1
   NoiseType2: 0
   Enable2: 1
-  Depth: 240
+  Depth: 120
   WaterLevel: 0.01
   VegeationMaxLevel: 0.3
   exponent: 3

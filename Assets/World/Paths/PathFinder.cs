@@ -21,8 +21,8 @@ public class PathFinder
     {
         StreetMap = new bool[Resolution, Resolution];
         Heights = heights;
-        RoadFlatArea = 1;
-        RoadSmoothArea = 2;
+        RoadFlatArea = 4;
+        RoadSmoothArea = 6;
         LowerLimits = new Vector2Int(0, 0);
         UpperLimits = new Vector2Int(Resolution, Resolution);
 
@@ -43,8 +43,9 @@ public class PathFinder
         List<Vector2Int> path = SearchAlgo.Search(start, end);
         if (path.Count == 0)
         {
-            Debug.Log("!FALLBACK Use line for path.");
-            path = new List<Vector2Int>(MapTools.BresenhamOrthogonalLine(start, end));
+            return;
+            //Debug.Log("!FALLBACK Use line for path.");
+            //path = new List<Vector2Int>(MapTools.BresenhamOrthogonalLine(start, end));
         }
         AddToStreetMap(path);
     }
