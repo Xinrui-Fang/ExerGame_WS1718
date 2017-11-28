@@ -21,9 +21,8 @@ public class PathFinder
     {
         StreetMap = new bool[Resolution, Resolution];
         Heights = heights;
-        RoadSize = 0;
-        RoadFlatArea = 2;
-        RoadSmoothArea = 3;
+        RoadFlatArea = 1;
+        RoadSmoothArea = 2;
         LowerLimits = new Vector2Int(0, 0);
         UpperLimits = new Vector2Int(Resolution, Resolution);
 
@@ -71,15 +70,6 @@ public class PathFinder
         {
             StreetMap[point.x, point.y] = true;
             RoadSmooth(point, octDistKernel, UpperLimits, LowerLimits);
-            foreach (Vector2Int neighbour in MapTools.GetCircleNodes(point, UpperLimits, LowerLimits, 1, RoadSize, true))
-            {
-                StreetMap[neighbour.x, neighbour.y] = true;
-            }
         }
-    }
-
-    public Vector2Int ToLocalCoords(Vector2Int GlobalCoords, int StepSize)
-    {
-        return new Vector2Int(Mathf.FloorToInt(GlobalCoords.x / (float)StepSize) * StepSize, Mathf.FloorToInt(GlobalCoords.y / (float)StepSize) * StepSize);
     }
 }

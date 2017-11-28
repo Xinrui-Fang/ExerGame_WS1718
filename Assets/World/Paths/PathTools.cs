@@ -13,7 +13,7 @@ public static class PathTools
     public class Bounded8Neighbours
     {
         public int lowerX, lowerY, upperX, upperY;
-        private static List<Vector2Int> NeigborSteps = new List<Vector2Int>(8)
+        private static Vector2Int[] NeigborSteps = new Vector2Int[]
         {
             new Vector2Int(1,0), new Vector2Int(1,1), new Vector2Int(0,1), new Vector2Int(-1,1), new Vector2Int(-1,0),
             new Vector2Int(-1,-1), new Vector2Int(0,-1), new Vector2Int(1, -1)
@@ -170,10 +170,10 @@ public static class PathTools
         {
             float hdiff = Heights[ax, ay] - Heights[bx, by];
             hdiff = hdiff > 0 ? hdiff : -hdiff;
-            int cost = 1 + ((int) (hdiff / StepWidth)) * Steps;
+            int cost = 1 + ((int) (hdiff * Steps));
             if ((ax - bx != 0) && (ay -by != 0))
             {
-                return 1.41f * cost;
+                return 1.41f * cost * Weight;
             }
             return cost * Weight;
         }
@@ -181,14 +181,12 @@ public static class PathTools
 
     public class Octile8GridSlopeStepCost
     {
-        private readonly float StepWidth;
         private readonly int Steps, Weight;
         public readonly float[,] Heights;
 
         public Octile8GridSlopeStepCost(int steps, int weight, float[,] heights)
         {
-            StepWidth = 1f / steps;
-            Steps = steps;
+            Steps = steps * steps;
             Heights = heights;
             Weight = weight;
         }
@@ -196,10 +194,10 @@ public static class PathTools
         public float StepCosts(int ax, int ay, int bx, int by)
         {
             float slope = (Heights[ax, ay] - Heights[bx, by])* (Heights[ax, ay] - Heights[bx, by]);
-            int cost = 1 + ((int)(slope / StepWidth)) * Steps;
+            int cost = 1 + ((int)(slope * Steps));
             if ((ax - bx != 0) && (ay - by != 0))
             {
-                return 1.41f * cost;
+                return 1.41f * cost * Weight;
             }
             return cost * Weight;
         }

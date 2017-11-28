@@ -10,8 +10,10 @@ public class MapTools
     {
         float delta_x = b.x - a.x;
         float delta_y = b.y - a.y;
-        float delta_r = Mathf.Abs(delta_y / delta_x);
+        float delta_r = delta_y / delta_x;
+        delta_r = delta_r > 0 ? delta_r : -delta_r;
         float error = 0;
+        int y_step = delta_y > 0 ? 1 : -1;
         int y = a.y;
         for (int x = a.x; x <= b.x; x++)
         {
@@ -20,6 +22,31 @@ public class MapTools
             while (error > .5f)
             {
                 y += (int)Mathf.Sign(delta_y);
+                error--;
+            }
+        }
+    }
+
+    // Draw a line on a grid from a to b
+    public static IEnumerable<Vector2Int> BresenhamOrthogonalLine(Vector2Int a, Vector2Int b)
+    {
+        float delta_x = b.x - a.x;
+        float delta_y = b.y - a.y;
+        
+        float delta_r = delta_y / delta_x;
+        delta_r = delta_r > 0 ? delta_r : -delta_r;
+        float error = 0;
+        int y_step = delta_y > 0 ? 1 : -1;
+        int y = a.y;
+        for (int x = a.x; x <= b.x; x++)
+        {
+            yield return new Vector2Int(x, y);
+            error += delta_r;
+            while (error > .5f)
+            {
+                y += y_step;
+                if (x != b.x && y != b.y)
+                    yield return new Vector2Int(x, y);
                 error--;
             }
         }
@@ -81,10 +108,11 @@ public class MapTools
     // Gets All Nodes in a circle of given radius around a node.
     public static IEnumerable<Vector2Int> GetCircleNodes(Vector2Int node, Vector2Int upperLimit, Vector2Int lowerLimit, int stepSize, int radius, bool includeSelf = false)
     {
-        foreach (Vector2Int neighbour in GetNeighbours(node, upperLimit, lowerLimit, stepSize, radius, includeSelf))
+        float target = radius * radius;
+        foreach (Vector2Int next in GetNeighbours(node, upperLimit, lowerLimit, stepSize, radius, includeSelf))
         {
-            if (Mathf.Pow(neighbour.x - node.x, 2) + Mathf.Pow(neighbour.y - node.y, 2) <= Mathf.Pow(radius,2))
-                yield return neighbour;
+            if ((next.x - node.x) * (next.x - node.x) + (next.y - node.y) * (next.y - node.y) <= radius * radius)
+                yield return next;
         }
     }
 
@@ -98,43 +126,52 @@ public class MapTools
 
     public static void SmoothRectangle(Vector2Int node, Vector2Int upperLimit, Vector2Int lowerLimit, int width, float[,] heights, IKernel kernel)
     {
-        foreach (Vector2Int circleNode in GetNeighbours(node, upperLimit, lowerLimit, 1, width, true))
+        foreach (Vector2Int point in GetNeighbours(node, upperLimit, lowerLimit, 1, width, true))
         {
-            heights[circleNode.x, circleNode.y] = kernel.ApplyKernel(circleNode, GetCircleNodes(circleNode, upperLimit, lowerLimit, 1, 1, true), heights);
-        }
-    }
-
-    public static IEnumerable<Vector2Int> EnumNotInList(IEnumerable<Vector2Int> original, IList<Vector2Int> list)
-    {
-        foreach (Vector2Int node in original)
-        {
-            if (!list.Contains(node))
-            {
-                yield return node;
-            }
+            heights[point.x, point.y] = kernel.ApplyKernel(point, GetCircleNodes(point, upperLimit, lowerLimit, 1, 1, true), heights);
         }
     }
 
     public static void FlattenCircular(Vector2Int node, Vector2Int upperLimit, Vector2Int lowerLimit, int radius, float[,] heights)
     {
         float avg = 0f;
-        float normalizer = 0f;
-        foreach (Vector2Int point in GetCircleNodes(node, upperLimit, lowerLimit, 1, radius, true))
+        List<Vector2Int> circle = new List<Vector2Int>(GetCircleNodes(node, upperLimit, lowerLimit, 1, radius, true));
+        foreach (Vector2Int point in circle)
         {
             avg += heights[point.x, point.y];
-            normalizer += 1f;
         }
-        avg /= normalizer;
-        foreach (Vector2Int point in GetCircleNodes(node, upperLimit, lowerLimit, 1, radius, true))
+        avg /= circle.Count;
+        foreach (Vector2Int point in circle)
         {
             heights[point.x, point.y] = avg;
         }
     }
 
-    public static float OctileDistance(Vector2Int a, Vector2Int b)
+    public static float OctileDistance(int ax, int ay, int bx, int by)
     {
-        float dx = Mathf.Abs(a.x - b.x);
-        float dy = Mathf.Abs(a.y - b.y);
-        return (dx + dy) + (Mathf.Sqrt(2) - 2f) * Mathf.Min(dx, dy);
+        float dx = ax - bx;
+        dx = 0 < dx ? dx : -dx;
+        float dy = ay - by;
+        dy = 0 < dy ? dy : -dy;
+        float min = dy < dx ? dy : dx;
+        return (dx + dy) + (1.41f - 2f) * min;
+        //return 1.41f * (dx < dy ? dx : dy) + (0 < dx - dy ? dx - dy : dy - dx);
+    }
+
+    public static Vector2Int UnfoldToPerimeter(int x, int SideLength)
+    {
+        int side = x / SideLength;
+        int pos = x - (side * SideLength);
+        switch (side)
+        {
+            case 0:
+                return new Vector2Int(0, pos);
+            case 1:
+                return new Vector2Int(pos, SideLength);
+            case 2:
+                return new Vector2Int(SideLength, SideLength - pos);
+            default:
+                return new Vector2Int(SideLength - pos, 0);
+        }
     }
 }

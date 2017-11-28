@@ -93,23 +93,23 @@ public struct PathNode : IEquatable<PathNode>
 
 public class AStar: PathSearch
 {
-    private DIsWalkable Walkable;
-    private DGetNeighbors Neighbors;
-    private DGetStepCost RealCosts;
-    private DGetStepCost Heuristic;
-    private DIsGoal GoalTest;
+    private readonly DIsWalkable Walkable;
+    private readonly DGetNeighbors Neighbors;
+    private readonly DGetStepCost RealCosts;
+    private readonly DGetStepCost Heuristic;
+    private readonly float Epsilon;
     public uint Steps;
     private PathNode[] Nodes;
     private uint nextNodeIDx;
     private bool prepared = false;
 
-    public AStar(DIsWalkable walkable, DGetNeighbors neighbors, DGetStepCost realCosts, DGetStepCost heuristic, DIsGoal goalTest)
+    public AStar(DIsWalkable walkable, DGetNeighbors neighbors, DGetStepCost realCosts, DGetStepCost heuristic, float epsilon)
     {
         Walkable = walkable;
         Neighbors = neighbors;
         RealCosts = realCosts;
         Heuristic = heuristic;
-        GoalTest = goalTest;
+        Epsilon = 1f + epsilon;
     }
 
     public void PrepareSearch(int ExpectedNodesCount)
@@ -213,7 +213,7 @@ public class AStar: PathSearch
                     {
                         Nodes[next].CameFrom = (int) current;
                         Nodes[next].GScore = tentative_gscore;
-                        float FScore = Nodes[next].GScore + Heuristic(Nodes[next].x, Nodes[next].y, Nodes[endIdx].x, Nodes[endIdx].y) * 1.01f;
+                        float FScore = Nodes[next].GScore + Heuristic(Nodes[next].x, Nodes[next].y, Nodes[endIdx].x, Nodes[endIdx].y) * Epsilon;
                         if (Opened.Contains(next))
                         {
                             Opened.UpdatePriority(next, FScore);

@@ -190,7 +190,7 @@ Terrain:
   m_GameObject: {fileID: 355964817}
   m_Enabled: 1
   serializedVersion: 3
-  m_TerrainData: {fileID: 15600000, guid: 7acc4bdbdf3df58499e09a97b2258bf0, type: 2}
+  m_TerrainData: {fileID: 0}
   m_TreeDistance: 2000
   m_TreeBillboardDistance: 50
   m_TreeCrossFadeLength: 5
@@ -238,7 +238,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Weight: 0.6
-  Resolution: 257
+  Resolution: 513
   Size: 1024
   Seed: 42
   Octaves: 3
@@ -249,7 +249,7 @@ MonoBehaviour:
   NoiseType: 0
   Weight2: 0.4
   Seed2: 123
-  Octaves2: 2
+  Octaves2: 1
   Lacunarity2: 1.66
   Persistance2: 0.5
   FeatureFrequency2: 3

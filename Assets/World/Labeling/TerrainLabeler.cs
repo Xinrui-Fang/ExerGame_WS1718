@@ -43,8 +43,7 @@ public static class TerrainLabeler
                         if (streetMap[node.x, node.y])
                         {
                             isStreetMapNeighbour = true;
-                            streetNeighbourFactor = 1f / (1f + MapTools.OctileDistance(new Vector2Int(x_heightmap, y_heightmap), node));
-                            break;
+                            streetNeighbourFactor += .125f / (1f + MapTools.OctileDistance(x_heightmap, y_heightmap, node.x, node.y));
                         }
                     }
                     // Calculate the steepness of the terrain
@@ -74,7 +73,7 @@ public static class TerrainLabeler
                 //Debug.Log(String.Format("({0}, {1})", x_heightmap, y_heightmap));
                 
                 if (isStreetMapNeighbour)
-                    splatWeights[4] += 1f * streetNeighbourFactor;
+                    splatWeights[4] += 1f + streetNeighbourFactor;
                 // Sum of all textures weights must add to 1, so calculate normalization factor from sum of weights
                 float z = splatWeights.Sum();
                 // Loop through each terrain texture

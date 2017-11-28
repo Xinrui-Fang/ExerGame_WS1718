@@ -10,7 +10,7 @@ public class OctileDistKernel: IKernel
         float normalizer = 0f;
         foreach (Vector2Int node in nodes)
         {
-            float dist = MapTools.OctileDistance(self, node);
+            float dist = MapTools.OctileDistance(self.x, self.y, node.x, node.y);
             avg += values[node.x, node.y] / (1f + dist);
             normalizer += 1f / (1f + dist);
         }

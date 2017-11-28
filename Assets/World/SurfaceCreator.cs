@@ -166,20 +166,20 @@ public class SurfaceCreator : MonoBehaviour {
         PathTools.Bounded8Neighbours neighbours = new PathTools.Bounded8Neighbours(lowerBound, upperBound);
         PathTools.NormalZThresholdWalkable walkable_src = new PathTools.NormalZThresholdWalkable(Mathf.Cos(Mathf.Deg2Rad * 40), terrain.terrainData, Resolution, lowerBound, upperBound);
         PathTools.CachedWalkable walkable = new PathTools.CachedWalkable(walkable_src.IsWalkable, lowerBound, upperBound, Resolution);
-        PathTools.Octile8GridSlopeStepCost AStarStepCost = new PathTools.Octile8GridSlopeStepCost(15000, 1, heights);
+        PathTools.Octile8GridSlopeStepCost AStarStepCost = new PathTools.Octile8GridSlopeStepCost(1000, 5, heights);
         //SubgoalGraph search = new SubgoalGraph(Resolution, walkable.IsWalkable);
 
         paths = new PathFinder(AStarStepCost.StepCosts, Resolution, heights);
-        AStar search = new AStar(walkable.IsWalkable, neighbours.GetNeighbors, paths.StepCostsRoad, MapTools.OctileDistance, PathTools.NodeEquatlity);
+        AStar search = new AStar(walkable.IsWalkable, neighbours.GetNeighbors, paths.StepCostsRoad, MapTools.OctileDistance, 6.01f);
         paths.SetSearch(search);
-        search.PrepareSearch(Mathf.CeilToInt(1.41f * Resolution * 8));
+        search.PrepareSearch(Resolution * Resolution);
         //SubgoalGraph metaSearch = new SubgoalGraph(Resolution, walkable.IsWalkable, paths);
         if (EnableExperimentalPaths)
         {
             System.Random prng = new System.Random((int)Seed);
             Vector2Int start = new Vector2Int();
             Vector2Int end = new Vector2Int();
-            for (int i = 0; i < 19; i++)
+            for (int i = 0; i < 10; i++)
             {
                 start = MapTools.UnfoldToPerimeter(prng.Next(0, 4 * (Resolution - 1)), Resolution - 1);
                 end = MapTools.UnfoldToPerimeter(prng.Next(0, 4 * (Resolution - 1)), Resolution - 1);
