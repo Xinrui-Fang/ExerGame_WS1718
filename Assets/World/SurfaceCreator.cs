@@ -126,7 +126,7 @@ public class SurfaceCreator : MonoBehaviour {
         vGen = new VegetationGenerator(0);
         terrain = GetComponent<Terrain>();
         terrain.terrainData = CreateTerrainData();
-
+        float[,] heights = terrain.terrainData.GetHeights(0, 0, Resolution, Resolution);
         terrain.terrainData.splatPrototypes = new SplatPrototype[] {
             new SplatPrototype
             {
@@ -160,16 +160,43 @@ public class SurfaceCreator : MonoBehaviour {
             }
         };
 
-        terrain.terrainData.RefreshPrototypes();
-        paths = new PathFinder(terrain.terrainData, Depth);
+        
+        Vector2Int lowerBound = new Vector2Int(0, 0);
+        Vector2Int upperBound = new Vector2Int(Resolution - 1, Resolution - 1);
+        PathTools.Bounded8Neighbours neighbours = new PathTools.Bounded8Neighbours(lowerBound, upperBound);
+        PathTools.NormalZThresholdWalkable walkable_src = new PathTools.NormalZThresholdWalkable(Mathf.Cos(Mathf.Deg2Rad * 40), terrain.terrainData, Resolution, lowerBound, upperBound);
+        PathTools.CachedWalkable walkable = new PathTools.CachedWalkable(walkable_src.IsWalkable, lowerBound, upperBound, Resolution);
+        PathTools.Octile8GridSlopeStepCost AStarStepCost = new PathTools.Octile8GridSlopeStepCost(15000, 1, heights);
+        //SubgoalGraph search = new SubgoalGraph(Resolution, walkable.IsWalkable);
+
+        paths = new PathFinder(AStarStepCost.StepCosts, Resolution, heights);
+        AStar search = new AStar(walkable.IsWalkable, neighbours.GetNeighbors, paths.StepCostsRoad, MapTools.OctileDistance, PathTools.NodeEquatlity);
+        paths.SetSearch(search);
+        search.PrepareSearch(Mathf.CeilToInt(1.41f * Resolution * 8));
+        //SubgoalGraph metaSearch = new SubgoalGraph(Resolution, walkable.IsWalkable, paths);
         if (EnableExperimentalPaths)
         {
-            paths.MakePath(new Vector2Int(0, 0), new Vector2Int(Resolution -1, Resolution -1), 0, 256);
-            //paths.MakePath(new Vector2Int(0, 0), new Vector2Int(512, 256), 0, 24);
-            //paths.MakePath(new Vector2Int(0, 0), new Vector2Int(256, 512), 0, 24);
+            System.Random prng = new System.Random((int)Seed);
+            Vector2Int start = new Vector2Int();
+            Vector2Int end = new Vector2Int();
+            for (int i = 0; i < 19; i++)
+            {
+                start = MapTools.UnfoldToPerimeter(prng.Next(0, 4 * (Resolution - 1)), Resolution - 1);
+                end = MapTools.UnfoldToPerimeter(prng.Next(0, 4 * (Resolution - 1)), Resolution - 1);
+                //search.Search(start, end);
+                //metaSearch.Search(start, end);
+                paths.MakePath(start, end);
+            }
+            //search.Search(new Vector2Int(0, 0), new Vector2Int(Resolution - 1, Resolution - 1));
+            //paths.MakePath(new Vector2Int(0, 0), new Vector2Int(Resolution - 1, Mathf.RoundToInt(.5f * Resolution) - 1));
+            //paths.MakePath(new Vector2Int(Mathf.RoundToInt(.5f * Resolution) - 1, Resolution - 1), new Vector2Int(0, 0));
+            //paths.MakePath(new Vector2Int(Resolution -1, Mathf.RoundToInt(.5f * Resolution) - 6), new Vector2Int(15, 0));
         }
-
+        search.CleanUp();
         terrain.terrainData.SetHeights(0, 0, paths.Heights);
+        terrain.terrainData.SetHeights(0, 0, paths.Heights);
+
+        terrain.terrainData.RefreshPrototypes();
         terrain.terrainData = TerrainLabeler.MapTerrain(noise, terrain.terrainData, paths.StreetMap, WaterLevel, VegeationMaxLevel);
         terrain.terrainData = vGen.PaintGras(noise2, terrain.terrainData);
         
