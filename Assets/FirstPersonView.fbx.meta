@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: 08337723004494ac082057e0683d59ec
-timeCreated: 1511617449
+timeCreated: 1511867387
 licenseType: Free
 ModelImporter:
   serializedVersion: 22
@@ -26,6 +26,7 @@ ModelImporter:
     100036: Simple2019
     100038: You_bette0
     100040: You_better
+    100042: Compone231
     400000: Circle001
     400002: Circle002
     400004: Circle003
@@ -47,6 +48,7 @@ ModelImporter:
     400036: Simple2019
     400038: You_bette0
     400040: You_better
+    400042: Compone231
     2300000: Compon1146
     2300002: Compon1148
     2300004: Compon2314
@@ -59,6 +61,7 @@ ModelImporter:
     2300018: Simple2019
     2300020: You_bette0
     2300022: You_better
+    2300024: Compone231
     3300000: Compon1146
     3300002: Compon1148
     3300004: Compon2314
@@ -71,6 +74,7 @@ ModelImporter:
     3300018: Simple2019
     3300020: You_bette0
     3300022: You_better
+    3300024: Compone231
     4300000: You_better
     4300002: Compone105
     4300004: You_bette0
@@ -83,6 +87,7 @@ ModelImporter:
     4300018: Simple2019
     4300020: Compon1148
     4300022: Compon2314
+    4300024: Compone231
     7400000: Take 001
     9500000: //RootNode
   externalObjects:
