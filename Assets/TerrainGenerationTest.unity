@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 2100000, guid: 39cace2863926444a9a78daa8ae26413, type: 2}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 046c5a01ffa3da54986eb48864e00578, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.8037745, g: 0.7082275, b: 0.62298775, a: 1}
+  m_IndirectSpecularColor: {r: 0.6735129, g: 0.623706, b: 0.5370834, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -291,7 +291,71 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 9500000, guid: 08337723004494ac082057e0683d59ec, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 400012, guid: 08337723004494ac082057e0683d59ec, type: 3}
+      propertyPath: m_RootOrder
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 400022, guid: 08337723004494ac082057e0683d59ec, type: 3}
+      propertyPath: m_RootOrder
+      value: 11
+      objectReference: {fileID: 0}
+    - target: {fileID: 400020, guid: 08337723004494ac082057e0683d59ec, type: 3}
+      propertyPath: m_RootOrder
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 400008, guid: 08337723004494ac082057e0683d59ec, type: 3}
+      propertyPath: m_RootOrder
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 400014, guid: 08337723004494ac082057e0683d59ec, type: 3}
+      propertyPath: m_RootOrder
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 400018, guid: 08337723004494ac082057e0683d59ec, type: 3}
+      propertyPath: m_RootOrder
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 400010, guid: 08337723004494ac082057e0683d59ec, type: 3}
+      propertyPath: m_RootOrder
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 400016, guid: 08337723004494ac082057e0683d59ec, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.314
+      objectReference: {fileID: 0}
+    - target: {fileID: 400016, guid: 08337723004494ac082057e0683d59ec, type: 3}
+      propertyPath: m_RootOrder
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 400016, guid: 08337723004494ac082057e0683d59ec, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 400016, guid: 08337723004494ac082057e0683d59ec, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 400016, guid: 08337723004494ac082057e0683d59ec, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 400016, guid: 08337723004494ac082057e0683d59ec, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 400016, guid: 08337723004494ac082057e0683d59ec, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 400016, guid: 08337723004494ac082057e0683d59ec, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 400016, guid: 08337723004494ac082057e0683d59ec, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 08337723004494ac082057e0683d59ec, type: 3}
@@ -334,9 +398,9 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!4 &429788286 stripped
+--- !u!4 &1043444322 stripped
 Transform:
-  m_PrefabParentObject: {fileID: 400024, guid: 08337723004494ac082057e0683d59ec, type: 3}
+  m_PrefabParentObject: {fileID: 400016, guid: 08337723004494ac082057e0683d59ec, type: 3}
   m_PrefabInternal: {fileID: 429788283}
 --- !u!1 &1194882776
 GameObject:
@@ -416,6 +480,7 @@ GameObject:
   - component: {fileID: 1685065142}
   - component: {fileID: 1685065141}
   - component: {fileID: 1685065140}
+  - component: {fileID: 1685065144}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -445,7 +510,7 @@ Skybox:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1685065138}
   m_Enabled: 1
-  m_CustomSkybox: {fileID: 2100000, guid: 39cace2863926444a9a78daa8ae26413, type: 2}
+  m_CustomSkybox: {fileID: 2100000, guid: 046c5a01ffa3da54986eb48864e00578, type: 2}
 --- !u!81 &1685065141
 AudioListener:
   m_ObjectHideFlags: 0
@@ -472,7 +537,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0.9117647, g: 0.89475, b: 0.7575692, a: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
@@ -481,7 +546,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 75
+  field of view: 80
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -498,6 +563,17 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
+--- !u!114 &1685065144
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1685065138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7089e5c18243a814b92dcbe5204927de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1740458381
 GameObject:
   m_ObjectHideFlags: 0
@@ -531,8 +607,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   frontWheel: {fileID: 2108974711}
   backWheel: {fileID: 1793104637}
-  speedMultiplier: 10
-  maxSpeed: 1000
+  speedMultiplier: 1
+  maxSpeed: 20
   downForce: 100
 --- !u!65 &1740458383
 BoxCollider:
@@ -577,7 +653,7 @@ Transform:
   - {fileID: 1685065139}
   - {fileID: 2108974712}
   - {fileID: 1793104638}
-  - {fileID: 429788286}
+  - {fileID: 1043444322}
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -669,10 +745,10 @@ WheelCollider:
   m_Center: {x: 0, y: 0, z: 0.5}
   m_Radius: 0.3556
   m_SuspensionSpring:
-    spring: 500
-    damper: 200
+    spring: 50000
+    damper: 2
     targetPosition: 0.5
-  m_SuspensionDistance: 0.12
+  m_SuspensionDistance: 0.03
   m_ForceAppPointDistance: 0
   m_Mass: 20
   m_WheelDampingRate: 0.25

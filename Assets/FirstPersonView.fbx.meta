@@ -1,93 +1,72 @@
 fileFormatVersion: 2
 guid: 08337723004494ac082057e0683d59ec
-timeCreated: 1511867387
+timeCreated: 1511872191
 licenseType: Free
 ModelImporter:
   serializedVersion: 22
   fileIDToRecycleName:
-    100000: Circle001
-    100002: Circle002
-    100004: Circle003
-    100006: Circle004
-    100008: Compon1146
-    100010: Compon1148
-    100012: Compon2314
-    100014: Compone105
-    100016: Compone213
-    100018: Compone215
-    100020: Compone217
-    100022: Compone230
-    100024: //RootNode
-    100026: forks_001
-    100028: PhysCamera001
-    100030: PhysCamera001.Target
-    100032: Point001
-    100034: Point002
-    100036: Simple2019
-    100038: You_bette0
-    100040: You_better
-    100042: Compone231
-    400000: Circle001
-    400002: Circle002
-    400004: Circle003
-    400006: Circle004
-    400008: Compon1146
-    400010: Compon1148
-    400012: Compon2314
-    400014: Compone105
-    400016: Compone213
-    400018: Compone215
-    400020: Compone217
-    400022: Compone230
-    400024: //RootNode
-    400026: forks_001
-    400028: PhysCamera001
-    400030: PhysCamera001.Target
-    400032: Point001
-    400034: Point002
-    400036: Simple2019
-    400038: You_bette0
-    400040: You_better
-    400042: Compone231
+    100000: Compon1146
+    100002: Compon1148
+    100004: Compon2314
+    100006: Compone105
+    100008: Compone215
+    100010: Compone217
+    100012: Compone230
+    100014: Compone231
+    100016: //RootNode
+    100018: forks_001
+    100020: Simple2019
+    100022: You_bette0
+    100024: You_better
+    400000: Compon1146
+    400002: Compon1148
+    400004: Compon2314
+    400006: Compone105
+    400008: Compone215
+    400010: Compone217
+    400012: Compone230
+    400014: Compone231
+    400016: //RootNode
+    400018: forks_001
+    400020: Simple2019
+    400022: You_bette0
+    400024: You_better
     2300000: Compon1146
     2300002: Compon1148
     2300004: Compon2314
     2300006: Compone105
-    2300008: Compone213
-    2300010: Compone215
-    2300012: Compone217
-    2300014: Compone230
+    2300008: Compone215
+    2300010: Compone217
+    2300012: Compone230
+    2300014: Compone231
     2300016: forks_001
     2300018: Simple2019
     2300020: You_bette0
     2300022: You_better
-    2300024: Compone231
     3300000: Compon1146
     3300002: Compon1148
     3300004: Compon2314
     3300006: Compone105
-    3300008: Compone213
-    3300010: Compone215
-    3300012: Compone217
-    3300014: Compone230
+    3300008: Compone215
+    3300010: Compone217
+    3300012: Compone230
+    3300014: Compone231
     3300016: forks_001
     3300018: Simple2019
     3300020: You_bette0
     3300022: You_better
-    3300024: Compone231
     4300000: You_better
     4300002: Compone105
     4300004: You_bette0
-    4300006: Compone213
-    4300008: Compone215
-    4300010: forks_001
-    4300012: Compone217
-    4300014: Compone230
-    4300016: Compon1146
-    4300018: Simple2019
-    4300020: Compon1148
-    4300022: Compon2314
-    4300024: Compone231
+    4300006: Compone215
+    4300008: forks_001
+    4300010: Compone217
+    4300012: Compone230
+    4300014: Compon1146
+    4300016: Simple2019
+    4300018: Compon1148
+    4300020: Compon2314
+    4300022: Compone231
     7400000: Take 001
     9500000: //RootNode
   externalObjects:
@@ -131,11 +110,6 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: Material2
     second: {fileID: 2100000, guid: bfa37da208ca84e97920769772492e68, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Material3
-    second: {fileID: 2100000, guid: 04e1f8c773b0f4b4b95f068904bf8c64, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
