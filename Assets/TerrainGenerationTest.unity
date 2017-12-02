@@ -198,7 +198,7 @@ MonoBehaviour:
   Weight: 0.5
   Resolution: 513
   Size: 256
-  Seed: 42
+  Seed: 425
   Octaves: 4
   Lacunarity: 1.6
   Persistance: 0.4
@@ -213,7 +213,7 @@ MonoBehaviour:
   FeatureFrequency2: 1
   NoiseType2: 0
   Enable2: 1
-  Depth: 120
+  Depth: 100
   WaterLevel: 0.01
   VegeationMaxLevel: 0.3
   exponent: 3
