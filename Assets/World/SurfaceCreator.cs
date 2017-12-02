@@ -97,9 +97,9 @@ public class SurfaceCreator : MonoBehaviour {
         // TODO Decide where to launch player!
         GameObject player = GameObject.Find("Player");
         
-        float height = terrain.terrainData.GetInterpolatedHeight(150, 150);
+        float height = terrain.terrainData.GetInterpolatedHeight(150f/terrain.terrainData.size[0], 150f/terrain.terrainData.size[2]);
         Debug.Log(height);
-        player.transform.position = new Vector3(150, height, 150);
+        player.transform.position = new Vector3(150, height, 150) + terrain.transform.position;
     }
 
     public void Refresh()
@@ -164,11 +164,11 @@ public class SurfaceCreator : MonoBehaviour {
         PathTools.Bounded8Neighbours neighbours = new PathTools.Bounded8Neighbours(lowerBound, upperBound);
         PathTools.NormalZThresholdWalkable walkable_src = new PathTools.NormalZThresholdWalkable(Mathf.Cos(Mathf.Deg2Rad * 30), terrain.terrainData, Resolution, lowerBound, upperBound);
         PathTools.CachedWalkable walkable = new PathTools.CachedWalkable(walkable_src.IsWalkable, lowerBound, upperBound, Resolution);
-        PathTools.Octile8GridSlopeStepCost AStarStepCost = new PathTools.Octile8GridSlopeStepCost(5000, 2, heights);
+        PathTools.Octile8GridSlopeStepCost AStarStepCost = new PathTools.Octile8GridSlopeStepCost(5000, 5, heights);
         //SubgoalGraph search = new SubgoalGraph(Resolution, walkable.IsWalkable);
 
         paths = new PathFinder(AStarStepCost.StepCosts, Resolution, heights);
-        AStar search = new AStar(walkable.IsWalkable, neighbours.GetNeighbors, paths.StepCostsRoad, MapTools.OctileDistance, 2.01f);
+        AStar search = new AStar(walkable.IsWalkable, neighbours.GetNeighbors, paths.StepCostsRoad, MapTools.OctileDistance, 500f);
         paths.SetSearch(search);
         search.PrepareSearch(Resolution * Resolution);
         //SubgoalGraph metaSearch = new SubgoalGraph(Resolution, walkable.IsWalkable, paths);

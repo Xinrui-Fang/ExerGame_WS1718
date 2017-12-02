@@ -26,18 +26,17 @@ public static class PathTools
             upperY = Mathf.Max(boundA.y, boundB.y);
         }
 
-        public IEnumerable<Vector2Int> GetNeighbors(int x, int y)
+        public void GetNeighbors(int x, int y, Location2D[] Neighbors)
         {
             Vector2Int node = new Vector2Int(x, y);
             List<Vector2Int> neighbors = new List<Vector2Int>(8);
-            foreach(Vector2Int step in NeigborSteps)
+            for (int i = 0; i < NeigborSteps.Length; i++)
             {
-                Vector2Int neighbor = node + step;
-                if (neighbor.x >= lowerX && neighbor.x <= upperX
-                    && neighbor.y >= lowerY && neighbor.y <= upperY)
-                    neighbors.Add(neighbor);
+                Neighbors[i].x = NeigborSteps[i].x + x;
+                Neighbors[i].y = NeigborSteps[i].y + y;
+                Neighbors[i].valid = (Neighbors[i].x >= lowerX && Neighbors[i].x <= upperX
+                    && Neighbors[i].y >= lowerY && Neighbors[i].y <= upperY);
             }
-            return neighbors;
         }
 
     }
@@ -76,18 +75,20 @@ public static class PathTools
     {
         public float thresholdPercentile;
         public float[,] Heights;
-        DGetNeighbors Neighbors;
         public int lowerX, lowerY, upperX, upperY;
+        private DGetNeighbors GetNeighbors;
+        private Location2D[] Neighbours;
 
-        public SteepNessThresholdWalkable(float percentile, float[,] heights, DGetNeighbors neighbors, Vector2Int boundA, Vector2Int boundB)
+        public SteepNessThresholdWalkable(float percentile, float[,] heights, DGetNeighbors neighbors, Vector2Int boundA, Vector2Int boundB, int maxNeighboursCount)
         {
             lowerX = Mathf.Min(boundA.x, boundB.x);
             lowerY = Mathf.Min(boundA.y, boundB.y);
             upperX = Mathf.Max(boundA.x, boundB.x);
             upperY = Mathf.Max(boundA.y, boundB.y);
-            Neighbors = neighbors;
+            GetNeighbors = neighbors;
             Heights = heights;
             thresholdPercentile = percentile;
+            Neighbours = new Location2D[maxNeighboursCount]; 
             //Debug.Log(string.Format("lx{0} ly{1} ux{2} ux{3}", lowerX, lowerY, upperX, upperY));
         }
 
@@ -98,7 +99,8 @@ public static class PathTools
                 //Debug.Log(string.Format("{0}, {1} not walkable because it is outside of the grid.", x, y));
                 return false;
             }
-            foreach (Vector2Int neighbor in Neighbors(x, y))
+            GetNeighbors(x, y, Neighbours);
+            foreach (Location2D neighbor in Neighbours)
             {
                 if ((Heights[x, y] - Heights[neighbor.x, neighbor.y])> thresholdPercentile)
                 {

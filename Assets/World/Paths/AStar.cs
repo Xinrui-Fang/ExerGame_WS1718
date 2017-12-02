@@ -1,55 +1,8 @@
 ﻿using UnityEngine;
 using PathInterfaces;
 using Priority_Queue;
-using System.Collections;
 using System.Collections.Generic;
 using System;
-
-public struct Location2D: IEquatable<Location2D> // 2 * 4 Byte
-{
-    public int x, y; // 2 * 4 Byte
-
-    public override bool Equals(object obj)
-    {
-        return obj is PathNode && this == (Location2D)obj;
-    }
-
-    public bool Equals(Location2D other)
-    {
-        return this == other;
-    }
-
-    public override int GetHashCode()
-    {
-        unchecked // overflow is not a problem.
-        {
-            int hash = 977; // prime
-            hash *= 881 * x; // 881 is prime
-            hash *= 881 * y;
-            return hash;
-        }
-    }
-
-    public static bool operator ==(Location2D x, Location2D y)
-    {
-        return x.x == y.x && x.y == y.y;
-    }
-
-    public static bool operator !=(Location2D x, Location2D y)
-    {
-        return !(x == y);
-    }
-
-    public static Location2D FromVector2Int(Vector2Int vector)
-    {
-        Location2D a = new Location2D
-        {
-            x = vector.x,
-            y = vector.y
-        };
-        return a;
-    }
-}
 
 public struct PathNode : IEquatable<PathNode>
 {
@@ -93,23 +46,25 @@ public struct PathNode : IEquatable<PathNode>
 
 public class AStar: PathSearch
 {
+    public uint Steps;
     private readonly DIsWalkable Walkable;
-    private readonly DGetNeighbors Neighbors;
+    private readonly DGetNeighbors GetNeighbors;
     private readonly DGetStepCost RealCosts;
     private readonly DGetStepCost Heuristic;
     private readonly float Epsilon;
-    public uint Steps;
     private PathNode[] Nodes;
     private uint nextNodeIDx;
     private bool prepared = false;
+    private int MaxNeighbors;
 
-    public AStar(DIsWalkable walkable, DGetNeighbors neighbors, DGetStepCost realCosts, DGetStepCost heuristic, float epsilon)
+    public AStar(DIsWalkable walkable, DGetNeighbors neighbors, DGetStepCost realCosts, DGetStepCost heuristic, float epsilon=0f, int maxNeightbors=8)
     {
         Walkable = walkable;
-        Neighbors = neighbors;
+        GetNeighbors = neighbors;
         RealCosts = realCosts;
         Heuristic = heuristic;
         Epsilon = 1f + epsilon;
+        MaxNeighbors = maxNeightbors;
     }
 
     public void PrepareSearch(int ExpectedNodesCount)
@@ -161,9 +116,12 @@ public class AStar: PathSearch
     {
         Debug.Log(string.Format("Searching for path from {0} to {1}", start, end));
         SimplePriorityQueue<uint> Opened = new SimplePriorityQueue<uint>();
-        Dictionary<Vector2Int, uint> NodeCache = new Dictionary<Vector2Int, uint>();
+        Dictionary<Location2D, uint> NodeCache = new Dictionary<Location2D, uint>();
+        Location2D[] NeighBors = new Location2D[MaxNeighbors];
         this.nextNodeIDx = 0;
 
+        Location2D startL = Location2D.FromVector2Int(start);
+        Location2D endL = Location2D.FromVector2Int(end);
         if (!Walkable(end.x, end.y))
         {
             Debug.Log("End node is not walkable");
@@ -174,10 +132,9 @@ public class AStar: PathSearch
         Nodes[current].CameFrom = -1;
         endIdx = AddNode(end.x, end.y);
         Nodes[endIdx].Walkable = Walkable(end.x, end.y);
-        NodeCache[start] = current;
-        NodeCache[end] = endIdx;
+        NodeCache[startL] = current;
+        NodeCache[endL] = endIdx;
         Opened.Enqueue(current, 0f); // FCost does not matter for first node.
-
         //float dist = MapTools.OctileDistance(start, end);
         Steps = 0;
         while (Opened.Count > 0)
@@ -189,8 +146,10 @@ public class AStar: PathSearch
                 return ReconstructPath(current);
 
             Nodes[current].Closed = true;
-            foreach (Vector2Int nextV in Neighbors(Nodes[current].x, Nodes[current].y))
+            GetNeighbors(Nodes[current].x, Nodes[current].y, NeighBors);
+            foreach (Location2D nextV in NeighBors)
             {
+                if (!nextV.valid) continue; // skip if e.g. neighbor is out of grid.
                 if (NodeCache.ContainsKey(nextV))
                 {
                     next = (uint) NodeCache[nextV];
