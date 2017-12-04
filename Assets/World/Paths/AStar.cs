@@ -44,27 +44,25 @@ public struct PathNode : IEquatable<PathNode>
     }
 }
 
-public class AStar: PathSearch
+public class AStar: IPathSearch
 {
     public uint Steps;
     private readonly DIsWalkable Walkable;
-    private readonly DGetNeighbors GetNeighbors;
+    private readonly IGetNeighbors NeighborSource;
     private readonly DGetStepCost RealCosts;
     private readonly DGetStepCost Heuristic;
     private readonly float Epsilon;
     private PathNode[] Nodes;
     private uint nextNodeIDx;
     private bool prepared = false;
-    private int MaxNeighbors;
 
-    public AStar(DIsWalkable walkable, DGetNeighbors neighbors, DGetStepCost realCosts, DGetStepCost heuristic, float epsilon=0f, int maxNeightbors=8)
+    public AStar(DIsWalkable walkable, IGetNeighbors neighbors, DGetStepCost realCosts, DGetStepCost heuristic, float epsilon=0f)
     {
         Walkable = walkable;
-        GetNeighbors = neighbors;
+        NeighborSource = neighbors;
         RealCosts = realCosts;
         Heuristic = heuristic;
         Epsilon = 1f + epsilon;
-        MaxNeighbors = maxNeightbors;
     }
 
     public void PrepareSearch(int ExpectedNodesCount)
@@ -117,7 +115,7 @@ public class AStar: PathSearch
         Debug.Log(string.Format("Searching for path from {0} to {1}", start, end));
         SimplePriorityQueue<uint> Opened = new SimplePriorityQueue<uint>();
         Dictionary<Location2D, uint> NodeCache = new Dictionary<Location2D, uint>();
-        Location2D[] NeighBors = new Location2D[MaxNeighbors];
+        Location2D[] NeighBors = NeighborSource.AllocateArray();
         this.nextNodeIDx = 0;
 
         Location2D startL = Location2D.FromVector2Int(start);
@@ -146,7 +144,7 @@ public class AStar: PathSearch
                 return ReconstructPath(current);
 
             Nodes[current].Closed = true;
-            GetNeighbors(Nodes[current].x, Nodes[current].y, NeighBors);
+            NeighborSource.GetNeighbors(Nodes[current].x, Nodes[current].y, NeighBors);
             foreach (Location2D nextV in NeighBors)
             {
                 if (!nextV.valid) continue; // skip if e.g. neighbor is out of grid.

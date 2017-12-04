@@ -167,8 +167,9 @@ public class SurfaceCreator : MonoBehaviour {
         PathTools.Octile8GridSlopeStepCost AStarStepCost = new PathTools.Octile8GridSlopeStepCost(5000, 5, heights);
         //SubgoalGraph search = new SubgoalGraph(Resolution, walkable.IsWalkable);
 
-        paths = new PathFinder(AStarStepCost.StepCosts, Resolution, heights);
-        AStar search = new AStar(walkable.IsWalkable, neighbours.GetNeighbors, paths.StepCostsRoad, MapTools.OctileDistance, 500f);
+        PathTools.ConnectivityLabel connectivity = new PathTools.ConnectivityLabel(terrain.terrainData, neighbours, walkable.IsWalkable);
+        paths = new PathFinder(AStarStepCost.StepCosts, Resolution, heights, connectivity);
+        AStar search = new AStar(walkable.IsWalkable, neighbours, paths.StepCostsRoad, MapTools.OctileDistance, 5f);
         paths.SetSearch(search);
         search.PrepareSearch(Resolution * Resolution);
         //SubgoalGraph metaSearch = new SubgoalGraph(Resolution, walkable.IsWalkable, paths);
@@ -177,7 +178,7 @@ public class SurfaceCreator : MonoBehaviour {
             System.Random prng = new System.Random((int)Seed);
             Vector2Int start = new Vector2Int();
             Vector2Int end = new Vector2Int();
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 8; i++)
             {
                 start = MapTools.UnfoldToPerimeter(prng.Next(0, 4 * (Resolution - 1)), Resolution - 1);
                 end = MapTools.UnfoldToPerimeter(prng.Next(0, 4 * (Resolution - 1)), Resolution - 1);

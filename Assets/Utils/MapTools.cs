@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using MapToolsInterfaces;
+using UtilsInterface;
+using PathInterfaces;
 
 public class MapTools
 {
@@ -62,88 +63,138 @@ public class MapTools
         return false;
     }
 
-    // Gets all coordinates adjacednt to a given nodes on a grid. gridSize is the resolution of the grid.
-    // optionally use: StepSize to jump over direct adjacent nodes. width: How many neighbours of neighbours to include.
-    // includeSelf: if true include node in the list of neighbours.
-    public static IEnumerable<Vector2Int> GetNeighbours(Vector2Int node, Vector2Int upperLimit, Vector2Int lowerLimit, int StepSize=1, int width=1, bool includeSelf=false)
+    public class VariableDistNeighbors : IGetNeighbors
     {
-        if (includeSelf)
-            yield return node;
-        for (int i = 1; i <= width; i++)
+        private readonly int lowerX, lowerY, upperX, upperY, StepSize, Width;
+        private readonly bool IncludeSelf;
+
+        public VariableDistNeighbors(Vector2Int boundA, Vector2Int boundB, int stepSize = 1, int width = 1, bool includeSelf = false)
         {
-            if (lowerLimit.x <= node.x - i * StepSize)
+
+            lowerX = Mathf.Min(boundA.x, boundB.x);
+            lowerY = Mathf.Min(boundA.y, boundB.y);
+            upperX = Mathf.Max(boundA.x, boundB.x);
+            upperY = Mathf.Max(boundA.y, boundB.y);
+            IncludeSelf = includeSelf;
+            Width = width;
+            StepSize = stepSize;
+        }
+        public Location2D[] AllocateArray()
+        {
+            return new Location2D[(1 + 2*Width) * (1 + 2*Width)];
+        }
+
+        // Gets all coordinates adjacednt to a given nodes on a grid. gridSize is the resolution of the grid.
+        // optionally use: StepSize to jump over direct adjacent nodes. width: How many neighbours of neighbours to include.
+        // includeSelf: if true include node in the list of neighbours.
+        public void GetNeighbors(int x, int y, Location2D[] Neighbors)
+        {
+            int i = 0;
+            for (int xi=x-(Width * StepSize); xi <= x+(Width * StepSize); xi += StepSize)
             {
-                int xCoord = node.x - i * StepSize;
-                yield return new Vector2Int(xCoord, node.y);
-                for (int j = 1; j <= width; j++)
+                for (int yi = y - (Width * StepSize); yi <= y + (Width * StepSize); yi += StepSize)
                 {
-                    if (lowerLimit.y <= node.y - j * StepSize)
-                        yield return new Vector2Int(xCoord, node.y - j * StepSize);
-                    if (upperLimit.y > node.y + j * StepSize)
-                        yield return new Vector2Int(xCoord, node.y + j * StepSize);
+                    Neighbors[i].x = xi;
+                    Neighbors[i].y = yi;
+                    Neighbors[i].valid = (Neighbors[i].x >= lowerX && Neighbors[i].x <= upperX
+                    && Neighbors[i].y >= lowerY && Neighbors[i].y <= upperY);
+                    if (Neighbors[i].valid && xi == x && yi == y) Neighbors[i].valid = IncludeSelf;
+                    i++;
                 }
             }
+        }
+    }
 
-            if (lowerLimit.y <= node.y - i * StepSize)
-                yield return new Vector2Int(node.x, node.y - i * StepSize);
-            if (upperLimit.y > node.y + i * StepSize)
-                yield return new Vector2Int(node.x, node.y + i * StepSize);
+    public class VariableDistCircle : IGetNeighbors
+    {
+        private readonly int Target;
+        private readonly IGetNeighbors NeighborSource;
 
-            if (upperLimit.x > node.x + i * StepSize)
+        public VariableDistCircle(Vector2Int boundA, Vector2Int boundB, int stepSize, int radius, bool includeSelf = true)
+        {
+            NeighborSource = new VariableDistNeighbors(boundA, boundB, stepSize, radius, includeSelf);
+            Target = radius * radius;
+        }
+        public Location2D[] AllocateArray()
+        {
+            return NeighborSource.AllocateArray();
+        }
+
+        // Gets all coordinates adjacednt to a given nodes on a grid. gridSize is the resolution of the grid.
+        // optionally use: StepSize to jump over direct adjacent nodes. width: How many neighbours of neighbours to include.
+        // includeSelf: if true include node in the list of neighbours.
+        public void GetNeighbors(int x, int y, Location2D[] Neighbors)
+        {
+            NeighborSource.GetNeighbors(x, y, Neighbors);
+            for (int i=0; i<Neighbors.Length; i++)
             {
-                int xCoord = node.x + i * StepSize;
-                yield return new Vector2Int(xCoord, node.y);
-                for (int j = 1; j <= width; j++)
-                {
-                    if (lowerLimit.y <= node.y - j * StepSize)
-                        yield return new Vector2Int(xCoord, node.y - j * StepSize);
-                    if (upperLimit.y > node.y + j * StepSize)
-                        yield return new Vector2Int(xCoord, node.y + j * StepSize);
-                }
+                if (!Neighbors[i].valid) continue;
+                Neighbors[i].valid = (Neighbors[i].x - x) * (Neighbors[i].x - x) + (Neighbors[i].y - y) * (Neighbors[i].y - y) <= Target;
             }
-
         }
     }
 
-    // Gets All Nodes in a circle of given radius around a node.
-    public static IEnumerable<Vector2Int> GetCircleNodes(Vector2Int node, Vector2Int upperLimit, Vector2Int lowerLimit, int stepSize, int radius, bool includeSelf = false)
+    // Applies Kernel to smoothen Data on Neighbourhood.
+    public class KernelAppliance
     {
-        float target = radius * radius;
-        foreach (Vector2Int next in GetNeighbours(node, upperLimit, lowerLimit, stepSize, radius, includeSelf))
+        private readonly IGetNeighbors NeighbourSource, InnerNeighbourSource;
+        private readonly IKernel Kernel;
+        public float[,] Data;
+        private Location2D[] Neighbours, InnerNeighbours;
+
+        public KernelAppliance(IGetNeighbors neighborSource, IGetNeighbors innerNeighborSource, IKernel kernel, float[,] data)
         {
-            if ((next.x - node.x) * (next.x - node.x) + (next.y - node.y) * (next.y - node.y) <= target)
-                yield return next;
+            NeighbourSource = neighborSource;
+            InnerNeighbourSource = innerNeighborSource;
+            Kernel = kernel;
+            Data = data;
+            Neighbours = NeighbourSource.AllocateArray();
+            InnerNeighbours = InnerNeighbourSource.AllocateArray();
+            Debug.Log(string.Format("Setting up Kernel Appliance. Got Inner Array of Lenght {0} Outer Array {1}", InnerNeighbours.Length, Neighbours.Length));
+        }
+
+        public void Apply(int x, int y)
+        {
+            NeighbourSource.GetNeighbors(x, y, Neighbours);
+            foreach(Location2D neighbor in Neighbours)
+            {
+                if (!neighbor.valid) continue;
+                InnerNeighbourSource.GetNeighbors(neighbor.x, neighbor.y, InnerNeighbours);
+                Data[neighbor.x, neighbor.y] = Kernel.ApplyKernel(neighbor.x, neighbor.y, InnerNeighbours, Data);
+            }
         }
     }
 
-    public static void SmoothCircular(Vector2Int node, Vector2Int upperLimit, Vector2Int lowerLimit, int radius, float[,] heights, IKernel kernel)
+    public class Flatten
     {
-        foreach (Vector2Int circleNode in GetCircleNodes(node, upperLimit, lowerLimit, 1, radius, true))
-        {
-            heights[circleNode.x, circleNode.y] = kernel.ApplyKernel(circleNode, GetCircleNodes(circleNode, upperLimit, lowerLimit, 1, 1, true), heights);
-        }
-    }
+        private readonly IGetNeighbors NeighbourSource;
+        public float[,] Data;
+        private Location2D[] Neighbours;
 
-    public static void SmoothRectangle(Vector2Int node, Vector2Int upperLimit, Vector2Int lowerLimit, int width, float[,] heights, IKernel kernel)
-    {
-        foreach (Vector2Int point in GetNeighbours(node, upperLimit, lowerLimit, 1, width, true))
+        public Flatten(IGetNeighbors neighborSource, float[,] data)
         {
-            heights[point.x, point.y] = kernel.ApplyKernel(point, GetCircleNodes(point, upperLimit, lowerLimit, 1, 1, true), heights);
+            NeighbourSource = neighborSource;
+            Data = data;
+            Neighbours = NeighbourSource.AllocateArray();
         }
-    }
 
-    public static void FlattenCircular(Vector2Int node, Vector2Int upperLimit, Vector2Int lowerLimit, int radius, float[,] heights)
-    {
-        float avg = 0f;
-        List<Vector2Int> circle = new List<Vector2Int>(GetCircleNodes(node, upperLimit, lowerLimit, 1, radius, true));
-        foreach (Vector2Int point in circle)
+        public void Apply(int x, int y)
         {
-            avg += heights[point.x, point.y];
-        }
-        avg /= circle.Count;
-        foreach (Vector2Int point in circle)
-        {
-            heights[point.x, point.y] = avg;
+            NeighbourSource.GetNeighbors(x, y, Neighbours);
+            float avg = 0;
+            float count = 0;
+            foreach (Location2D neighbor in Neighbours)
+            {
+                if (!neighbor.valid) continue;
+                avg += Data[neighbor.x, neighbor.y];
+                count++;
+            }
+            if (count > 0) avg /= count;
+            foreach (Location2D neighbor in Neighbours)
+            {
+                if (!neighbor.valid) continue;
+                Data[neighbor.x, neighbor.y] = avg;
+            }
         }
     }
 

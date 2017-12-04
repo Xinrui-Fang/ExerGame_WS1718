@@ -1,34 +1,38 @@
 ﻿using UnityEngine;
-using MapToolsInterfaces;
+using UtilsInterface;
 using System.Collections.Generic;
 
 public class OctileDistKernel: IKernel
 {
-    public float ApplyKernel(Vector2Int self, IEnumerable<Vector2Int> nodes, float[,] values)
+    public float ApplyKernel(int x, int y, IEnumerable<Location2D> nodes, float[,] data)
     {
         float avg = 0f;
         float normalizer = 0f;
-        foreach (Vector2Int node in nodes)
+        foreach (Location2D node in nodes)
         {
-            float dist = MapTools.OctileDistance(self.x, self.y, node.x, node.y);
-            avg += values[node.x, node.y] / (1f + dist);
+            if (!node.valid) continue;
+            float dist = MapTools.OctileDistance(x, y, node.x, node.y);
+            avg += data[node.x, node.y] / (1f + dist);
             normalizer += 1f / (1f + dist);
         }
+        if (normalizer == 0) return 0;
         return avg / normalizer;
     }
 }
 
 public class AvgKernel: IKernel
 {
-    public float ApplyKernel(Vector2Int self, IEnumerable<Vector2Int> nodes, float[,] values)
+    public float ApplyKernel(int x, int y, IEnumerable<Location2D> nodes, float[,] data)
     {
         float avg = 0f;
         float normalizer = 0f;
-        foreach (Vector2Int node in nodes)
+        foreach (Location2D node in nodes)
         {
-            avg += values[node.x, node.y];
+            if (!node.valid) continue;
+            avg += data[node.x, node.y];
             normalizer += 1f;
         }
+        if (normalizer == 0) return 0;
         return avg / normalizer;
     }
 }

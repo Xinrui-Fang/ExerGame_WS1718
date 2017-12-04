@@ -1,10 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-namespace MapToolsInterfaces
+namespace UtilsInterface
 {
     public interface IKernel
     {
-        float ApplyKernel(Vector2Int node, IEnumerable<Vector2Int> nodes, float[,] values);
+        float ApplyKernel(int x, int y, IEnumerable<Location2D> nodes, float[,] data);
+    }
+
+    public interface IFixedSizeArrayIterator<ArrayType>
+    {
+        ArrayType[] AllocateArray();
     }
 }

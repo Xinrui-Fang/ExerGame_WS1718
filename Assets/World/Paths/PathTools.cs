@@ -9,7 +9,7 @@ public static class PathTools
         return ax == bx && ay == by;
     }
 
-    public class Bounded8Neighbours
+    public class Bounded8Neighbours: IGetNeighbors
     {
         public int lowerX, lowerY, upperX, upperY;
         private static Vector2Int[] NeigborSteps = new Vector2Int[]
@@ -28,8 +28,6 @@ public static class PathTools
 
         public void GetNeighbors(int x, int y, Location2D[] Neighbors)
         {
-            Vector2Int node = new Vector2Int(x, y);
-            List<Vector2Int> neighbors = new List<Vector2Int>(8);
             for (int i = 0; i < NeigborSteps.Length; i++)
             {
                 Neighbors[i].x = NeigborSteps[i].x + x;
@@ -39,13 +37,16 @@ public static class PathTools
             }
         }
 
+        public Location2D[] AllocateArray()
+        {
+            return new Location2D[8];
+        }
     }
 
     public class NormalZThresholdWalkable
     {
         public float thresholdPercentile;
         private TerrainData terrainData;
-        DGetNeighbors Neighbors;
         public int lowerX, lowerY, upperX, upperY;
         float Resolution;
 
@@ -76,19 +77,19 @@ public static class PathTools
         public float thresholdPercentile;
         public float[,] Heights;
         public int lowerX, lowerY, upperX, upperY;
-        private DGetNeighbors GetNeighbors;
+        IGetNeighbors NeighborSource;
         private Location2D[] Neighbours;
 
-        public SteepNessThresholdWalkable(float percentile, float[,] heights, DGetNeighbors neighbors, Vector2Int boundA, Vector2Int boundB, int maxNeighboursCount)
+        public SteepNessThresholdWalkable(float percentile, float[,] heights, IGetNeighbors neighbors, Vector2Int boundA, Vector2Int boundB)
         {
             lowerX = Mathf.Min(boundA.x, boundB.x);
             lowerY = Mathf.Min(boundA.y, boundB.y);
             upperX = Mathf.Max(boundA.x, boundB.x);
             upperY = Mathf.Max(boundA.y, boundB.y);
-            GetNeighbors = neighbors;
+            NeighborSource = neighbors;
             Heights = heights;
             thresholdPercentile = percentile;
-            Neighbours = new Location2D[maxNeighboursCount]; 
+            Neighbours = NeighborSource.AllocateArray(); 
             //Debug.Log(string.Format("lx{0} ly{1} ux{2} ux{3}", lowerX, lowerY, upperX, upperY));
         }
 
@@ -99,7 +100,7 @@ public static class PathTools
                 //Debug.Log(string.Format("{0}, {1} not walkable because it is outside of the grid.", x, y));
                 return false;
             }
-            GetNeighbors(x, y, Neighbours);
+            NeighborSource.GetNeighbors(x, y, Neighbours);
             foreach (Location2D neighbor in Neighbours)
             {
                 if ((Heights[x, y] - Heights[neighbor.x, neighbor.y])> thresholdPercentile)
@@ -199,6 +200,137 @@ public static class PathTools
                 return 1.41f * cost * Weight;
             }
             return cost * Weight;
+        }
+    }
+
+    public class ConnectivityLabel
+    {
+        private readonly TerrainData Data;
+        private DIsWalkable IsWalkable;
+        public int[,] Labels;
+        private int nextLabel;
+        private readonly int lowerX, lowerY, upperX;
+
+        public ConnectivityLabel(TerrainData data, IGetNeighbors neighborSource, DIsWalkable isWalkable)
+        {
+            Data = data;
+            Labels = new int[data.heightmapResolution, data.heightmapResolution];
+            IsWalkable = isWalkable;
+            lowerX = 0;
+            lowerY = 0;
+            upperX = data.heightmapResolution -1;
+            CalculateLabels();
+        }
+
+        public void CalculateLabels()
+        {
+            int labelCounter = 1;
+            int[] Predecessors = new int[4];
+            int validPredecessors;
+            List<UnionFindNode<int>> UnionFindTree = new List<UnionFindNode<int>>();
+            for (int x = 0; x < Data.heightmapResolution; x++)
+            {
+                for (int y = 0; y < Data.heightmapResolution; y++)
+                {
+                    if (!IsWalkable(x, y))
+                    {
+                        Labels[x, y] = -1;
+                        continue;
+                    }
+                    validPredecessors = 0;
+                    if (x - 1 >= lowerX)
+                    {
+                        if (Labels[x - 1, y] > 0) Predecessors[validPredecessors++] = Labels[x - 1, y];
+                        if (y - 1 >= lowerY)
+                        {
+                            if (Labels[x - 1, y - 1] > 0) Predecessors[validPredecessors++] = Labels[x - 1, y - 1];
+                        }
+                    }
+                    if (y - 1 >= lowerY)
+                    {
+                        if (Labels[x, y - 1] > 0) Predecessors[validPredecessors++] = Labels[x, y - 1];
+                        if (x + 1 <= upperX)
+                        {
+                            if (Labels[x + 1, y - 1] > 0) Predecessors[validPredecessors++] = Labels[x + 1, y - 1];
+                        }
+                    }
+                    // Cases
+                    switch (validPredecessors)
+                    {
+                        case 0:
+                            UnionFindTree.Add(new UnionFindNode<int>(labelCounter));
+                            Labels[x, y] = labelCounter;
+                            labelCounter++;
+                            break;
+                        case 1:
+                            Labels[x, y] = Predecessors[0];
+                            break;
+                        case 2:
+                            Labels[x, y] = Predecessors[0];
+                            if (Predecessors[0] != Predecessors[1])
+                            {
+                                UnionFindNode<int>.Union(UnionFindTree[Predecessors[0] - 1], UnionFindTree[Predecessors[1] - 1]);
+                            }
+                            break;
+                        case 3:
+                            Labels[x, y] = Predecessors[0];
+                            if (Predecessors[0] != Predecessors[1])
+                            {
+                                UnionFindNode<int>.Union(UnionFindTree[Predecessors[0] - 1], UnionFindTree[Predecessors[1] - 1]);
+                            }
+                            if (Predecessors[0] != Predecessors[2])
+                            {
+                                UnionFindNode<int>.Union(UnionFindTree[Predecessors[0] - 1], UnionFindTree[Predecessors[2] - 1]);
+                            }
+                            if (Predecessors[1] != Predecessors[2])
+                            {
+                                UnionFindNode<int>.Union(UnionFindTree[Predecessors[1] - 1], UnionFindTree[Predecessors[2] - 1]);
+                            }
+                            break;
+                        case 4:
+                            Labels[x, y] = Predecessors[0];
+                            if (Predecessors[0] != Predecessors[1])
+                            {
+                                UnionFindNode<int>.Union(UnionFindTree[Predecessors[0] - 1], UnionFindTree[Predecessors[1] - 1]);
+                            }
+                            if (Predecessors[0] != Predecessors[2])
+                            {
+                                UnionFindNode<int>.Union(UnionFindTree[Predecessors[0] - 1], UnionFindTree[Predecessors[2] - 1]);
+                            }
+                            if (Predecessors[1] != Predecessors[2])
+                            {
+                                UnionFindNode<int>.Union(UnionFindTree[Predecessors[1] - 1], UnionFindTree[Predecessors[2] - 1]);
+                            }
+                            if (Predecessors[0] != Predecessors[3])
+                            {
+                                UnionFindNode<int>.Union(UnionFindTree[Predecessors[0] - 1], UnionFindTree[Predecessors[3] - 1]);
+                            }
+                            if (Predecessors[1] != Predecessors[3])
+                            {
+                                UnionFindNode<int>.Union(UnionFindTree[Predecessors[1] - 1], UnionFindTree[Predecessors[3] - 1]);
+                            }
+                            if (Predecessors[2] != Predecessors[3])
+                            {
+                                UnionFindNode<int>.Union(UnionFindTree[Predecessors[2] - 1], UnionFindTree[Predecessors[3] - 1]);
+                            }
+                            break;
+                    }
+                }
+            }
+            for (int i = 0; i < UnionFindTree.Count; i++)
+            {
+                UnionFindTree[i] = UnionFindTree[i].Find();
+            }
+            for (int x = 0; x < Data.heightmapResolution; x++)
+            {
+                for (int y = 0; y < Data.heightmapResolution; y++)
+                {
+                    if (Labels[x, y] > 0)
+                    {
+                        Labels[x, y] = UnionFindTree[Labels[x, y] - 1].Value;
+                    }
+                }
+            }
         }
     }
 }

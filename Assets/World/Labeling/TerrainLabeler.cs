@@ -8,9 +8,12 @@ public static class TerrainLabeler
 {
     public static TerrainData MapTerrain(INoise2DProvider noise, TerrainData terrainData, bool[,] streetMap, float WaterLevel, float VegetationMaxHeight)
     {
-        Vector2Int heightmapLimits = new Vector2Int(terrainData.heightmapWidth, terrainData.heightmapWidth);
+        Vector2Int heightmapLimits = new Vector2Int(terrainData.heightmapWidth - 1, terrainData.heightmapWidth - 1);
+        Vector2 location = new Vector2();
         // Splatmap data is stored internally as a 3d array of floats, so declare a new empty array ready for your custom splatmap data:
         float[,,] splatmapData = new float[terrainData.alphamapWidth, terrainData.alphamapHeight, terrainData.alphamapLayers];
+        MapTools.VariableDistCircle GetCircleNodes = new MapTools.VariableDistCircle(heightmapLimits, new Vector2Int(0, 0), 1, 1);
+        Location2D[] CircleNodes = GetCircleNodes.AllocateArray();
 
         for (int y = 0; y < terrainData.alphamapHeight; y++)
         {
@@ -19,7 +22,8 @@ public static class TerrainLabeler
                 // Normalise x/y coordinates to range 0-1 
                 float y_01 = (float)y / (float)terrainData.alphamapHeight;
                 float x_01 = (float)x / (float)terrainData.alphamapWidth;
-
+                location.x = x_01;
+                location.y = x_01;
                 int x_heightmap = Mathf.CeilToInt(x_01 * (terrainData.heightmapWidth - 1));
                 int y_heightmap = Mathf.CeilToInt(y_01 * (terrainData.heightmapWidth -1));
 
@@ -38,16 +42,17 @@ public static class TerrainLabeler
                 }
                 else
                 {
-                    foreach (var node in MapTools.GetCircleNodes(new Vector2Int(x_heightmap, y_heightmap), heightmapLimits, new Vector2Int(0, 0), 1, 1, true))
+                    GetCircleNodes.GetNeighbors(x_heightmap, y_heightmap, CircleNodes);
+                    foreach (var node in CircleNodes)
                     {
-                        if (streetMap[node.x, node.y])
+                        if (node.valid && streetMap[node.x, node.y])
                         {
                             isStreetMapNeighbour = true;
                             streetNeighbourFactor += .125f / (1f + MapTools.OctileDistance(x_heightmap, y_heightmap, node.x, node.y));
                         }
                     }
                     // Calculate the steepness of the terrain
-                    float moisture = .5f + noise.Evaluate(new Vector2(x_01, y_01))/2f;
+                    float moisture = .5f + noise.Evaluate(location)/2f;
                     Vector3 normal = terrainData.GetInterpolatedNormal(x_01, y_01);
                     float steepness = Mathf.InverseLerp(0f, terrainData.size[1], terrainData.GetSteepness(y_01, x_01));
                     float slope = steepness * steepness;

@@ -12,7 +12,7 @@ namespace HeightMapInterfaces
     public interface IScannableHeightSource: IHeightSource
     {
         // Performs the Height generation for a certain position. Vector2 should be scaled according to target resolution.
-        float ScanHeight(Vector2 position);
+        float ScanHeight(Vector2 point);
     }
 
     public interface IHeightPostProcessor

@@ -43,7 +43,6 @@ public class Fractal2DNoise : INoise2DProvider
         float layered = noise.Evaluate(point);
         float amplitude = 1f;
         float range = 1f;
-
         for (int i=0; i < Octaves; i++)
         {
             amplitude *= Persistance;

@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using MapToolsInterfaces;
+using UtilsInterface;
 using PathInterfaces;
 
 public class PathFinder
@@ -14,24 +14,35 @@ public class PathFinder
     public float[,] Heights;
     public int Resolution;
     private int RoadSize, RoadFlatArea, RoadSmoothArea;
-    private PathSearch SearchAlgo;
+    private PathTools.ConnectivityLabel Connectivity;
+    private IPathSearch SearchAlgo;
     private DGetStepCost StepCosts;
+    private MapTools.Flatten RoadFlatten;
+    private MapTools.KernelAppliance TerrainSmoother;
 
-    public PathFinder(DGetStepCost stepCosts, int Resolution, float[,] heights)
+    public PathFinder(DGetStepCost stepCosts, int Resolution, float[,] heights, PathTools.ConnectivityLabel connectivity)
     {
         StreetMap = new bool[Resolution, Resolution];
         Heights = heights;
         RoadFlatArea = 4;
         RoadSmoothArea = 6;
         LowerLimits = new Vector2Int(0, 0);
-        UpperLimits = new Vector2Int(Resolution, Resolution);
+        UpperLimits = new Vector2Int(Resolution - 1, Resolution - 1);
 
         SearchPerimeterUpper = UpperLimits;
         SearchPermieterLower = LowerLimits;
         StepCosts = stepCosts;
+        Connectivity = connectivity;
+        RoadFlatten = new MapTools.Flatten(new MapTools.VariableDistCircle(LowerLimits, UpperLimits, 1, RoadFlatArea), Heights);
+        TerrainSmoother = new MapTools.KernelAppliance(
+            new MapTools.VariableDistCircle(LowerLimits, UpperLimits, 1, RoadSmoothArea),
+            new MapTools.VariableDistCircle(LowerLimits, UpperLimits, 1, 2),
+            new OctileDistKernel(),
+            Heights
+        );
     }
 
-    public void SetSearch(PathSearch search)
+    public void SetSearch(IPathSearch search)
     {
         SearchAlgo = search;
 
@@ -40,6 +51,11 @@ public class PathFinder
     public void MakePath(Vector2Int start, Vector2Int end)
     {
         Debug.Log(string.Format("## Building Path from {0} to {1}. ##", start, end));
+        if (Connectivity.Labels[start.x, start.y] != Connectivity.Labels[end.x, end.y])
+        {
+            Debug.Log(string.Format("{0} ({2}) and {1} ({3}) are not connected!", start, end, Connectivity.Labels[start.x, start.y], Connectivity.Labels[end.x, end.y]));
+            return;
+        }
         List<Vector2Int> path = SearchAlgo.Search(start, end);
         if (path.Count == 0)
         {
@@ -57,10 +73,10 @@ public class PathFinder
         return 4f * StepCosts(ax, ay, bx, by);
     }
 
-    public void RoadSmooth(Vector2Int linePoint, IKernel outerKernel, Vector2Int upperLimits, Vector2Int lowerLimits)
+    public void RoadSmooth(Vector2Int linePoint)
     {
-        MapTools.SmoothCircular(linePoint, upperLimits, lowerLimits, RoadSmoothArea, Heights, outerKernel);
-        MapTools.FlattenCircular(linePoint, upperLimits, lowerLimits, RoadFlatArea, Heights);
+        TerrainSmoother.Apply(linePoint.x, linePoint.y);
+        RoadFlatten.Apply(linePoint.x, linePoint.y);
         //MapTools.SmoothCircular(linePoint, upperLimits, lowerLimits, RoadSmoothArea, Heights, outerKernel);
     }
 
@@ -70,7 +86,7 @@ public class PathFinder
         foreach (Vector2Int point in path)
         {
             StreetMap[point.x, point.y] = true;
-            RoadSmooth(point, octDistKernel, UpperLimits, LowerLimits);
+            RoadSmooth(point);
         }
     }
 }
