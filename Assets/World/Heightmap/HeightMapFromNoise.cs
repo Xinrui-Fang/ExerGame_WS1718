@@ -20,7 +20,6 @@ public class HeightMapFromNoise : IScannableHeightSource
 
     public float[,] ManipulateHeight(float[,] heights, int Resolution, int UnitSize)
     {
-        
         float stepSize = 1f / Resolution;
         float val;
         for (int y = 0; y < Resolution; y++)
