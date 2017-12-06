@@ -18,7 +18,7 @@ public class HeightMapFromNoise : IScannableHeightSource
         Iterator = new Vector2();
     }
 
-    public float[,] ManipulateHeight(float[,] heights, int Resolution, int UnitSize)
+    public void ManipulateHeight(ref float[,] heights, int Resolution, int UnitSize)
     {
         
         float stepSize = 1f / Resolution;
@@ -36,7 +36,6 @@ public class HeightMapFromNoise : IScannableHeightSource
                     heights[x,y] = PostProcessor.PostProcess(val);
             }
         }
-        return heights;
     }
 
     public float ScanHeight(Vector2 point)

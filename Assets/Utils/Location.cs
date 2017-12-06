@@ -20,10 +20,8 @@ public struct Location2D : IEquatable<Location2D> // 2 * 4 Byte
     {
         unchecked // overflow is not a problem.
         {
-            int hash = 977; // prime
-            hash *= 881 * x; // 881 is prime
-            hash *= 881 * y;
-            return hash;
+            int hash = x;
+            return hash * 881 + y; // 881 is prime
         }
     }
 

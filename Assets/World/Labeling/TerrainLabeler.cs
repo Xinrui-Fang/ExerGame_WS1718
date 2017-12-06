@@ -42,7 +42,7 @@ public static class TerrainLabeler
                 }
                 else
                 {
-                    GetCircleNodes.GetNeighbors(x_heightmap, y_heightmap, CircleNodes);
+                    GetCircleNodes.GetNeighbors(x_heightmap, y_heightmap, ref CircleNodes);
                     foreach (var node in CircleNodes)
                     {
                         if (node.valid && streetMap[node.x, node.y])

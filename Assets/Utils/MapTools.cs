@@ -87,7 +87,7 @@ public class MapTools
         // Gets all coordinates adjacednt to a given nodes on a grid. gridSize is the resolution of the grid.
         // optionally use: StepSize to jump over direct adjacent nodes. width: How many neighbours of neighbours to include.
         // includeSelf: if true include node in the list of neighbours.
-        public void GetNeighbors(int x, int y, Location2D[] Neighbors)
+        public void GetNeighbors(int x, int y, ref Location2D[] Neighbors)
         {
             int i = 0;
             for (int xi=x-(Width * StepSize); xi <= x+(Width * StepSize); xi += StepSize)
@@ -123,9 +123,9 @@ public class MapTools
         // Gets all coordinates adjacednt to a given nodes on a grid. gridSize is the resolution of the grid.
         // optionally use: StepSize to jump over direct adjacent nodes. width: How many neighbours of neighbours to include.
         // includeSelf: if true include node in the list of neighbours.
-        public void GetNeighbors(int x, int y, Location2D[] Neighbors)
+        public void GetNeighbors(int x, int y, ref Location2D[] Neighbors)
         {
-            NeighborSource.GetNeighbors(x, y, Neighbors);
+            NeighborSource.GetNeighbors(x, y, ref Neighbors);
             for (int i=0; i<Neighbors.Length; i++)
             {
                 if (!Neighbors[i].valid) continue;
@@ -150,16 +150,16 @@ public class MapTools
             Data = data;
             Neighbours = NeighbourSource.AllocateArray();
             InnerNeighbours = InnerNeighbourSource.AllocateArray();
-            Debug.Log(string.Format("Setting up Kernel Appliance. Got Inner Array of Lenght {0} Outer Array {1}", InnerNeighbours.Length, Neighbours.Length));
+            //Debug.Log(string.Format("Setting up Kernel Appliance. Got Inner Array of Lenght {0} Outer Array {1}", InnerNeighbours.Length, Neighbours.Length));
         }
 
         public void Apply(int x, int y)
         {
-            NeighbourSource.GetNeighbors(x, y, Neighbours);
+            NeighbourSource.GetNeighbors(x, y, ref Neighbours);
             foreach(Location2D neighbor in Neighbours)
             {
                 if (!neighbor.valid) continue;
-                InnerNeighbourSource.GetNeighbors(neighbor.x, neighbor.y, InnerNeighbours);
+                InnerNeighbourSource.GetNeighbors(neighbor.x, neighbor.y, ref InnerNeighbours);
                 Data[neighbor.x, neighbor.y] = Kernel.ApplyKernel(neighbor.x, neighbor.y, InnerNeighbours, Data);
             }
         }
@@ -180,7 +180,7 @@ public class MapTools
 
         public void Apply(int x, int y)
         {
-            NeighbourSource.GetNeighbors(x, y, Neighbours);
+            NeighbourSource.GetNeighbors(x, y, ref Neighbours);
             float avg = 0;
             float count = 0;
             foreach (Location2D neighbor in Neighbours)

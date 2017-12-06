@@ -10,11 +10,11 @@ namespace PathInterfaces
 
     public interface IPathSearch
     {
-        List<Vector2Int> Search(Vector2Int start, Vector2Int goal);
+        List<Vector2Int> Search(ref Vector2Int start, ref Vector2Int goal);
     }
 
     public interface IGetNeighbors: IFixedSizeArrayIterator<Location2D>
     {
-        void GetNeighbors(int x, int y, Location2D[] NeighborsArray);
+        void GetNeighbors(int x, int y, ref Location2D[] NeighborsArray);
     }
 }

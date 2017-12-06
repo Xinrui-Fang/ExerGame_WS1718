@@ -5,7 +5,7 @@ namespace HeightMapInterfaces
     /// Creates the initial HeightMap or simulates natur forces on heightmap.
     public interface IHeightSource
     {
-        float[,] ManipulateHeight(float[,] heights, int Resolution, int UnitSize);
+        void ManipulateHeight(ref float[,] heights, int Resolution, int UnitSize);
         void SetPostProcessor(IHeightPostProcessor processor);
     }
 

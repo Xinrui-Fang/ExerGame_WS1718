@@ -118,8 +118,8 @@ public class SurfaceCreator : MonoBehaviour {
         heigthCreator2.SetPostProcessor(new HeightRescale(.2f, .9f));
 
         HeightMapCreator = new ComposedHeightMap();
-        HeightMapCreator.AddSource(heigthCreator, Weight);
-        HeightMapCreator.AddSource(heigthCreator2, Weight2);
+        HeightMapCreator.AddSource(ref heigthCreator, Weight);
+        HeightMapCreator.AddSource(ref heigthCreator2, Weight2);
 
         vGen = new VegetationGenerator(0);
         terrain = GetComponent<Terrain>();
@@ -161,8 +161,8 @@ public class SurfaceCreator : MonoBehaviour {
         
         Vector2Int lowerBound = new Vector2Int(0, 0);
         Vector2Int upperBound = new Vector2Int(Resolution - 1, Resolution - 1);
-        PathTools.Bounded8Neighbours neighbours = new PathTools.Bounded8Neighbours(lowerBound, upperBound);
-        PathTools.NormalZThresholdWalkable walkable_src = new PathTools.NormalZThresholdWalkable(Mathf.Cos(Mathf.Deg2Rad * 30), terrain.terrainData, Resolution, lowerBound, upperBound);
+        PathTools.Bounded8Neighbours neighbours = new PathTools.Bounded8Neighbours(ref lowerBound, ref upperBound);
+        PathTools.NormalZThresholdWalkable walkable_src = new PathTools.NormalZThresholdWalkable(Mathf.Cos(Mathf.Deg2Rad * 30), terrain.terrainData, Resolution, ref lowerBound, ref upperBound);
         PathTools.CachedWalkable walkable = new PathTools.CachedWalkable(walkable_src.IsWalkable, lowerBound, upperBound, Resolution);
         PathTools.Octile8GridSlopeStepCost AStarStepCost = new PathTools.Octile8GridSlopeStepCost(5000, 5, heights);
         //SubgoalGraph search = new SubgoalGraph(Resolution, walkable.IsWalkable);
@@ -212,8 +212,8 @@ public class SurfaceCreator : MonoBehaviour {
         terrain.terrainData.heightmapResolution = Resolution;
         terrain.terrainData.size = new Vector3(Size, Depth, Size);
         float[,] heights = new float[Resolution, Resolution];
-        heights = HeightMapCreator.ManipulateHeight(
-            heights,
+        HeightMapCreator.ManipulateHeight(
+            ref heights,
             Resolution, 
             Size
         );

@@ -56,7 +56,7 @@ public class PathFinder
             Debug.Log(string.Format("{0} ({2}) and {1} ({3}) are not connected!", start, end, Connectivity.Labels[start.x, start.y], Connectivity.Labels[end.x, end.y]));
             return;
         }
-        List<Vector2Int> path = SearchAlgo.Search(start, end);
+        List<Vector2Int> path = SearchAlgo.Search(ref start, ref end);
         if (path.Count == 0)
         {
             return;

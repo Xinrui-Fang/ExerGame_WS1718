@@ -24,13 +24,13 @@ public class ComposedHeightMap : IHeightSource
         Weights = weights;
     }
 
-    public void AddSource(IScannableHeightSource source, float weight)
+    public void AddSource(ref IScannableHeightSource source, float weight)
     {
         this.Sources.Add(source);
         this.Weights.Add(weight);
     }
 
-    public float[,] ManipulateHeight(float[,] heights, int Resolution, int UnitSize)
+    public void ManipulateHeight(ref float[,] heights, int Resolution, int UnitSize)
     {
         float stepSize = 1f / Resolution;
         for (int y = 0; y < Resolution; y++)
@@ -51,7 +51,6 @@ public class ComposedHeightMap : IHeightSource
                     heights[x, y] = Postprocessor.PostProcess(val);
             }
         }
-        return heights;
     }
 
     public void SetPostProcessor(IHeightPostProcessor processor)

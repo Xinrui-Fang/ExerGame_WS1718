@@ -110,7 +110,7 @@ public class AStar: IPathSearch
         return this.nextNodeIDx++;
     } 
 
-    public List<Vector2Int> Search(Vector2Int start, Vector2Int end)
+    public List<Vector2Int> Search(ref Vector2Int start, ref Vector2Int end)
     {
         Debug.Log(string.Format("Searching for path from {0} to {1}", start, end));
         SimplePriorityQueue<uint> Opened = new SimplePriorityQueue<uint>();
@@ -144,7 +144,7 @@ public class AStar: IPathSearch
                 return ReconstructPath(current);
 
             Nodes[current].Closed = true;
-            NeighborSource.GetNeighbors(Nodes[current].x, Nodes[current].y, NeighBors);
+            NeighborSource.GetNeighbors(Nodes[current].x, Nodes[current].y, ref NeighBors);
             foreach (Location2D nextV in NeighBors)
             {
                 if (!nextV.valid) continue; // skip if e.g. neighbor is out of grid.

@@ -18,7 +18,7 @@ public static class PathTools
             new Vector2Int(-1,-1), new Vector2Int(0,-1), new Vector2Int(1, -1)
         };
 
-        public Bounded8Neighbours(Vector2Int boundA, Vector2Int boundB)
+        public Bounded8Neighbours(ref Vector2Int boundA, ref Vector2Int boundB)
         {
             lowerX = Mathf.Min(boundA.x, boundB.x);
             lowerY = Mathf.Min(boundA.y, boundB.y);
@@ -26,7 +26,7 @@ public static class PathTools
             upperY = Mathf.Max(boundA.y, boundB.y);
         }
 
-        public void GetNeighbors(int x, int y, Location2D[] Neighbors)
+        public void GetNeighbors(int x, int y, ref Location2D[] Neighbors)
         {
             for (int i = 0; i < NeigborSteps.Length; i++)
             {
@@ -50,7 +50,7 @@ public static class PathTools
         public int lowerX, lowerY, upperX, upperY;
         float Resolution;
 
-        public NormalZThresholdWalkable(float percentile, TerrainData terrainData, int Resolution , Vector2Int boundA, Vector2Int boundB)
+        public NormalZThresholdWalkable(float percentile, TerrainData terrainData, int Resolution , ref Vector2Int boundA, ref Vector2Int boundB)
         {
             lowerX = Mathf.Min(boundA.x, boundB.x);
             lowerY = Mathf.Min(boundA.y, boundB.y);
@@ -80,7 +80,7 @@ public static class PathTools
         IGetNeighbors NeighborSource;
         private Location2D[] Neighbours;
 
-        public SteepNessThresholdWalkable(float percentile, float[,] heights, IGetNeighbors neighbors, Vector2Int boundA, Vector2Int boundB)
+        public SteepNessThresholdWalkable(float percentile, float[,] heights, IGetNeighbors neighbors, ref Vector2Int boundA, ref Vector2Int boundB)
         {
             lowerX = Mathf.Min(boundA.x, boundB.x);
             lowerY = Mathf.Min(boundA.y, boundB.y);
@@ -100,7 +100,7 @@ public static class PathTools
                 //Debug.Log(string.Format("{0}, {1} not walkable because it is outside of the grid.", x, y));
                 return false;
             }
-            NeighborSource.GetNeighbors(x, y, Neighbours);
+            NeighborSource.GetNeighbors(x, y, ref Neighbours);
             foreach (Location2D neighbor in Neighbours)
             {
                 if ((Heights[x, y] - Heights[neighbor.x, neighbor.y])> thresholdPercentile)
