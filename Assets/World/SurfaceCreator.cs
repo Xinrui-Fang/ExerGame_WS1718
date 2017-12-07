@@ -112,12 +112,13 @@ public class SurfaceCreator : MonoBehaviour {
 
     public void Build()
     {
+        //Debug.Log(string.Format("Creating Surface with Offset {0}", Offset));
         // Prepare HeightMap Generation: TODO: Create ChunkManager. Make ChunkManager manage Heightmap Settings.
         INoise2DProvider noise = new Fractal2DNoise(Persistance, Lacunarity, Octaves, Seed, NoiseType);
         ComposedPostProcessor postProcessor = new ComposedPostProcessor();
         postProcessor.AddProcessor(new ExponentialPostProcessor(exponent));
-        postProcessor.AddProcessor(new HeightRescale(0f, Mathf.Pow(.8f, exponent)));
-        postProcessor.AddProcessor(new SmoothTerracingPostProcessor(.08f, 2f, .08f));
+        postProcessor.AddProcessor(new HeightRescale(0f, Mathf.Pow(.9f, exponent)));
+        postProcessor.AddProcessor(new SmoothTerracingPostProcessor(.1f, 1.5f, .1f));
         IScannableHeightSource heigthCreator = new HeightMapFromNoise(noise, FeatureFrequency, Offset);
         heigthCreator.SetPostProcessor(postProcessor);
 
@@ -125,7 +126,7 @@ public class SurfaceCreator : MonoBehaviour {
         IScannableHeightSource heigthCreator2 = new HeightMapFromNoise(noise2, FeatureFrequency2, Offset);
         heigthCreator2.SetPostProcessor(new HeightRescale(.2f, .9f));
 
-        HeightMapCreator = new ComposedHeightMap();
+        HeightMapCreator = new ComposedHeightMap(Offset);
         HeightMapCreator.AddSource(ref heigthCreator, Weight);
         HeightMapCreator.AddSource(ref heigthCreator2, Weight2);
 
@@ -186,7 +187,7 @@ public class SurfaceCreator : MonoBehaviour {
             System.Random prng = new System.Random((int)Seed);
             Vector2Int start = new Vector2Int();
             Vector2Int end = new Vector2Int();
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 3; i++)
             {
                 start = MapTools.UnfoldToPerimeter(prng.Next(0, 4 * (Resolution - 1)), Resolution - 1);
                 end = MapTools.UnfoldToPerimeter(prng.Next(0, 4 * (Resolution - 1)), Resolution - 1);
@@ -204,7 +205,7 @@ public class SurfaceCreator : MonoBehaviour {
         terrain.terrainData.SetHeights(0, 0, paths.Heights);
 
         terrain.terrainData.RefreshPrototypes();
-        terrain.terrainData = TerrainLabeler.MapTerrain(noise, terrain.terrainData, paths.StreetMap, WaterLevel, VegeationMaxLevel);
+        terrain.terrainData = TerrainLabeler.MapTerrain(noise, terrain.terrainData, paths.StreetMap, WaterLevel, VegeationMaxLevel, Offset);
         terrain.terrainData = vGen.PaintGras(noise2, Trees, terrain.terrainData);
         
         TerrainCollider collider = terrain.GetComponent<TerrainCollider>();

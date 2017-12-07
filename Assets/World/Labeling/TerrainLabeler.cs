@@ -6,7 +6,7 @@ using NoiseInterfaces;
 
 public static class TerrainLabeler
 {
-    public static TerrainData MapTerrain(INoise2DProvider noise, TerrainData terrainData, bool[,] streetMap, float WaterLevel, float VegetationMaxHeight)
+    public static TerrainData MapTerrain(INoise2DProvider noise, TerrainData terrainData, bool[,] streetMap, float WaterLevel, float VegetationMaxHeight, Vector2 TerrainOffset)
     {
         Vector2Int heightmapLimits = new Vector2Int(terrainData.heightmapWidth - 1, terrainData.heightmapWidth - 1);
         Vector2 location = new Vector2();
@@ -22,10 +22,11 @@ public static class TerrainLabeler
                 // Normalise x/y coordinates to range 0-1 
                 float y_01 = (float)y / (float)terrainData.alphamapHeight;
                 float x_01 = (float)x / (float)terrainData.alphamapWidth;
-                location.x = x_01;
-                location.y = x_01;
                 int x_heightmap = Mathf.CeilToInt(x_01 * (terrainData.heightmapWidth - 1));
-                int y_heightmap = Mathf.CeilToInt(y_01 * (terrainData.heightmapWidth -1));
+                int y_heightmap = Mathf.CeilToInt(y_01 * (terrainData.heightmapHeight-1));
+
+                location.x = x_01 * (terrainData.heightmapWidth - 1);
+                location.y = y_01 * (terrainData.heightmapHeight - 1);
 
 
                 bool isStreetMapNeighbour = false;
@@ -52,7 +53,7 @@ public static class TerrainLabeler
                         }
                     }
                     // Calculate the steepness of the terrain
-                    float moisture = .5f + noise.Evaluate(location)/2f;
+                    float moisture = .5f + noise.Evaluate((location + TerrainOffset)*.0001f)/2f;
                     Vector3 normal = terrainData.GetInterpolatedNormal(x_01, y_01);
                     float steepness = Mathf.InverseLerp(0f, terrainData.size[1], terrainData.GetSteepness(y_01, x_01));
                     float slope = steepness * steepness;
