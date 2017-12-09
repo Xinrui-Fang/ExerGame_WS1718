@@ -26,7 +26,7 @@ public class ComposedHeightMap : IHeightSource
         Weights = weights;
     }
 
-    public void AddSource(ref IScannableHeightSource source, float weight)
+    public void AddSource(IScannableHeightSource source, float weight)
     {
         this.Sources.Add(source);
         this.Weights.Add(weight);

@@ -43,14 +43,14 @@ public static class PathTools
         }
     }
 
-    public class NormalZThresholdWalkable
+    public class NormalYThresholdWalkable
     {
         public float thresholdPercentile;
         private TerrainData terrainData;
         public int lowerX, lowerY, upperX, upperY;
         float Resolution;
 
-        public NormalZThresholdWalkable(float percentile, TerrainData terrainData, int Resolution , ref Vector2Int boundA, ref Vector2Int boundB)
+        public NormalYThresholdWalkable(float percentile, TerrainData terrainData, int Resolution , ref Vector2Int boundA, ref Vector2Int boundB)
         {
             lowerX = Mathf.Min(boundA.x, boundB.x);
             lowerY = Mathf.Min(boundA.y, boundB.y);

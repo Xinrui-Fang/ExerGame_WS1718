@@ -5,37 +5,37 @@ using HeightPostProcessors;
 
 public class SurfaceManager : MonoBehaviour {
 
-	Terrain Build(GameObject tile, Vector2Int offset, int tilesize)
+    public GameSettings Settings;
+
+	TerrainChunk Build(TerrainChunk tile, Vector2Int offset)
 	{
-		SurfaceCreator creator = tile.GetComponent<SurfaceCreator>();
-		Terrain terrain = tile.GetComponent<Terrain>();
-		terrain.terrainData = null; // Force the creation of a new terrain!
-		
-		tile.transform.position = new Vector3(offset.y * tilesize, 0, offset.x * tilesize);
-		
-		creator.Offset = offset * (creator.Resolution -1);
-		creator.Build();
-        return tile.GetComponent<Terrain>();
+        tile.Build(offset);
+        return tile;
 	}
 
     void OnEnable() // TODO Maybe even when player moves?
     {
-	    GameObject root = GameObject.Find("Surface");
-	    Build(root, new Vector2Int(0, 0), 0);
+	    var root = Build(new TerrainChunk(Settings), new Vector2Int(0, 0));
 	
-	    //GameObject left = Instantiate(root);
-	    Terrain terrain = root.GetComponent<Terrain>();
+	    var S = Build(new TerrainChunk(Settings), new Vector2Int(-1, 0));
+	    var N = Build(new TerrainChunk(Settings), new Vector2Int(1, 0));
+	    var O = Build(new TerrainChunk(Settings), new Vector2Int(0, 1));
+	    var W = Build(new TerrainChunk(Settings), new Vector2Int(0, -1));
 	
-	    var S = Build(Instantiate(root), new Vector2Int(-1, 0), (int) terrain.terrainData.size.x);
-	    var N = Build(Instantiate(root), new Vector2Int(1, 0), (int) terrain.terrainData.size.x);
-	    var O = Build(Instantiate(root), new Vector2Int(0, 1), (int) terrain.terrainData.size.x);
-	    var W = Build(Instantiate(root), new Vector2Int(0, -1), (int) terrain.terrainData.size.x);
-	
-	    var SW = Build(Instantiate(root), new Vector2Int(-1, -1), (int) terrain.terrainData.size.x);
-	    var NO = Build(Instantiate(root), new Vector2Int(1, 1), (int) terrain.terrainData.size.x);
-	    var SO = Build(Instantiate(root), new Vector2Int(-1, 1), (int) terrain.terrainData.size.x);
-	    var NW = Build(Instantiate(root), new Vector2Int(1, -1), (int) terrain.terrainData.size.x);
+	    var SW = Build(new TerrainChunk(Settings), new Vector2Int(-1, -1));
+	    var NO = Build(new TerrainChunk(Settings), new Vector2Int(1, 1));
+	    var SO = Build(new TerrainChunk(Settings), new Vector2Int(-1, 1));
+	    var NW = Build(new TerrainChunk(Settings), new Vector2Int(1, -1));
 
+        root.Flush();
+        S.Flush();
+        N.Flush();
+        O.Flush();
+        W.Flush();
+        SW.Flush();
+        NO.Flush();
+        SO.Flush();
+        NW.Flush();
         // Setting Neighbors will reduce Detail seams.
         // Heightmap seams have to be taken care of separately.
         /** reenable once heightmap seams are gone.

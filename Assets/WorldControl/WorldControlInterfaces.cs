@@ -1,15 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public interface IGameManager
-{
-    // Sets reference to the main menu
-    void SetMenu(IMenu menu);
-
-    // Called by Menu to start the game.
-    void StartGame(GameSettings settings);
-}
-
 public interface IMenu
 {
     // This function will be called by the GameManager to return to Main Menu

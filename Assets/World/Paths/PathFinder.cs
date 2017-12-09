@@ -77,12 +77,10 @@ public class PathFinder
     {
         TerrainSmoother.Apply(linePoint.x, linePoint.y);
         RoadFlatten.Apply(linePoint.x, linePoint.y);
-        //MapTools.SmoothCircular(linePoint, upperLimits, lowerLimits, RoadSmoothArea, Heights, outerKernel);
     }
 
     public void AddToStreetMap(List<Vector2Int> path, int width=1)
     {
-        IKernel octDistKernel = new OctileDistKernel();
         foreach (Vector2Int point in path)
         {
             StreetMap[point.x, point.y] = true;

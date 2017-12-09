@@ -67,12 +67,12 @@ public static class TerrainLabeler
                     //3 public Texture2D SandTexture;
                     //4 public Texture2D PathTexture;
                     //5 public Texture2D CliffTexture;
-                    splatWeights[0] = moisture*Mathf.Clamp01(normal.y) * .4f * Mathf.Pow(Mathf.Clamp(0, .2f, .25f - Mathf.Abs(.25f - height)), 2f);
-                    splatWeights[1] = Mathf.Clamp01(normal.y) * Mathf.Pow(Mathf.InverseLerp(.6f, 1f, height), 2f) * moisture;
-                    splatWeights[2] = slope*height*(1f+2f*steepness) * (1f - moisture);
+                    splatWeights[0] = moisture*Mathf.InverseLerp(.6f, 1f, normal.y) * .2f * Mathf.Pow(Mathf.Clamp(0, .2f, .25f - Mathf.Abs(.25f - height)), 2f);
+                    splatWeights[1] = Mathf.InverseLerp(.6f, 1f, normal.y) * Mathf.Pow(Mathf.InverseLerp(.6f, 1f, height), 2f) * moisture;
+                    splatWeights[2] = 4 * (1f -Mathf.InverseLerp(0f, .6f, normal.y)) * (1f - moisture);
                     splatWeights[3] = steepness * Mathf.Pow(Mathf.InverseLerp(.8f, 1f, 1f - height), 2f) * (1f - moisture);
-                    splatWeights[4] = splatWeights[0] * .7f + splatWeights[3] * .5f * (1f-moisture);
-                    splatWeights[5] = Mathf.Abs(normal.z) * Mathf.Abs(normal.x) * Mathf.InverseLerp(.2f, .8f, height) * (1f - moisture);
+                    //splatWeights[4] = splatWeights[0] * .7f + splatWeights[3] * .5f * (1f-moisture);
+                    splatWeights[5] = 3 * Mathf.Abs(normal.z) * Mathf.Abs(normal.x) * Mathf.InverseLerp(.2f, 1f, height) * (1f - moisture);
                 }
                 
 

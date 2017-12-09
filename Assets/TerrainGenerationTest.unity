@@ -112,126 +112,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &355964817
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 355964820}
-  - component: {fileID: 355964819}
-  - component: {fileID: 355964818}
-  - component: {fileID: 355964821}
-  m_Layer: 0
-  m_Name: Surface
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!154 &355964818
-TerrainCollider:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 355964817}
-  m_Material: {fileID: 0}
-  m_Enabled: 1
-  m_TerrainData: {fileID: 15600000, guid: 7acc4bdbdf3df58499e09a97b2258bf0, type: 2}
-  m_EnableTreeColliders: 1
---- !u!218 &355964819
-Terrain:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 355964817}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_TerrainData: {fileID: 0}
-  m_TreeDistance: 2000
-  m_TreeBillboardDistance: 50
-  m_TreeCrossFadeLength: 5
-  m_TreeMaximumFullLODCount: 50
-  m_DetailObjectDistance: 80
-  m_DetailObjectDensity: 1
-  m_HeightmapPixelError: 1
-  m_SplatMapDistance: 1024
-  m_HeightmapMaximumLOD: 0
-  m_CastShadows: 0
-  m_DrawHeightmap: 1
-  m_DrawTreesAndFoliage: 1
-  m_ReflectionProbeUsage: 2
-  m_MaterialType: 3
-  m_LegacySpecular:
-    serializedVersion: 2
-    rgba: 4286545791
-  m_LegacyShininess: 0.078125
-  m_MaterialTemplate: {fileID: 2100000, guid: aa92db0d7bc9ac44691bd4558ab97e8d, type: 2}
-  m_BakeLightProbesForTrees: 1
-  m_ScaleInLightmap: 0.0512
-  m_LightmapParameters: {fileID: 15201, guid: 0000000000000000f000000000000000, type: 0}
---- !u!4 &355964820
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 355964817}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &355964821
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 355964817}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8fe68c0f5253c784fb88f8ed937c0f59, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Weight: 0.5
-  Resolution: 513
-  Size: 256
-  Seed: 425
-  Octaves: 4
-  Lacunarity: 1.6
-  Persistance: 0.4
-  FeatureFrequency: 2
-  Enable: 1
-  NoiseType: 0
-  Weight2: 0.6
-  Seed2: 123
-  Octaves2: 3
-  Lacunarity2: 1.66
-  Persistance2: 0.3
-  FeatureFrequency2: 1
-  NoiseType2: 0
-  Enable2: 1
-  Depth: 100
-  WaterLevel: 0.01
-  VegeationMaxLevel: 0.3
-  exponent: 3
-  EnableExperimentalPaths: 1
-  Offset: {x: 0, y: 0}
-  Trees: []
-  GrasTexture: {fileID: 2800000, guid: cc7345aa189037b4eadd014712552d5e, type: 3}
-  SnowTexture: {fileID: 2800000, guid: 1f27a16ed04f7e0499cca9e2d233da4c, type: 3}
-  RockTexture: {fileID: 2800000, guid: 37d471177e9735144b3dc8bee880e573, type: 3}
-  SandTexture: {fileID: 2800000, guid: d0e61c5ae051a0b4a945494f5469d3b1, type: 3}
-  PathTexture: {fileID: 2800000, guid: 5edd0aaa57578b84da829c036eecf914, type: 3}
-  CliffTexture: {fileID: 2800000, guid: 5652ba698994bba4f9d8069be4bd2259, type: 3}
-  GrasNormalMap: {fileID: 2800000, guid: a0b6d0da45847764d87b8b45a90126ef, type: 3}
-  SnowNormalMap: {fileID: 2800000, guid: 310d1ec2ed5c49b4abeeb1835a5d28c2, type: 3}
-  RockNormalMap: {fileID: 2800000, guid: 5e8a57c82bf4fba4fa3c47aad2ca5460, type: 3}
-  SandNormalMap: {fileID: 2800000, guid: 32cf70478fb7dad48838fdb26204be22, type: 3}
-  PathNormalMap: {fileID: 0}
-  CliffNormalMap: {fileID: 2800000, guid: 11a83d38eeab664408cb7d088abe5a49, type: 3}
 --- !u!1001 &429788283
 Prefab:
   m_ObjectHideFlags: 0
@@ -479,7 +359,7 @@ GameObject:
   - component: {fileID: 1519617107}
   - component: {fileID: 1519617106}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: Surface Manager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -496,6 +376,111 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c6270b520bc84f0e83d85b36f742fc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Settings:
+    Depth: 240
+    WaterLevel: 0.01
+    VegetationLevel: 0.6
+    HeightmapResolution: 513
+    DetailResolution: 1025
+    DetailResolutionPerPatch: 33
+    Size: 256
+    Trees:
+    - {fileID: 100000, guid: c91c1eb85782d5748ace27eb4d7415bb, type: 3}
+    - {fileID: 100000, guid: 6aab193b7693b5e4c9741f1917d2987c, type: 3}
+    - {fileID: 100016, guid: 469edab27ab6d004d84af2c4a851bd7f, type: 3}
+    - {fileID: 100004, guid: d027af1092f6b434090f040565e7e656, type: 3}
+    - {fileID: 112922, guid: 0018a0d5fcd38d34d81764846a43c4bd, type: 2}
+    HeightmapLayers:
+    - Octaves: 6
+      Weight: 0.6
+      Lacunarity: 2
+      Persistance: 0.4
+      FeatureFrequency: 1
+      NoiseType: 0
+      Seed: 435
+      postprocessors:
+      - type: 0
+        value1: 6
+        value2: 0
+        value3: 0
+      - type: 2
+        value1: 0
+        value2: 0.5
+        value3: 0
+      - type: 1
+        value1: 0.05
+        value2: 2
+        value3: 0.05
+    - Octaves: 4
+      Weight: 0.4
+      Lacunarity: 1.66
+      Persistance: 0.3
+      FeatureFrequency: 0.5
+      NoiseType: 0
+      Seed: 123
+      postprocessors:
+      - type: 2
+        value1: 0.2
+        value2: 0.9
+        value3: 0
+    SplatMaps:
+    - NormalMap: {fileID: 2800000, guid: a0b6d0da45847764d87b8b45a90126ef, type: 3}
+      Texture: {fileID: 2800000, guid: cc7345aa189037b4eadd014712552d5e, type: 3}
+      TileSize: {x: 1, y: 1}
+      Metallic: 0
+      Smoothness: 1
+    - NormalMap: {fileID: 2800000, guid: 310d1ec2ed5c49b4abeeb1835a5d28c2, type: 3}
+      Texture: {fileID: 2800000, guid: 1f27a16ed04f7e0499cca9e2d233da4c, type: 3}
+      TileSize: {x: 2, y: 2}
+      Metallic: 0
+      Smoothness: 1
+    - NormalMap: {fileID: 2800000, guid: 5e8a57c82bf4fba4fa3c47aad2ca5460, type: 3}
+      Texture: {fileID: 2800000, guid: 37d471177e9735144b3dc8bee880e573, type: 3}
+      TileSize: {x: 2, y: 2}
+      Metallic: 2
+      Smoothness: 1
+    - NormalMap: {fileID: 2800000, guid: 32cf70478fb7dad48838fdb26204be22, type: 3}
+      Texture: {fileID: 2800000, guid: 32cf70478fb7dad48838fdb26204be22, type: 3}
+      TileSize: {x: 2, y: 2}
+      Metallic: 0
+      Smoothness: 1
+    - NormalMap: {fileID: 0}
+      Texture: {fileID: 2800000, guid: 3e8f839d23c8c7f42b81fc76f0dbeb9f, type: 3}
+      TileSize: {x: 1, y: 1}
+      Metallic: 0
+      Smoothness: 1
+    - NormalMap: {fileID: 2800000, guid: 11a83d38eeab664408cb7d088abe5a49, type: 3}
+      Texture: {fileID: 2800000, guid: 5652ba698994bba4f9d8069be4bd2259, type: 3}
+      TileSize: {x: 2, y: 2}
+      Metallic: 2
+      Smoothness: 1
+    TerrainDetails:
+    - BendFactor: 1
+      NoiseSpread: 2
+      MaxHeight: 0.5
+      MaxWidth: 0.5
+      MinHeight: 0.1
+      MinWidth: 0.1
+      DryColor: {r: 0.54185116, g: 0.58823526, b: 0.13764706, a: 0}
+      HealthyColor: {r: 0.2129482, g: 0.647, b: 0.055775873, a: 0}
+      Prototype: {fileID: 0}
+      PrototypeTexture: {fileID: 2800000, guid: d6cdc79ec19714fcd980ca3f6ac01a0a,
+        type: 3}
+      RenderMode: 0
+    - BendFactor: 1
+      NoiseSpread: 2
+      MaxHeight: 0.5
+      MaxWidth: 0.5
+      MinHeight: 0.1
+      MinWidth: 0.1
+      DryColor: {r: 0.6764706, g: 0.6486308, b: 0.29785, a: 0}
+      HealthyColor: {r: 0, g: 0.578, b: 0, a: 0}
+      Prototype: {fileID: 0}
+      PrototypeTexture: {fileID: 2800000, guid: 2c528fec5d95e4ac28cf46399b887662,
+        type: 3}
+      RenderMode: 0
+    WorldSeed: 42
+    TerrainMaterial: {fileID: 2100000, guid: aa92db0d7bc9ac44691bd4558ab97e8d, type: 2}
 --- !u!4 &1519617107
 Transform:
   m_ObjectHideFlags: 0
@@ -507,7 +492,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1685065138
 GameObject:
@@ -697,7 +682,7 @@ Transform:
   - {fileID: 1793104638}
   - {fileID: 1043444322}
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1793104636
 GameObject:
