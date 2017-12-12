@@ -20,16 +20,20 @@ public class ComposedHeightMap : IHeightSource
         Iterator = new Vector2();
     }
 
-    public ComposedHeightMap(List<IScannableHeightSource> sources, List<float> weights)
-    {
-        Sources = sources;
-        Weights = weights;
-    }
-
     public void AddSource(IScannableHeightSource source, float weight)
     {
         this.Sources.Add(source);
         this.Weights.Add(weight);
+    }
+
+    virtual protected float CombineValues(Vector2 Iterator)
+    {
+        float val = 0;
+        for (int i = 0; i < Sources.Count; i++)
+        {
+            val += Weights[i] * Sources[i].ScanHeight(Iterator);
+        }
+        return val;
     }
 
     public void ManipulateHeight(ref float[,] heights, int Resolution, int UnitSize)
@@ -44,15 +48,11 @@ public class ComposedHeightMap : IHeightSource
             {
                 Iterator.x = x_pos;
                 Iterator.y = y_pos;
-                float val = 0;
-                for (int i = 0; i < Sources.Count; i++)
-                {
-                    val += Weights[i] * Sources[i].ScanHeight(Iterator);
-                }
+                float val = CombineValues(Iterator);
                 if (Postprocessor == null)
-                    heights[x, y] = val;
+                    heights[y, x] = val;
                 else
-                    heights[x, y] = Postprocessor.PostProcess(val);
+                    heights[y, x] = Postprocessor.PostProcess(val);
 
                 x_pos += stepSize;
             }

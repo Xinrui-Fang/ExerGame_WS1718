@@ -4,8 +4,7 @@ using System.Collections.Generic;
 public class TerrainChunkEdge
 {
     public List<int> RoadPoints;
-    private Vector2Int ChunkPos1;
-    private Vector2Int ChunkPos2;
+    public Vector2Int ChunkPos1, ChunkPos2;
     private readonly long WorldSeed;
     private readonly int ChunkResolution;
 
@@ -44,6 +43,7 @@ public class TerrainChunkEdge
         this.ChunkPos2 = ChunkPos2;
         this.ChunkResolution = ChunkResolution;
         this.WorldSeed = WorldSeed;
+        //Debug.Log(string.Format("Got Hash {0} for edge {1} - {2}", this.GetHashCode(), ChunkPos1, ChunkPos2));
     }
 
     // Generate points on this edge. Uses the edges hash as seed. IF points are closer to each other then the value indicated by Delta these points will be merged.

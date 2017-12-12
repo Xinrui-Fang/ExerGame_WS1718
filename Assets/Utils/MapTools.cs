@@ -198,6 +198,7 @@ public class MapTools
         }
     }
 
+    // This function is not correct!
     public static float OctileDistance(int ax, int ay, int bx, int by)
     {
         float dx = ax - bx;
@@ -216,13 +217,13 @@ public class MapTools
         switch (side)
         {
             case 0:
-                return new Vector2Int(0, pos);
+                return new Vector2Int(pos,0);
             case 1:
-                return new Vector2Int(pos, SideLength);
+                return new Vector2Int(SideLength, pos);
             case 2:
-                return new Vector2Int(SideLength, SideLength - pos);
+                return new Vector2Int(pos, SideLength);
             default:
-                return new Vector2Int(SideLength - pos, 0);
+                return new Vector2Int(0, pos);
         }
     }
 }

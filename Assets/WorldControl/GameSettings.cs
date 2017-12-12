@@ -32,16 +32,19 @@ public class HeightmapSetting
     public int Octaves;
     public float Weight, Lacunarity, Persistance, FeatureFrequency;
     public Fractal2DNoise.NoiseBase NoiseType;
+    public Fractal2DNoise.FractalNoiseType FractalType = Fractal2DNoise.FractalNoiseType.Normal;
     public IHeightPostProcessor PostProcessor;
     public long Seed;
     public HeightMapPostProcessor[] postprocessors;
+    public HeightMapFromNoise.HeightMapType HeightmapType = HeightMapFromNoise.HeightMapType.smooth;
 
     public IScannableHeightSource GetHeightSource(Vector2Int Offset)
     {
         IScannableHeightSource source = new HeightMapFromNoise(
-            new Fractal2DNoise(Persistance, Lacunarity, Octaves, Seed, NoiseType),
+            new Fractal2DNoise(Persistance, Lacunarity, Octaves, Seed, NoiseType, FractalType),
             FeatureFrequency,
-            Offset
+            Offset,
+            HeightmapType
         );
 
         if (postprocessors.Length == 1)
@@ -116,6 +119,7 @@ public class GameSettings
     public int HeightmapResolution, DetailResolution, DetailResolutionPerPatch, Size;
     public GameObject[] Trees;
     public HeightmapSetting[] HeightmapLayers;
+    public HeightmapSetting Moisture;
     public SplatTexture[] SplatMaps;
     public DetailObject[] TerrainDetails;
     public long WorldSeed;

@@ -17,7 +17,8 @@ public class VegetationGenerator
         {
             protos[j] = new TreePrototype
             {
-                prefab = treeObjects[j]
+                prefab = treeObjects[j],
+                bendFactor = .5f
             };
         }
         int n = 0;
@@ -27,7 +28,7 @@ public class VegetationGenerator
 
             x = prng.Next(0, terrainData.heightmapWidth);
             y = prng.Next(0, terrainData.heightmapHeight);
-            if (streetMap[x, y] || Heights[x,y] <= WaterLevel || Heights[x,y] > VegetationMaxHeight) continue;
+            if (streetMap[x, y] || Heights[y,x] <= WaterLevel || Heights[y,x] > VegetationMaxHeight) continue;
             if (terrainData.GetInterpolatedNormal((float) x / terrainData.heightmapWidth, (float) y / terrainData.heightmapWidth).y < .7f) continue;
             float heightScale = (float)prng.Next(256, 512) / 512.0f;
             trees.Add(new TreeInstance
@@ -61,10 +62,10 @@ public class VegetationGenerator
                 {
                     x_01 += step;
                     x_hm = (int)(x_01 * (float)terrainData.heightmapWidth);
-                    if (terrainData.GetInterpolatedNormal(x_01, y_01).y >= .8f && Heights[x_hm, y_hm] > WaterLevel && Heights[x_hm, y_hm] <= VegetationMaxHeight)
+                    if (terrainData.GetInterpolatedNormal(x_01, y_01).y >= .8f && Heights[y_hm, x_hm] > WaterLevel && Heights[y_hm, x_hm] <= VegetationMaxHeight)
                     {
                         int r = prng.Next(-200, 8);
-                        if(!TreeMap[x_hm, y_hm] && !streetMap[x_hm, y_hm]) detailMap[x, y] = r > 0 ? r : 0;
+                        if(!TreeMap[x_hm, y_hm] && !streetMap[x_hm, y_hm]) detailMap[y, x] = r > 0 ? r : 0;
                     }
                 }
             }

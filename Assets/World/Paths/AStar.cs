@@ -89,7 +89,7 @@ public class AStar: IPathSearch
             currentIDx = (uint) Nodes[currentIDx].CameFrom;
             path.Add(new Vector2Int(Nodes[currentIDx].x, Nodes[currentIDx].y));
         }
-        Debug.Log(string.Format("## Found path of lenght {0} in {1} steps. ##", path.Count, Steps));
+        //Debug.Log(string.Format("## Found path of lenght {0} in {1} steps. ##", path.Count, Steps));
         path.Reverse();
         return path;
     }
@@ -112,7 +112,7 @@ public class AStar: IPathSearch
 
     public List<Vector2Int> Search(ref Vector2Int start, ref Vector2Int end)
     {
-        Debug.Log(string.Format("Searching for path from {0} to {1}", start, end));
+        //Debug.Log(string.Format("Searching for path from {0} to {1}", start, end));
         SimplePriorityQueue<uint> Opened = new SimplePriorityQueue<uint>();
         Dictionary<Location2D, uint> NodeCache = new Dictionary<Location2D, uint>();
         Location2D[] NeighBors = NeighborSource.AllocateArray();
@@ -122,7 +122,7 @@ public class AStar: IPathSearch
         Location2D endL = Location2D.FromVector2Int(end);
         if (!Walkable(end.x, end.y))
         {
-            Debug.Log("End node is not walkable");
+            //Debug.Log("End node is not walkable");
             return new List<Vector2Int>();
         }
         uint current, next, endIdx;
@@ -185,7 +185,7 @@ public class AStar: IPathSearch
                 }    
             }
         }
-        Debug.Log(string.Format("## Found no path in {0} steps. ##", Steps));
+        //Debug.Log(string.Format("## Found no path in {0} steps. ##", Steps));
         return new List<Vector2Int>();
     }
     

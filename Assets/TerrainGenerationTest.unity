@@ -391,38 +391,71 @@ MonoBehaviour:
     - {fileID: 100004, guid: d027af1092f6b434090f040565e7e656, type: 3}
     - {fileID: 112922, guid: 0018a0d5fcd38d34d81764846a43c4bd, type: 2}
     HeightmapLayers:
-    - Octaves: 6
-      Weight: 0.6
+    - Octaves: 8
+      Weight: 0.45
       Lacunarity: 2
-      Persistance: 0.4
-      FeatureFrequency: 1
+      Persistance: 0.5
+      FeatureFrequency: 0.5
       NoiseType: 0
+      FractalType: 1
       Seed: 435
       postprocessors:
       - type: 0
-        value1: 6
+        value1: 1.2
         value2: 0
         value3: 0
       - type: 2
-        value1: 0
-        value2: 0.5
+        value1: 0.1
+        value2: 0.85
         value3: 0
-      - type: 1
-        value1: 0.05
-        value2: 2
-        value3: 0.05
-    - Octaves: 4
-      Weight: 0.4
-      Lacunarity: 1.66
-      Persistance: 0.3
-      FeatureFrequency: 0.5
+      HeightmapType: 1
+    - Octaves: 6
+      Weight: 0.5
+      Lacunarity: 2
+      Persistance: 0.5
+      FeatureFrequency: 0.25
       NoiseType: 0
+      FractalType: 0
       Seed: 123
       postprocessors:
       - type: 2
         value1: 0.2
         value2: 0.9
         value3: 0
+      HeightmapType: 0
+    - Octaves: 2
+      Weight: 0.05
+      Lacunarity: 1.6
+      Persistance: 0.5
+      FeatureFrequency: 1
+      NoiseType: 0
+      FractalType: 0
+      Seed: 224
+      postprocessors:
+      - type: 2
+        value1: 0.2
+        value2: 0.9
+        value3: 0
+      HeightmapType: 0
+    Moisture:
+      Octaves: 3
+      Weight: 0
+      Lacunarity: 4
+      Persistance: 0.5
+      FeatureFrequency: 0.125
+      NoiseType: 0
+      FractalType: 0
+      Seed: 424242
+      postprocessors:
+      - type: 1
+        value1: 0.3
+        value2: 1
+        value3: 0.3
+      - type: 2
+        value1: 0.1
+        value2: 0.9
+        value3: 0
+      HeightmapType: 0
     SplatMaps:
     - NormalMap: {fileID: 2800000, guid: a0b6d0da45847764d87b8b45a90126ef, type: 3}
       Texture: {fileID: 2800000, guid: cc7345aa189037b4eadd014712552d5e, type: 3}
@@ -433,27 +466,27 @@ MonoBehaviour:
       Texture: {fileID: 2800000, guid: 1f27a16ed04f7e0499cca9e2d233da4c, type: 3}
       TileSize: {x: 2, y: 2}
       Metallic: 0
-      Smoothness: 1
+      Smoothness: 0
     - NormalMap: {fileID: 2800000, guid: 5e8a57c82bf4fba4fa3c47aad2ca5460, type: 3}
       Texture: {fileID: 2800000, guid: 37d471177e9735144b3dc8bee880e573, type: 3}
-      TileSize: {x: 2, y: 2}
-      Metallic: 2
-      Smoothness: 1
+      TileSize: {x: 3, y: 3}
+      Metallic: 0
+      Smoothness: 0
     - NormalMap: {fileID: 2800000, guid: 32cf70478fb7dad48838fdb26204be22, type: 3}
       Texture: {fileID: 2800000, guid: 32cf70478fb7dad48838fdb26204be22, type: 3}
       TileSize: {x: 2, y: 2}
       Metallic: 0
       Smoothness: 0
     - NormalMap: {fileID: 0}
-      Texture: {fileID: 2800000, guid: 3e8f839d23c8c7f42b81fc76f0dbeb9f, type: 3}
+      Texture: {fileID: 2800000, guid: 5edd0aaa57578b84da829c036eecf914, type: 3}
       TileSize: {x: 1, y: 1}
       Metallic: 0
       Smoothness: 0
     - NormalMap: {fileID: 2800000, guid: 11a83d38eeab664408cb7d088abe5a49, type: 3}
       Texture: {fileID: 2800000, guid: 5652ba698994bba4f9d8069be4bd2259, type: 3}
-      TileSize: {x: 2, y: 2}
-      Metallic: 2
-      Smoothness: 1
+      TileSize: {x: 3, y: 3}
+      Metallic: 0
+      Smoothness: 0
     TerrainDetails:
     - BendFactor: 1
       NoiseSpread: 2

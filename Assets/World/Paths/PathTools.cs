@@ -103,7 +103,7 @@ public static class PathTools
             NeighborSource.GetNeighbors(x, y, ref Neighbours);
             foreach (Location2D neighbor in Neighbours)
             {
-                if ((Heights[x, y] - Heights[neighbor.x, neighbor.y])> thresholdPercentile)
+                if ((Heights[y, x] - Heights[neighbor.y, neighbor.x])> thresholdPercentile)
                 {
                     //Debug.Log(string.Format("{0}, {1} not walkable because its neighbour ({3}, {4}) has a too big height diff {5} > {6}", x, y, neighbor.x, neighbor.y, Heights[x, y], - Heights[neighbor.x, neighbor.y], thresholdPercentile));
                     return false;
@@ -208,6 +208,7 @@ public static class PathTools
         private readonly TerrainData Data;
         private DIsWalkable IsWalkable;
         public int[,] Labels;
+        public int NumLabels;
         private int nextLabel;
         private readonly int lowerX, lowerY, upperX;
 
@@ -228,30 +229,31 @@ public static class PathTools
             int[] Predecessors = new int[4];
             int validPredecessors;
             List<UnionFindNode<int>> UnionFindTree = new List<UnionFindNode<int>>();
-            for (int x = 0; x < Data.heightmapResolution; x++)
+
+            for (int y = 0; y < Data.heightmapResolution; y++)
             {
-                for (int y = 0; y < Data.heightmapResolution; y++)
+                for (int x = 0; x < Data.heightmapResolution; x++)
                 {
                     if (!IsWalkable(x, y))
                     {
-                        Labels[x, y] = -1;
+                        Labels[y, x] = -1;
                         continue;
                     }
                     validPredecessors = 0;
                     if (x - 1 >= lowerX)
                     {
-                        if (Labels[x - 1, y] > 0) Predecessors[validPredecessors++] = Labels[x - 1, y];
+                        if (Labels[y, x - 1] > 0) Predecessors[validPredecessors++] = Labels[y, x - 1];
                         if (y - 1 >= lowerY)
                         {
-                            if (Labels[x - 1, y - 1] > 0) Predecessors[validPredecessors++] = Labels[x - 1, y - 1];
+                            if (Labels[y - 1, x - 1] > 0) Predecessors[validPredecessors++] = Labels[y - 1, x - 1];
                         }
                     }
                     if (y - 1 >= lowerY)
                     {
-                        if (Labels[x, y - 1] > 0) Predecessors[validPredecessors++] = Labels[x, y - 1];
+                        if (Labels[y - 1, x] > 0) Predecessors[validPredecessors++] = Labels[y - 1, x];
                         if (x + 1 <= upperX)
                         {
-                            if (Labels[x + 1, y - 1] > 0) Predecessors[validPredecessors++] = Labels[x + 1, y - 1];
+                            if (Labels[y - 1, x + 1] > 0) Predecessors[validPredecessors++] = Labels[y - 1, x + 1];
                         }
                     }
                     // Cases
@@ -259,21 +261,21 @@ public static class PathTools
                     {
                         case 0:
                             UnionFindTree.Add(new UnionFindNode<int>(labelCounter));
-                            Labels[x, y] = labelCounter;
+                            Labels[y, x] = labelCounter;
                             labelCounter++;
                             break;
                         case 1:
-                            Labels[x, y] = Predecessors[0];
+                            Labels[y, x] = Predecessors[0];
                             break;
                         case 2:
-                            Labels[x, y] = Predecessors[0];
+                            Labels[y, x] = Predecessors[0];
                             if (Predecessors[0] != Predecessors[1])
                             {
                                 UnionFindNode<int>.Union(UnionFindTree[Predecessors[0] - 1], UnionFindTree[Predecessors[1] - 1]);
                             }
                             break;
                         case 3:
-                            Labels[x, y] = Predecessors[0];
+                            Labels[y, x] = Predecessors[0];
                             if (Predecessors[0] != Predecessors[1])
                             {
                                 UnionFindNode<int>.Union(UnionFindTree[Predecessors[0] - 1], UnionFindTree[Predecessors[1] - 1]);
@@ -288,7 +290,7 @@ public static class PathTools
                             }
                             break;
                         case 4:
-                            Labels[x, y] = Predecessors[0];
+                            Labels[y, x] = Predecessors[0];
                             if (Predecessors[0] != Predecessors[1])
                             {
                                 UnionFindNode<int>.Union(UnionFindTree[Predecessors[0] - 1], UnionFindTree[Predecessors[1] - 1]);
@@ -317,17 +319,23 @@ public static class PathTools
                     }
                 }
             }
+            Dictionary<int, int> valueRemap = new Dictionary<int, int>();
+            NumLabels = 0;
             for (int i = 0; i < UnionFindTree.Count; i++)
             {
                 UnionFindTree[i] = UnionFindTree[i].Find();
-            }
-            for (int x = 0; x < Data.heightmapResolution; x++)
-            {
-                for (int y = 0; y < Data.heightmapResolution; y++)
+                if (!valueRemap.ContainsKey(UnionFindTree[i].Value))
                 {
-                    if (Labels[x, y] > 0)
+                    valueRemap.Add(UnionFindTree[i].Value, NumLabels++);
+                }
+            }
+            for (int y = 0; y < Data.heightmapResolution; y++)
+            {
+                for (int x = 0; x < Data.heightmapResolution; x++)
+                {
+                    if (Labels[y, x] >= 0)
                     {
-                        Labels[x, y] = UnionFindTree[Labels[x, y] - 1].Value;
+                        Labels[y, x] = valueRemap[UnionFindTree[Labels[y, x] - 1].Value];
                     }
                 }
             }

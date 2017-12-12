@@ -6,7 +6,7 @@ using NoiseInterfaces;
 
 public static class TerrainLabeler
 {
-    public static TerrainData MapTerrain(INoise2DProvider noise, TerrainData terrainData, bool[,] streetMap, float WaterLevel, float VegetationMaxHeight, Vector2 TerrainOffset)
+    public static TerrainData MapTerrain(float[,] moisture, float[,] Heights, TerrainData terrainData, bool[,] streetMap, float WaterLevel, float VegetationMaxHeight, Vector2 TerrainOffset)
     {
         Vector2Int heightmapLimits = new Vector2Int(terrainData.heightmapWidth - 1, terrainData.heightmapWidth - 1);
         Vector2 location = new Vector2();
@@ -22,8 +22,8 @@ public static class TerrainLabeler
                 // Normalise x/y coordinates to range 0-1 
                 float y_01 = (float)y / (float)terrainData.alphamapHeight;
                 float x_01 = (float)x / (float)terrainData.alphamapWidth;
-                int x_heightmap = Mathf.CeilToInt(x_01 * (terrainData.heightmapWidth - 1));
-                int y_heightmap = Mathf.CeilToInt(y_01 * (terrainData.heightmapHeight-1));
+                int x_hm = Mathf.CeilToInt(x_01 * (terrainData.heightmapWidth - 1));
+                int y_hm = Mathf.CeilToInt(y_01 * (terrainData.heightmapHeight-1));
 
                 location.x = x_01 * (terrainData.heightmapWidth - 1);
                 location.y = y_01 * (terrainData.heightmapHeight - 1);
@@ -36,30 +36,24 @@ public static class TerrainLabeler
                 float[] splatWeights = new float[terrainData.alphamapLayers];
 
 
-                if (streetMap[x_heightmap, y_heightmap])
+                if (streetMap[x_hm, y_hm])
                 {
 
                     splatWeights[4] = 1f;
                 }
                 else
                 {
-                    GetCircleNodes.GetNeighbors(x_heightmap, y_heightmap, ref CircleNodes);
+                    GetCircleNodes.GetNeighbors(x_hm, y_hm, ref CircleNodes);
                     foreach (var node in CircleNodes)
                     {
                         if (node.valid && streetMap[node.x, node.y])
                         {
                             isStreetMapNeighbour = true;
-                            streetNeighbourFactor += .125f / (1f + MapTools.OctileDistance(x_heightmap, y_heightmap, node.x, node.y));
+                            streetNeighbourFactor += .125f / (1f + MapTools.OctileDistance(x_hm, y_hm, node.x, node.y));
                         }
                     }
-                    // Calculate the steepness of the terrain
-                    float moisture = .5f + noise.Evaluate((location + TerrainOffset)*.0001f)/2f;
                     Vector3 normal = terrainData.GetInterpolatedNormal(x_01, y_01);
-                    float steepness = Mathf.InverseLerp(0f, terrainData.size[1], terrainData.GetSteepness(y_01, x_01));
-                    float slope = steepness * steepness;
-                    // Sample the height at this location (note GetHeight expects int coordinates corresponding to locations in the heightmap array)
-                    // clamp value to 0 - 1 by dividing by the total terrain height in unity units.
-                    float height = Mathf.InverseLerp(0f, terrainData.size[1], terrainData.GetHeight(y_heightmap, x_heightmap));
+                    float height = Heights[y_hm, x_hm];
 
                     //0 public Texture2D GrasTexture;
                     //1 public Texture2D SnowTexture;
@@ -67,19 +61,25 @@ public static class TerrainLabeler
                     //3 public Texture2D SandTexture;
                     //4 public Texture2D PathTexture;
                     //5 public Texture2D CliffTexture;
-                    splatWeights[0] = moisture*Mathf.InverseLerp(.6f, 1f, normal.y) * .2f * Mathf.Pow(Mathf.Clamp(0, .2f, .25f - Mathf.Abs(.25f - height)), 2f);
-                    splatWeights[1] = Mathf.InverseLerp(.6f, 1f, normal.y) * Mathf.Pow(Mathf.InverseLerp(.6f, 1f, height), 2f) * moisture;
-                    splatWeights[2] = 4 * (1f -Mathf.InverseLerp(0f, .6f, normal.y)) * (1f - moisture);
-                    splatWeights[3] = (1f - Mathf.InverseLerp(0f, .5f, normal.y)) * Mathf.Pow(Mathf.InverseLerp(.8f, 1f, 1f - height), 2f) * (1f - moisture);
+                    splatWeights[0] = moisture[y_hm, x_hm] * Mathf.InverseLerp(.6f, 1f, normal.y) * .2f * Mathf.Pow(Mathf.Clamp(0, .2f, .25f - Mathf.Abs(.25f - height)), 2f);
+                    splatWeights[1] = Mathf.InverseLerp(Mathf.Cos(45f * Mathf.Deg2Rad), 1f, normal.y) * Mathf.Pow(Mathf.InverseLerp(.6f, 1f, height), 2f) * moisture[y_hm, x_hm];
+                    splatWeights[2] = 4 * (1f - Mathf.InverseLerp(Mathf.Cos(60 * Mathf.Deg2Rad), Mathf.Cos(45f * Mathf.Deg2Rad), normal.y));
+                    splatWeights[3] = (1f - Mathf.InverseLerp(0f, .5f, normal.y)) * Mathf.Pow(Mathf.InverseLerp(.9f - WaterLevel, 1f, 1f - height), 2f) * (1f - moisture[y_hm, x_hm]);
                     //splatWeights[4] = splatWeights[0] * .7f + splatWeights[3] * .5f * (1f-moisture);
-                    splatWeights[5] = 3 * Mathf.Abs(normal.z) * Mathf.Abs(normal.x) * Mathf.InverseLerp(.2f, 1f, height) * (1f - moisture);
+                    splatWeights[5] = 5 * (1f - Mathf.InverseLerp(0,Mathf.Cos(60f * Mathf.Deg2Rad), normal.y)) * Mathf.InverseLerp(WaterLevel + .1f, 1f, height);
                 }
-                
 
                 //Debug.Log(String.Format("({0}, {1})", x_heightmap, y_heightmap));
                 
                 if (isStreetMapNeighbour)
                     splatWeights[4] += 1f + streetNeighbourFactor;
+                else if (splatWeights[1] > .2f)
+                {
+                    splatWeights[0] = splatWeights[0] > splatWeights[1] ? splatWeights[0] - splatWeights[1] : 0;
+                    splatWeights[2] = splatWeights[2] > splatWeights[1] ? splatWeights[2] - splatWeights[1] : 0;
+                    splatWeights[3] = splatWeights[3] > splatWeights[1] ? splatWeights[3] - splatWeights[1] : 0;
+                    splatWeights[5] = splatWeights[5] > splatWeights[1] ? splatWeights[5] - splatWeights[1] : 0;
+                }
                 // Sum of all textures weights must add to 1, so calculate normalization factor from sum of weights
                 float z = splatWeights.Sum();
                 // Loop through each terrain texture
@@ -90,7 +90,7 @@ public static class TerrainLabeler
                     splatWeights[i] /= z;
 
                     // Assign this point to the splatmap array
-                    splatmapData[x, y, i] = splatWeights[i];
+                    splatmapData[y, x, i] = splatWeights[i];
                 }
             }
         }
