@@ -22,7 +22,7 @@ public class VegetationGenerator
             };
         }
         int n = 0;
-        for (int i = 0; i < 256; i++)
+        for (int i = 0; i < 128; i++)
         {
             int x, y;
 

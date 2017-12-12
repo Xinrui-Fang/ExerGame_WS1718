@@ -380,10 +380,10 @@ MonoBehaviour:
     Depth: 240
     WaterLevel: 0.1
     VegetationLevel: 0.6
-    HeightmapResolution: 513
-    DetailResolution: 1025
+    HeightmapResolution: 257
+    DetailResolution: 513
     DetailResolutionPerPatch: 33
-    Size: 256
+    Size: 129
     Trees:
     - {fileID: 100000, guid: c91c1eb85782d5748ace27eb4d7415bb, type: 3}
     - {fileID: 100000, guid: 6aab193b7693b5e4c9741f1917d2987c, type: 3}
@@ -394,43 +394,21 @@ MonoBehaviour:
     - Octaves: 8
       Weight: 0.45
       Lacunarity: 2
-      Persistance: 0.5
-      FeatureFrequency: 0.5
+      Persistance: 0.4
+      FeatureFrequency: 0.3
       NoiseType: 0
       FractalType: 1
       Seed: 435
-      postprocessors:
-      - type: 0
-        value1: 1.2
-        value2: 0
-        value3: 0
-      - type: 2
-        value1: 0.1
-        value2: 0.85
-        value3: 0
+      postprocessors: []
       HeightmapType: 1
     - Octaves: 6
-      Weight: 0.5
+      Weight: 0.55
       Lacunarity: 2
-      Persistance: 0.5
-      FeatureFrequency: 0.25
+      Persistance: 0.4
+      FeatureFrequency: 0.2
       NoiseType: 0
       FractalType: 0
       Seed: 42421
-      postprocessors:
-      - type: 2
-        value1: 0.2
-        value2: 0.9
-        value3: 0
-      HeightmapType: 0
-    - Octaves: 3
-      Weight: 0.05
-      Lacunarity: 3
-      Persistance: 0.5
-      FeatureFrequency: 1
-      NoiseType: 0
-      FractalType: 0
-      Seed: 42
       postprocessors:
       - type: 2
         value1: 0.2
