@@ -378,7 +378,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Settings:
     Depth: 240
-    WaterLevel: 0.01
+    WaterLevel: 0.1
     VegetationLevel: 0.6
     HeightmapResolution: 513
     DetailResolution: 1025
@@ -416,21 +416,21 @@ MonoBehaviour:
       FeatureFrequency: 0.25
       NoiseType: 0
       FractalType: 0
-      Seed: 123
+      Seed: 42421
       postprocessors:
       - type: 2
         value1: 0.2
         value2: 0.9
         value3: 0
       HeightmapType: 0
-    - Octaves: 2
+    - Octaves: 3
       Weight: 0.05
-      Lacunarity: 1.6
+      Lacunarity: 3
       Persistance: 0.5
       FeatureFrequency: 1
       NoiseType: 0
       FractalType: 0
-      Seed: 224
+      Seed: 42
       postprocessors:
       - type: 2
         value1: 0.2
@@ -438,11 +438,11 @@ MonoBehaviour:
         value3: 0
       HeightmapType: 0
     Moisture:
-      Octaves: 3
+      Octaves: 4
       Weight: 0
-      Lacunarity: 4
+      Lacunarity: 3
       Persistance: 0.5
-      FeatureFrequency: 0.125
+      FeatureFrequency: 1
       NoiseType: 0
       FractalType: 0
       Seed: 424242

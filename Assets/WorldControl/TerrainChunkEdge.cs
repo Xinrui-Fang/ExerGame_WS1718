@@ -47,7 +47,7 @@ public class TerrainChunkEdge
     }
 
     // Generate points on this edge. Uses the edges hash as seed. IF points are closer to each other then the value indicated by Delta these points will be merged.
-    public void GenerateRoadPoints(int MaxRoads = 5, int Delta = 10)
+    public void GenerateRoadPoints(int MaxRoads = 5, int Delta = 100, int CornerDistance = 50)
     { 
         System.Random prng = new System.Random(this.GetHashCode());
         int numRoads = prng.Next(1, MaxRoads);
@@ -55,7 +55,7 @@ public class TerrainChunkEdge
         int i = 0;
         while (i < numRoads)
         {
-            int candidate = prng.Next(1, ChunkResolution - 2); // Only allow points that are not on the corners of the terrain.
+            int candidate = prng.Next(CornerDistance, ChunkResolution - CornerDistance - 1); // Only allow points that are not on the corners of the terrain.
             if (RoadPoints.Contains(candidate)) continue;
             RoadPoints.Add(candidate);
             i++;

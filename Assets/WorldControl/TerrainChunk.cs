@@ -1,12 +1,13 @@
 ﻿using Assets.Utils;
 using System;
+using System.Diagnostics;
 using UnityEngine;
 
 public class TerrainChunk
 {
     public Vector2Int GridCoords;
     public int ChunkSeed;
-    public float[,] Heights;
+    public float[,] Heights, Moisture;
     public Terrain ChunkTerrain;
 
     private long WorldSeed;
@@ -47,9 +48,12 @@ public class TerrainChunk
 
     public void Build(Vector2Int gridCoords)
     {
+
+        Stopwatch stopWatch = new Stopwatch();
+        stopWatch.Start();
         // Resetting all the Arrays
         Heights = new float[Settings.HeightmapResolution, Settings.HeightmapResolution];
-        float[,] Moiisture = new float[Settings.HeightmapResolution, Settings.HeightmapResolution];
+        Moisture = new float[Settings.HeightmapResolution, Settings.HeightmapResolution];
 
         GridCoords = gridCoords;
         ChunkSeed = GetHashCode();
@@ -61,9 +65,18 @@ public class TerrainChunk
             new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(-1,0), WorldSeed, Settings.HeightmapResolution)
         };
 
+        UnityEngine.Debug.Log(string.Format("Took {0} ms to prepare arrays and edges at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        stopWatch.Reset();
+        stopWatch.Start();
+
         Settings.GetHeightMapGenerator(GridCoords * Settings.HeightmapResolution).ManipulateHeight(ref Heights, Settings.HeightmapResolution, Settings.Size);
-        Settings.Moisture.GetHeightSource(GridCoords * Settings.HeightmapResolution).ManipulateHeight(ref Moiisture, Settings.HeightmapResolution, Settings.Size);
+        Settings.Moisture.GetHeightSource(GridCoords * Settings.HeightmapResolution).ManipulateHeight(ref Moisture, Settings.HeightmapResolution, Settings.Size);
+
         ChunkTerrainData.SetHeights(0, 0, Heights);
+
+        UnityEngine.Debug.Log(string.Format("Took {0} ms to create Heightmap and Moisture at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        stopWatch.Reset();
+        stopWatch.Start();
 
         Vector2Int lowerBound = new Vector2Int(0, 0);
         Vector2Int upperBound = new Vector2Int(Settings.HeightmapResolution - 1, Settings.HeightmapResolution - 1);
@@ -75,28 +88,53 @@ public class TerrainChunk
         PathTools.CachedWalkable walkable = new PathTools.CachedWalkable(walkable_src.IsWalkable, lowerBound, upperBound, Settings.HeightmapResolution);
         PathTools.Octile8GridSlopeStepCost AStarStepCost = new PathTools.Octile8GridSlopeStepCost(5000, 10, Heights);
 
+
+        UnityEngine.Debug.Log(string.Format("Took {0} ms to prepare pathfinding at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        stopWatch.Reset();
+        stopWatch.Start();
         Connectivity = new PathTools.ConnectivityLabel(ChunkTerrainData, neighbours, walkable.IsWalkable);
+
+
+        UnityEngine.Debug.Log(string.Format("Took {0} ms to create ConnectivityMap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        stopWatch.Reset();
+        stopWatch.Start();
+
         paths = new PathFinder(AStarStepCost.StepCosts, Settings.HeightmapResolution, Heights, Connectivity);
         AStar search = new AStar(walkable.IsWalkable, neighbours, paths.StepCostsRoad, MapTools.OctileDistance, 2f);
         paths.SetSearch(search);
         search.PrepareSearch(Settings.HeightmapResolution * Settings.HeightmapResolution);
         paths.CreateNetwork(TerrainEdges);
         search.CleanUp();
+
         ChunkTerrainData.SetHeights(0, 0, paths.Heights);
 
+        UnityEngine.Debug.Log(string.Format("Took {0} ms to create route network at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        stopWatch.Reset();
+        stopWatch.Start();
+
+
         ChunkTerrainData.RefreshPrototypes();
-        ChunkTerrainData = TerrainLabeler.MapTerrain(Moiisture, Heights, ChunkTerrainData, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, gridCoords * Settings.HeightmapResolution);
+        ChunkTerrainData = TerrainLabeler.MapTerrain(Moisture, Heights, ChunkTerrainData, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, gridCoords * Settings.HeightmapResolution);
         vGen.PaintGras(ChunkSeed, Heights, Settings.Trees, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, ChunkTerrainData);
+
+        UnityEngine.Debug.Log(string.Format("Took {0} ms to create Vegetation and Splatmap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        stopWatch.Stop();
     }
 
     public void Flush()
     {
         if (DEBUG_ON)
         {
+
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
             FloatImageExporter HimgExp = new FloatImageExporter(0f, 1f);
             IntImageExporter CimgExp = new IntImageExporter(-1, Connectivity.NumLabels - 1);
             HimgExp.Export(string.Format("HeightmapAt{0}-{1}", GridCoords.x, GridCoords.y), Heights);
+            HimgExp.Export(string.Format("MoistureAt{0}-{1}", GridCoords.x, GridCoords.y), Moisture);
             CimgExp.Export(string.Format("ConnectivityMapAt{0}-{1}", GridCoords.x, GridCoords.y), Connectivity.Labels);
+            UnityEngine.Debug.Log(string.Format("Took {0} ms to export debug Images at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+            stopWatch.Stop();
         }
         if (UnityTerrain != null)
         {
