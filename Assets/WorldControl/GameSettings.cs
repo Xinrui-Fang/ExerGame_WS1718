@@ -115,6 +115,8 @@ public class  DetailObject
 [System.Serializable]
 public class GameSettings
 {
+    public GameObject MainObject;
+    public int ChunkMapSize = 32;
     public float Depth, WaterLevel, VegetationLevel;
     public int HeightmapResolution, DetailResolution, DetailResolutionPerPatch, Size;
     public GameObject[] Trees;

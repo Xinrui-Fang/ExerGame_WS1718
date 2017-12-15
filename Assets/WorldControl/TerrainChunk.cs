@@ -72,7 +72,8 @@ public class TerrainChunk
         Settings.GetHeightMapGenerator(GridCoords * Settings.HeightmapResolution).ManipulateHeight(ref Heights, Settings.HeightmapResolution, Settings.Size);
         Settings.Moisture.GetHeightSource(GridCoords * Settings.HeightmapResolution).ManipulateHeight(ref Moisture, Settings.HeightmapResolution, Settings.Size);
 
-        ChunkTerrainData.SetHeights(0, 0, Heights);
+        //return;
+        //ChunkTerrainData.SetHeights(0, 0, Heights);
 
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create Heightmap and Moisture at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Reset();
@@ -106,16 +107,16 @@ public class TerrainChunk
         paths.CreateNetwork(TerrainEdges);
         search.CleanUp();
 
-        ChunkTerrainData.SetHeights(0, 0, paths.Heights);
+        //ChunkTerrainData.SetHeights(0, 0, paths.Heights);
 
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create route network at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Reset();
         stopWatch.Start();
 
 
-        ChunkTerrainData.RefreshPrototypes();
-        ChunkTerrainData = TerrainLabeler.MapTerrain(Moisture, Heights, ChunkTerrainData, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, gridCoords * Settings.HeightmapResolution);
-        vGen.PaintGras(ChunkSeed, Heights, Settings.Trees, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, ChunkTerrainData);
+        //ChunkTerrainData.RefreshPrototypes();
+        //ChunkTerrainData = TerrainLabeler.MapTerrain(Moisture, Heights, ChunkTerrainData, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, gridCoords * Settings.HeightmapResolution);
+        //vGen.PaintGras(ChunkSeed, Heights, Settings.Trees, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, ChunkTerrainData);
 
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create Vegetation and Splatmap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Stop();
@@ -140,11 +141,18 @@ public class TerrainChunk
         {
             GameObject.Destroy(UnityTerrain.gameObject);
         }
+        
+        ChunkTerrainData.SetHeights(0, 0, Heights);
         UnityTerrain = Terrain.CreateTerrainGameObject(ChunkTerrainData);
         Terrain terrain =  UnityTerrain.GetComponent<Terrain>();
         terrain.materialType = Terrain.MaterialType.Custom;
         terrain.materialTemplate = Settings.TerrainMaterial;
         UnityTerrain.SetActive(true);
-        UnityTerrain.transform.Translate(new Vector3(GridCoords.x, 0, GridCoords.y) * Settings.Size);
+        UnityTerrain.transform.position = new Vector3(GridCoords.x, 0, GridCoords.y) * (float) Settings.Size;       
+    }
+    
+    public void DestroyTerrain()
+    {
+        GameObject.Destroy(UnityTerrain);
     }
 }
