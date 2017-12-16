@@ -1,4 +1,5 @@
 ﻿using Assets.Utils;
+using Assets.World.Heightmap;
 using System;
 using System.Diagnostics;
 using UnityEngine;
@@ -8,6 +9,7 @@ public class TerrainChunk
     public Vector2Int GridCoords;
     public int ChunkSeed;
     public float[,] Heights, Moisture;
+    public Vector3[,] Normals;
     public Terrain ChunkTerrain;
 
     private long WorldSeed;
@@ -43,6 +45,7 @@ public class TerrainChunk
             detailPrototypes = Settings.GetDetail()
         };
         ChunkTerrainData.SetDetailResolution(Settings.DetailResolution, Settings.DetailResolutionPerPatch);
+        ChunkTerrainData.RefreshPrototypes();
         vGen = new VegetationGenerator();
     }
 
@@ -53,6 +56,7 @@ public class TerrainChunk
         stopWatch.Start();
         // Resetting all the Arrays
         Heights = new float[Settings.HeightmapResolution, Settings.HeightmapResolution];
+        Normals = new Vector3[Settings.HeightmapResolution, Settings.HeightmapResolution];
         Moisture = new float[Settings.HeightmapResolution, Settings.HeightmapResolution];
 
         GridCoords = gridCoords;
@@ -71,8 +75,7 @@ public class TerrainChunk
 
         Settings.GetHeightMapGenerator(GridCoords * Settings.HeightmapResolution).ManipulateHeight(ref Heights, Settings.HeightmapResolution, Settings.Size);
         Settings.Moisture.GetHeightSource(GridCoords * Settings.HeightmapResolution).ManipulateHeight(ref Moisture, Settings.HeightmapResolution, Settings.Size);
-
-        ChunkTerrainData.SetHeights(0, 0, Heights);
+        NormalsFromHeightMap.GenerateNormals(Heights, Normals, Settings.Depth, (float)Settings.Size / Settings.HeightmapResolution);
 
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create Heightmap and Moisture at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Reset();
@@ -83,7 +86,7 @@ public class TerrainChunk
         PathTools.Bounded8Neighbours neighbours = new PathTools.Bounded8Neighbours(ref lowerBound, ref upperBound);
         PathTools.NormalYThresholdWalkable walkable_src = new PathTools.NormalYThresholdWalkable(
             Mathf.Cos(Mathf.Deg2Rad * 25),
-            ChunkTerrainData, 
+            Normals, 
             Settings.HeightmapResolution, ref lowerBound, ref upperBound);
         PathTools.CachedWalkable walkable = new PathTools.CachedWalkable(walkable_src.IsWalkable, lowerBound, upperBound, Settings.HeightmapResolution);
         PathTools.Octile8GridSlopeStepCost AStarStepCost = new PathTools.Octile8GridSlopeStepCost(5000, 10, Heights);
@@ -112,10 +115,8 @@ public class TerrainChunk
         stopWatch.Reset();
         stopWatch.Start();
 
-
-        ChunkTerrainData.RefreshPrototypes();
-        ChunkTerrainData = TerrainLabeler.MapTerrain(Moisture, Heights, ChunkTerrainData, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, gridCoords * Settings.HeightmapResolution);
-        vGen.PaintGras(ChunkSeed, Heights, Settings.Trees, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, ChunkTerrainData);
+        ChunkTerrainData = TerrainLabeler.MapTerrain(Moisture, Heights, ChunkTerrainData, Normals, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, gridCoords * Settings.HeightmapResolution);
+        vGen.PaintGras(ChunkSeed, Heights, Settings.Trees, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, ChunkTerrainData, Normals);
 
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create Vegetation and Splatmap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Stop();
