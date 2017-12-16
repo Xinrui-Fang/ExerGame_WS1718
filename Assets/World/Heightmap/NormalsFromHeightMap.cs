@@ -34,5 +34,24 @@ namespace Assets.World.Heightmap
                 }
             }
         }
+
+        public static void InterpolateNormal(float x, float y, Vector3 VecOut, Vector3[,] NormalMap)
+        {
+            float x1, x2, y1, y2;
+            float d1, d2, t;
+            x1 = Mathf.FloorToInt(x);
+            x2 = Mathf.CeilToInt(x);
+            y1 = Mathf.FloorToInt(y);
+            y2 = Mathf.CeilToInt(y);
+
+            if ((x == x1 && y == y1) || (x == x2 && y == y2)) VecOut = NormalMap[(int)y, (int)x];
+
+            d1 = Mathf.Sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1));
+            d2 = Mathf.Sqrt((x - x2) * (x - x2) + (y - y2) * (y - y2));
+
+            t = d1 / (d1 + d2);
+
+            VecOut = NormalMap[(int)y1, (int)x1] * t + (1 - t) * NormalMap[(int)y2, (int)x2];
+        }
     }
 }

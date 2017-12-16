@@ -381,7 +381,7 @@ MonoBehaviour:
     WaterLevel: 0.1
     VegetationLevel: 0.6
     HeightmapResolution: 257
-    DetailResolution: 513
+    DetailResolution: 257
     DetailResolutionPerPatch: 33
     Size: 129
     Trees:

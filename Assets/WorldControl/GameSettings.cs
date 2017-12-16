@@ -159,4 +159,18 @@ public class GameSettings
         }
         return HeightmapLayers[0].GetHeightSource(Offset);
     }
+
+    public TreePrototype[] GetTreePrototypes()
+    {
+        TreePrototype[] protos = new TreePrototype[Trees.Length];
+        for (int j = 0; j < Trees.Length; j++)
+        {
+            protos[j] = new TreePrototype
+            {
+                prefab = Trees[j],
+                bendFactor = .5f
+            };
+        }
+        return protos;
+    }
 }

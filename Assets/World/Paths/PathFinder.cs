@@ -76,8 +76,8 @@ public class PathFinder
 
     public void RoadSmooth(Vector2Int linePoint)
     {
-        TerrainSmoother.Apply(linePoint.x, linePoint.y);
-        RoadFlatten.Apply(linePoint.x, linePoint.y);
+        TerrainSmoother.Apply(linePoint.y, linePoint.x);
+        RoadFlatten.Apply(linePoint.y, linePoint.x);
     }
 
     public void AddToStreetMap(List<Vector2Int> path, int width=1)
