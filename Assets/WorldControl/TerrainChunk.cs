@@ -1,5 +1,7 @@
 ﻿using Assets.Utils;
+using Assets.World.Heightmap;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 
@@ -8,18 +10,24 @@ public class TerrainChunk
     public Vector2Int GridCoords;
     public int ChunkSeed;
     public float[,] Heights, Moisture;
+    public Vector3[,] Normals;
     public Terrain ChunkTerrain;
 
     private long WorldSeed;
     public TerrainChunkEdge[] TerrainEdges;
     public GameSettings Settings;
     private TerrainData ChunkTerrainData;
+
+    public float[,,] SplatmapData;
+
     private VegetationGenerator vGen;
     private PathFinder paths;
     public PathTools.ConnectivityLabel Connectivity;
     GameObject UnityTerrain;
 
     public bool DEBUG_ON = false;
+
+    public List<TreeInstance> Trees { get; private set; }
 
     public override int GetHashCode()
     {
@@ -40,10 +48,17 @@ public class TerrainChunk
             heightmapResolution = Settings.HeightmapResolution,
             size = new Vector3(Settings.Size, Settings.Depth, Settings.Size),
             splatPrototypes = Settings.GetSplat(),
-            detailPrototypes = Settings.GetDetail()
+            alphamapResolution = Settings.HeightmapResolution,
+
+            detailPrototypes = Settings.GetDetail(),
+            treePrototypes = settings.GetTreePrototypes()
         };
         ChunkTerrainData.SetDetailResolution(Settings.DetailResolution, Settings.DetailResolutionPerPatch);
+        ChunkTerrainData.RefreshPrototypes();
+
+        SplatmapData = new float[ChunkTerrainData.alphamapWidth, ChunkTerrainData.alphamapHeight, ChunkTerrainData.alphamapLayers];
         vGen = new VegetationGenerator();
+        Trees = new List<TreeInstance>();
     }
 
     public void Build(Vector2Int gridCoords)
@@ -53,6 +68,7 @@ public class TerrainChunk
         stopWatch.Start();
         // Resetting all the Arrays
         Heights = new float[Settings.HeightmapResolution, Settings.HeightmapResolution];
+        Normals = new Vector3[Settings.HeightmapResolution, Settings.HeightmapResolution];
         Moisture = new float[Settings.HeightmapResolution, Settings.HeightmapResolution];
 
         GridCoords = gridCoords;
@@ -71,11 +87,10 @@ public class TerrainChunk
 
         Settings.GetHeightMapGenerator(GridCoords * Settings.HeightmapResolution).ManipulateHeight(ref Heights, Settings.HeightmapResolution, Settings.Size);
         Settings.Moisture.GetHeightSource(GridCoords * Settings.HeightmapResolution).ManipulateHeight(ref Moisture, Settings.HeightmapResolution, Settings.Size);
-
-        //return;
-        //ChunkTerrainData.SetHeights(0, 0, Heights);
+        NormalsFromHeightMap.GenerateNormals(Heights, Normals, Settings.Depth, (float)Settings.Size / Settings.HeightmapResolution);
 
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create Heightmap and Moisture at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        
         stopWatch.Reset();
         stopWatch.Start();
 
@@ -84,7 +99,7 @@ public class TerrainChunk
         PathTools.Bounded8Neighbours neighbours = new PathTools.Bounded8Neighbours(ref lowerBound, ref upperBound);
         PathTools.NormalYThresholdWalkable walkable_src = new PathTools.NormalYThresholdWalkable(
             Mathf.Cos(Mathf.Deg2Rad * 25),
-            ChunkTerrainData, 
+            Normals, 
             Settings.HeightmapResolution, ref lowerBound, ref upperBound);
         PathTools.CachedWalkable walkable = new PathTools.CachedWalkable(walkable_src.IsWalkable, lowerBound, upperBound, Settings.HeightmapResolution);
         PathTools.Octile8GridSlopeStepCost AStarStepCost = new PathTools.Octile8GridSlopeStepCost(5000, 10, Heights);
@@ -93,30 +108,26 @@ public class TerrainChunk
         UnityEngine.Debug.Log(string.Format("Took {0} ms to prepare pathfinding at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Reset();
         stopWatch.Start();
-        Connectivity = new PathTools.ConnectivityLabel(ChunkTerrainData, neighbours, walkable.IsWalkable);
+        Connectivity = new PathTools.ConnectivityLabel(Settings.HeightmapResolution, neighbours, walkable.IsWalkable);
 
 
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create ConnectivityMap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Reset();
         stopWatch.Start();
-
         paths = new PathFinder(AStarStepCost.StepCosts, Settings.HeightmapResolution, Heights, Connectivity);
         AStar search = new AStar(walkable.IsWalkable, neighbours, paths.StepCostsRoad, MapTools.OctileDistance, 2f);
         paths.SetSearch(search);
         search.PrepareSearch(Settings.HeightmapResolution * Settings.HeightmapResolution);
         paths.CreateNetwork(TerrainEdges);
         search.CleanUp();
-
-        //ChunkTerrainData.SetHeights(0, 0, paths.Heights);
-
+        
+        NormalsFromHeightMap.GenerateNormals(Heights, Normals, Settings.Depth, (float)Settings.Size / Settings.HeightmapResolution);
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create route network at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Reset();
         stopWatch.Start();
-
-
-        //ChunkTerrainData.RefreshPrototypes();
-        //ChunkTerrainData = TerrainLabeler.MapTerrain(Moisture, Heights, ChunkTerrainData, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, gridCoords * Settings.HeightmapResolution);
-        //vGen.PaintGras(ChunkSeed, Heights, Settings.Trees, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, ChunkTerrainData);
+        
+        TerrainLabeler.MapTerrain(Moisture, Heights, Normals, SplatmapData, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, gridCoords * Settings.HeightmapResolution);
+        Trees = vGen.PaintGras(ChunkSeed, Heights, Settings.Trees.Length, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, Normals);
 
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create Vegetation and Splatmap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Stop();
@@ -141,8 +152,9 @@ public class TerrainChunk
         {
             GameObject.Destroy(UnityTerrain.gameObject);
         }
-        
         ChunkTerrainData.SetHeights(0, 0, Heights);
+        ChunkTerrainData.SetAlphamaps(0, 0, SplatmapData);
+        ChunkTerrainData.treeInstances = Trees.ToArray();
         UnityTerrain = Terrain.CreateTerrainGameObject(ChunkTerrainData);
         Terrain terrain =  UnityTerrain.GetComponent<Terrain>();
         terrain.materialType = Terrain.MaterialType.Custom;

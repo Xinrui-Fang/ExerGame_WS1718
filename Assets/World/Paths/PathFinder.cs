@@ -76,8 +76,8 @@ public class PathFinder
 
     public void RoadSmooth(Vector2Int linePoint)
     {
-        TerrainSmoother.Apply(linePoint.x, linePoint.y);
-        RoadFlatten.Apply(linePoint.x, linePoint.y);
+        TerrainSmoother.Apply(linePoint.y, linePoint.x);
+        RoadFlatten.Apply(linePoint.y, linePoint.x);
     }
 
     public void AddToStreetMap(List<Vector2Int> path, int width=1)
@@ -102,11 +102,13 @@ public class PathFinder
         {
             Debug.Log(string.Format("Inspecting edge to {0} from {1}", edge.ChunkPos2, edge.ChunkPos1));
             edge.GenerateRoadPoints();
+            Debug.Log(edge.RoadPoints.Count);
             foreach (int roadPoint in edge.RoadPoints)
             {
                 Vector2Int p = MapTools.UnfoldToPerimeter(roadPoint + Offset, Resolution - 1);
                 Debug.Log(string.Format("Got point {0} for {1} and Offset {2}", p, roadPoint, Offset));
                 int label = Connectivity.Labels[p.y, p.x];
+                Debug.Log(label);
                 if (label >= 0)
                 {
                     Points[label].Add(p);
@@ -117,8 +119,10 @@ public class PathFinder
             }
             Offset += Resolution - 1;
         }
+
         for (int i=0; i < Connectivity.NumLabels; i++)
         {
+            Debug.Log(string.Format("Looking at Connectivity group {0}", i));
             if (Points[i].Count == 1)
             {
                 DiscardedPoints.Add(Points[i][0]);
@@ -128,17 +132,18 @@ public class PathFinder
                 ConnectPoints(Points[i]);
             }
         }
-
     }
 
     private void ConnectPoints(List<Vector2Int> Points)
     {
         if(Points.Count == 2)
         {
+            Debug.Log("Making paths");
             MakePath(Points[0], Points[1]);
         }
         else
         {
+            Debug.Log("Sorting points . . .");
             var comparer = new PointDistanceComparer(Points[0]);
             Points.Sort((a,b) => -1* comparer.Compare(a,b));
             for (int  i = 1; i < Points.Count; i++)
@@ -158,7 +163,7 @@ public class PathFinder
         public int Compare(Vector2Int a, Vector2Int b)
         {
             //return MapTools.OctileDistance(P.x, P.y, a.x, a.y).CompareTo(MapTools.OctileDistance(P.x, P.y, b.x, b.y));
-            return (P - a).magnitude.CompareTo((P - b).magnitude);
+            return (Mathf.Sqrt((P.x * a.x) * (P.x - a.x) + (P.y - a.y) * (P.y - a.y)).CompareTo(Mathf.Sqrt((P.x - b.x) * (P.x - b.x) + (P.y - b.y) * (P.y - b.y))));
         }
     }
 }

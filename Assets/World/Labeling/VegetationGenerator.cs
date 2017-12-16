@@ -1,42 +1,35 @@
 ﻿using UnityEngine;
-using NoiseInterfaces;
 using System.Collections.Generic;
+using Assets.World.Heightmap;
 
 public class VegetationGenerator
 {
     public VegetationGenerator(){}
 
-    public void PaintGras(long Seed, float[,] Heights, GameObject[] treeObjects, bool[,] streetMap, float WaterLevel, float VegetationMaxHeight, TerrainData terrainData)
+    public List<TreeInstance> PaintGras(long Seed, float[,] Heights, int NumOfTrees, bool[,] streetMap, float WaterLevel, float VegetationMaxHeight, Vector3[,] Normals)
     {
-        bool[,] TreeMap = new bool[terrainData.heightmapWidth, terrainData.heightmapHeight];
+        int x_res, y_res;
+        x_res = Heights.GetLength(1);
+        y_res = Heights.GetLength(0);
+        bool[,] TreeMap = new bool[y_res, x_res];
         System.Random prng = new System.Random((int)Seed);
-        TreePrototype[] protos = new TreePrototype[treeObjects.Length];
-        //TreeInstance[] trees = new TreeInstance[256];
         List<TreeInstance> trees = new List<TreeInstance>(256);
-        for (int j = 0; j < treeObjects.Length; j++)
-        {
-            protos[j] = new TreePrototype
-            {
-                prefab = treeObjects[j],
-                bendFactor = .5f
-            };
-        }
         int n = 0;
         for (int i = 0; i < 128; i++)
         {
             int x, y;
 
-            x = prng.Next(0, terrainData.heightmapWidth);
-            y = prng.Next(0, terrainData.heightmapHeight);
-            if (streetMap[x, y] || Heights[y,x] <= WaterLevel || Heights[y,x] > VegetationMaxHeight) continue;
-            if (terrainData.GetInterpolatedNormal((float) x / terrainData.heightmapWidth, (float) y / terrainData.heightmapWidth).y < .7f) continue;
+            x = prng.Next(0, x_res);
+            y = prng.Next(0, y_res);
+            if (streetMap[x, y] || TreeMap[x,y] || Heights[y,x] <= WaterLevel || Heights[y,x] > VegetationMaxHeight) continue;
+            if (Normals[y, x].y < .7f) continue;
             float heightScale = (float)prng.Next(256, 512) / 512.0f;
             trees.Add(new TreeInstance
             {
-                prototypeIndex = prng.Next(0, treeObjects.Length - 1),
-                position = new Vector3((float)x / terrainData.heightmapWidth,
-                        terrainData.GetHeight(x, y) / terrainData.size.y,
-                        (float)y / terrainData.heightmapHeight),
+                prototypeIndex = prng.Next(0, NumOfTrees - 1),
+                position = new Vector3((float)x / x_res,
+                        Heights[y,x],
+                        (float)y / y_res),
                 heightScale = heightScale,
                 widthScale = heightScale,
                 rotation = (float)prng.Next(0, 360) * Mathf.Deg2Rad
@@ -45,8 +38,10 @@ public class VegetationGenerator
             TreeMap[x, y] = true;
 
         }
+        /**
         float y_01, x_01;
         int y_hm, x_hm;
+        
         float step = 1f / terrainData.detailWidth;
 	    for (int l = 0; l < terrainData.detailPrototypes.Length; l++)
         {
@@ -71,8 +66,8 @@ public class VegetationGenerator
             }
             terrainData.SetDetailLayer(0, 0, l, detailMap);
         }
-	
-	    terrainData.treePrototypes = protos;
 	    terrainData.treeInstances = trees.ToArray();
+       **/
+        return trees;
     }
 }

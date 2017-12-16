@@ -1,12 +1,5 @@
 using UnityEngine;
-using NoiseInterfaces;
-using HeightMapInterfaces;
-using HeightPostProcessors;
-
-using System;
-using System.IO;
 using System.Threading;
-using System.Collections.Concurrent;
 
 public class SurfaceManager : MonoBehaviour {
 
@@ -35,12 +28,6 @@ public class SurfaceManager : MonoBehaviour {
 			ChunkCount++;
 			Debug.Log(string.Format("We now have {0} chunks loaded.", ChunkCount));
 		}
-		
-		Vector2Int playerPos = new Vector2Int((int) Mathf.Floor(Settings.MainObject.transform.position.x) / Settings.Size,
-							(int) Mathf.Floor(Settings.MainObject.transform.position.z) / Settings.Size);
-		
-		
-		ExtendAt(playerPos);
 	}
 	
 	// ATTENTION: NOT THREAD SAFE!
@@ -75,12 +62,18 @@ public class SurfaceManager : MonoBehaviour {
 	
 	void OnEnable() // TODO Maybe even when player moves?
 	{
-		ChunkMap = new TerrainChunk[Settings.ChunkMapSize, Settings.ChunkMapSize];		
-		
-		// TODO Save in TerrainChunk so we can defer this until it is handled in Update
-		// Setting Neighbors will reduce Detail seams.
-		// Heightmap seams have to be taken care of separately.
-		/** reenable once heightmap seams are gone.
+		ChunkMap = new TerrainChunk[Settings.ChunkMapSize, Settings.ChunkMapSize];
+
+
+        Vector2Int playerPos = new Vector2Int((int)Mathf.Floor(Settings.MainObject.transform.position.x) / Settings.Size,
+                            (int)Mathf.Floor(Settings.MainObject.transform.position.z) / Settings.Size);
+
+
+        ExtendAt(playerPos);
+        // TODO Save in TerrainChunk so we can defer this until it is handled in Update
+        // Setting Neighbors will reduce Detail seams.
+        // Heightmap seams have to be taken care of separately.
+        /** reenable once heightmap seams are gone.
 		terrain.SetNeighbors(W, N, O, S);
 		S.SetNeighbors(SW, terrain, SO, null);
 		N.SetNeighbors(NW, null, NO, terrain);

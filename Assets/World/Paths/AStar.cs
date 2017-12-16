@@ -112,7 +112,7 @@ public class AStar: IPathSearch
 
     public List<Vector2Int> Search(ref Vector2Int start, ref Vector2Int end)
     {
-        //Debug.Log(string.Format("Searching for path from {0} to {1}", start, end));
+        Debug.Log(string.Format("Searching for path from {0} to {1}", start, end));
         SimplePriorityQueue<uint> Opened = new SimplePriorityQueue<uint>();
         Dictionary<Location2D, uint> NodeCache = new Dictionary<Location2D, uint>();
         Location2D[] NeighBors = NeighborSource.AllocateArray();

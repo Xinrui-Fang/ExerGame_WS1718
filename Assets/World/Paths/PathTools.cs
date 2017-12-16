@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using PathInterfaces;
+using Assets.World.Heightmap;
 
 public static class PathTools
 {
@@ -46,11 +47,12 @@ public static class PathTools
     public class NormalYThresholdWalkable
     {
         public float thresholdPercentile;
-        private TerrainData terrainData;
+        private Vector3[,] Normals;
+        private Vector3 normal;
         public int lowerX, lowerY, upperX, upperY;
         float Resolution;
 
-        public NormalYThresholdWalkable(float percentile, TerrainData terrainData, int Resolution , ref Vector2Int boundA, ref Vector2Int boundB)
+        public NormalYThresholdWalkable(float percentile, Vector3[,] Normals, int Resolution , ref Vector2Int boundA, ref Vector2Int boundB)
         {
             lowerX = Mathf.Min(boundA.x, boundB.x);
             lowerY = Mathf.Min(boundA.y, boundB.y);
@@ -58,7 +60,9 @@ public static class PathTools
             upperY = Mathf.Max(boundA.y, boundB.y);
             thresholdPercentile = percentile;
             this.Resolution = Resolution;
-            this.terrainData = terrainData;
+            this.Normals = Normals;
+            normal = new Vector3();
+
         }
 
         public bool IsWalkable(int x, int y)
@@ -68,7 +72,8 @@ public static class PathTools
                 //Debug.Log(string.Format("{0}, {1} not walkable because it is outside of the grid.", x, y));
                 return false;
             }
-            return (terrainData.GetInterpolatedNormal(x / Resolution, y / Resolution).y >= thresholdPercentile);
+            
+            return Normals[y,x].y >= thresholdPercentile;
         }
     }
 
@@ -205,21 +210,19 @@ public static class PathTools
 
     public class ConnectivityLabel
     {
-        private readonly TerrainData Data;
         private DIsWalkable IsWalkable;
         public int[,] Labels;
-        public int NumLabels;
+        public int NumLabels, Resolution;
         private int nextLabel;
         private readonly int lowerX, lowerY, upperX;
 
-        public ConnectivityLabel(TerrainData data, IGetNeighbors neighborSource, DIsWalkable isWalkable)
+        public ConnectivityLabel(int Resolution, IGetNeighbors neighborSource, DIsWalkable isWalkable)
         {
-            Data = data;
-            Labels = new int[data.heightmapResolution, data.heightmapResolution];
+            Labels = new int[Resolution, Resolution];
             IsWalkable = isWalkable;
             lowerX = 0;
             lowerY = 0;
-            upperX = data.heightmapResolution -1;
+            upperX = Resolution -1;
             CalculateLabels();
         }
 
@@ -230,9 +233,9 @@ public static class PathTools
             int validPredecessors;
             List<UnionFindNode<int>> UnionFindTree = new List<UnionFindNode<int>>();
 
-            for (int y = 0; y < Data.heightmapResolution; y++)
+            for (int y = 0; y < Resolution; y++)
             {
-                for (int x = 0; x < Data.heightmapResolution; x++)
+                for (int x = 0; x < Resolution; x++)
                 {
                     if (!IsWalkable(x, y))
                     {
@@ -329,9 +332,9 @@ public static class PathTools
                     valueRemap.Add(UnionFindTree[i].Value, NumLabels++);
                 }
             }
-            for (int y = 0; y < Data.heightmapResolution; y++)
+            for (int y = 0; y < Resolution; y++)
             {
-                for (int x = 0; x < Data.heightmapResolution; x++)
+                for (int x = 0; x < Resolution; x++)
                 {
                     if (Labels[y, x] >= 0)
                     {
