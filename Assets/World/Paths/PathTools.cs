@@ -212,12 +212,14 @@ public static class PathTools
     {
         private DIsWalkable IsWalkable;
         public int[,] Labels;
-        public int NumLabels, Resolution;
+        public int NumLabels;
         private int nextLabel;
+        private int Resolution;
         private readonly int lowerX, lowerY, upperX;
 
         public ConnectivityLabel(int Resolution, IGetNeighbors neighborSource, DIsWalkable isWalkable)
         {
+            this.Resolution = Resolution;
             Labels = new int[Resolution, Resolution];
             IsWalkable = isWalkable;
             lowerX = 0;

@@ -97,6 +97,7 @@ public class PathFinder
         {
             Points.Add(new List<Vector2Int>());
         }
+        
         int Offset = 0;
         foreach (TerrainChunkEdge edge in terrainEdges)
         {
@@ -111,7 +112,7 @@ public class PathFinder
                 Debug.Log(label);
                 if (label >= 0)
                 {
-                    Points[label].Add(p);
+                    Points[label].Add(p);                   
                 } else
                 {
                     DiscardedPoints.Add(p);

@@ -104,14 +104,13 @@ public class TerrainChunk
         PathTools.CachedWalkable walkable = new PathTools.CachedWalkable(walkable_src.IsWalkable, lowerBound, upperBound, Settings.HeightmapResolution);
         PathTools.Octile8GridSlopeStepCost AStarStepCost = new PathTools.Octile8GridSlopeStepCost(5000, 10, Heights);
 
-
         UnityEngine.Debug.Log(string.Format("Took {0} ms to prepare pathfinding at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Reset();
         stopWatch.Start();
         Connectivity = new PathTools.ConnectivityLabel(Settings.HeightmapResolution, neighbours, walkable.IsWalkable);
 
-
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create ConnectivityMap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        
         stopWatch.Reset();
         stopWatch.Start();
         paths = new PathFinder(AStarStepCost.StepCosts, Settings.HeightmapResolution, Heights, Connectivity);
@@ -120,7 +119,7 @@ public class TerrainChunk
         search.PrepareSearch(Settings.HeightmapResolution * Settings.HeightmapResolution);
         paths.CreateNetwork(TerrainEdges);
         search.CleanUp();
-        
+
         NormalsFromHeightMap.GenerateNormals(Heights, Normals, Settings.Depth, (float)Settings.Size / Settings.HeightmapResolution);
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create route network at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Reset();
@@ -133,7 +132,7 @@ public class TerrainChunk
         stopWatch.Stop();
     }
 
-    public void Flush()
+    public void Flush(SurfaceManager SM)
     {
         if (DEBUG_ON)
         {
@@ -152,6 +151,7 @@ public class TerrainChunk
         {
             GameObject.Destroy(UnityTerrain.gameObject);
         }
+        
         ChunkTerrainData.SetHeights(0, 0, Heights);
         ChunkTerrainData.SetAlphamaps(0, 0, SplatmapData);
         ChunkTerrainData.treeInstances = Trees.ToArray();

@@ -10,7 +10,7 @@ public class SurfaceManager : MonoBehaviour {
 	TerrainChunk[,] ChunkMap = null;
 	//Vector2Int WindowOffset = new Vector2Int();
 	
-	int ChunkCount = 0;	
+	int ChunkCount = 0;
 	void Build(TerrainChunk tile, Vector2Int offset)
 	{
 		tile.Build(offset);
@@ -22,7 +22,7 @@ public class SurfaceManager : MonoBehaviour {
 		var tile = FinalizationQueue.TryPop();
 		if(tile != null)
 		{
-			tile.Flush();
+			tile.Flush(this);
 			ChunkMap[tile.GridCoords.x, tile.GridCoords.y] = tile;
 			
 			ChunkCount++;
@@ -63,17 +63,15 @@ public class SurfaceManager : MonoBehaviour {
 	void OnEnable() // TODO Maybe even when player moves?
 	{
 		ChunkMap = new TerrainChunk[Settings.ChunkMapSize, Settings.ChunkMapSize];
+		Vector2Int playerPos = new Vector2Int((int)Mathf.Floor(Settings.MainObject.transform.position.x) / Settings.Size,
+				(int)Mathf.Floor(Settings.MainObject.transform.position.z) / Settings.Size);
 
 
-        Vector2Int playerPos = new Vector2Int((int)Mathf.Floor(Settings.MainObject.transform.position.x) / Settings.Size,
-                            (int)Mathf.Floor(Settings.MainObject.transform.position.z) / Settings.Size);
-
-
-        ExtendAt(playerPos);
-        // TODO Save in TerrainChunk so we can defer this until it is handled in Update
-        // Setting Neighbors will reduce Detail seams.
-        // Heightmap seams have to be taken care of separately.
-        /** reenable once heightmap seams are gone.
+		ExtendAt(playerPos);
+		// TODO Save in TerrainChunk so we can defer this until it is handled in Update
+		// Setting Neighbors will reduce Detail seams.
+		// Heightmap seams have to be taken care of separately.
+		/** reenable once heightmap seams are gone.
 		terrain.SetNeighbors(W, N, O, S);
 		S.SetNeighbors(SW, terrain, SO, null);
 		N.SetNeighbors(NW, null, NO, terrain);
@@ -85,6 +83,17 @@ public class SurfaceManager : MonoBehaviour {
 		SO.SetNeighbors(S, O, null, null);
 		NW.SetNeighbors(null, null, N, W);
 		**/
-    }
+	}
+	
+	TerrainChunk GetTile(Vector2Int pos)
+	{
+		if(pos.x >= 0 && pos.x < Settings.ChunkMapSize
+				&& pos.y >= 0 && pos.y < Settings.ChunkMapSize)
+		{
+			return ChunkMap[pos.x, pos.y];
+		}
+		
+		return null;
+	}
 }
  
