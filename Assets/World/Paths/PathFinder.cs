@@ -1,8 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using UtilsInterface;
 using PathInterfaces;
-using System;
+using Assets.World.Paths;
 
 public class PathFinder
 {
@@ -11,7 +10,7 @@ public class PathFinder
     public Vector2Int SearchPerimeterUpper { get; private set; }
     public Vector2Int SearchPermieterLower { get; private set; }
 
-    public bool[,] StreetMap;
+    public int[,] StreetMap;
     public float[,] Heights;
     public int Resolution;
     private int RoadSize, RoadFlatArea, RoadSmoothArea;
@@ -20,10 +19,12 @@ public class PathFinder
     private DGetStepCost StepCosts;
     private MapTools.Flatten RoadFlatten;
     private MapTools.KernelAppliance TerrainSmoother;
+    public List<NavigationPath> paths;
 
     public PathFinder(DGetStepCost stepCosts, int Resolution, float[,] heights, PathTools.ConnectivityLabel connectivity)
     {
-        StreetMap = new bool[Resolution, Resolution];
+        paths = new List<NavigationPath>();
+        StreetMap = new int[Resolution, Resolution];
         Heights = heights;
         RoadFlatArea = 4;
         RoadSmoothArea = 6;
@@ -69,8 +70,8 @@ public class PathFinder
 
     public float StepCostsRoad(int ax, int ay, int bx, int by)
     {
-        if (StreetMap[ax, ay] && StreetMap[bx, by]) return StepCosts(ax, ay, bx, by);
-        if (StreetMap[ax, ay] || StreetMap[bx, by]) return 2f * StepCosts(ax, ay, bx, by);
+        if (StreetMap[ax, ay] > 0  && StreetMap[bx, by] > 0) return StepCosts(ax, ay, bx, by);
+        if (StreetMap[ax, ay] > 0 || StreetMap[bx, by] > 0) return 2f * StepCosts(ax, ay, bx, by);
         return 4f * StepCosts(ax, ay, bx, by);
     }
 
@@ -80,16 +81,93 @@ public class PathFinder
         RoadFlatten.Apply(linePoint.y, linePoint.x);
     }
 
-    public void AddToStreetMap(List<Vector2Int> path, int width=1)
+    public void AddToStreetMap(List<Vector2Int> path, int width = 1)
     {
+        // don't bother with empty path
+        if (path.Count == 0) return;
+
+        //Debug.Log("Adding Path to Streetmap.");
+
+        // load label from start point
+        int LastLabel = StreetMap[path[0].x, path[0].y];
+        int MyLabel = paths.Count + 1;
+
+        // remember previous point for branching
+        Vector2Int oldPoint = path[0];
+
+        NavigationPath MyPath = new NavigationPath()
+        {
+            Start = path[0],
+            Waypoints = new LinkedList<Vector2Int>()
+        };
+        bool PathOverride = LastLabel == 0;
+        int i = 0;
         foreach (Vector2Int point in path)
         {
-            StreetMap[point.x, point.y] = true;
+            int nextLabel = StreetMap[point.x, point.y];
+            //Debug.Log(string.Format("working on point {0} : {1} - {2}, NL {3}, LL {4}", i++, point, paths.Count, nextLabel, LastLabel));
+            if (nextLabel == LastLabel)
+            {
+                if (PathOverride)
+                {
+                    //Debug.Log("overide");
+                    StreetMap[point.x, point.y] = MyLabel;
+                    MyPath.Waypoints.AddLast(point);
+                }
+            }
+            else if (nextLabel != 0)
+            {
+                MyPath.End = point;
+                if (MyPath.Start != MyPath.End)
+                {
+                    paths.Add(MyPath);
+                    NavigationPath branch = new NavigationPath();
+                    if (paths[StreetMap[point.x, point.y] - 1].Split(point, ref branch))
+                    {
+                        foreach (Vector2Int waypoint in branch.Waypoints)
+                        {
+                            StreetMap[waypoint.x, waypoint.y] = paths.Count + 1;
+                        }
+                        paths.Add(branch);
+                    }
+                    LastLabel = StreetMap[point.x, point.y];
+                    PathOverride = false;
+                }
+            }
+            else
+            {
+                NavigationPath branch = new NavigationPath();
+                //Debug.Log(string.Format("point {0}, paths {1}, Streetmap {2}, LastLabel {3}, nextLabel {4}", oldPoint, paths.Count, StreetMap[oldPoint.x, oldPoint.y], LastLabel, nextLabel));
+                if (paths[StreetMap[oldPoint.x, oldPoint.y] - 1].Split(oldPoint, ref branch))
+                {
+                    foreach (Vector2Int waypoint in branch.Waypoints)
+                    {
+                        StreetMap[waypoint.x, waypoint.y] = paths.Count + 1;
+                    }
+                    paths.Add(branch);
+                }
+                LastLabel = StreetMap[point.x, point.y];
+                MyLabel = paths.Count + 1;
+                MyPath = new NavigationPath()
+                {
+                    Start = oldPoint,
+                    Waypoints = new LinkedList<Vector2Int>()
+                };
+                MyPath.Waypoints.AddLast(oldPoint);
+                MyPath.Waypoints.AddLast(point);
+                StreetMap[point.x, point.y] = MyLabel;
+                PathOverride = true;
+                LastLabel = 0;
+            }
             RoadSmooth(point);
+            oldPoint = point;
         }
+
+        MyPath.End = MyPath.Waypoints.Last.Value;
+        paths.Add(MyPath);
     }
 
-    internal void CreateNetwork(TerrainChunkEdge[] terrainEdges)
+    public void CreateNetwork(TerrainChunkEdge[] terrainEdges)
     {
         List<Vector2Int> DiscardedPoints = new List<Vector2Int>();
         List<List<Vector2Int>> Points = new List<List<Vector2Int>>();
@@ -100,12 +178,12 @@ public class PathFinder
         int Offset = 0;
         foreach (TerrainChunkEdge edge in terrainEdges)
         {
-            Debug.Log(string.Format("Inspecting edge to {0} from {1}", edge.ChunkPos2, edge.ChunkPos1));
+            //Debug.Log(string.Format("Inspecting edge to {0} from {1}", edge.ChunkPos2, edge.ChunkPos1));
             edge.GenerateRoadPoints();
             foreach (int roadPoint in edge.RoadPoints)
             {
                 Vector2Int p = MapTools.UnfoldToPerimeter(roadPoint + Offset, Resolution - 1);
-                Debug.Log(string.Format("Got point {0} for {1} and Offset {2}", p, roadPoint, Offset));
+                //Debug.Log(string.Format("Got point {0} for {1} and Offset {2}", p, roadPoint, Offset));
                 int label = Connectivity.Labels[p.y, p.x];
                 if (label >= 0)
                 {

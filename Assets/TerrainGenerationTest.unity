@@ -394,8 +394,8 @@ MonoBehaviour:
     - Octaves: 8
       Weight: 0.45
       Lacunarity: 2
-      Persistance: 0.4
-      FeatureFrequency: 0.3
+      Persistance: 0.45
+      FeatureFrequency: 0.4
       NoiseType: 0
       FractalType: 1
       Seed: 435
@@ -404,7 +404,7 @@ MonoBehaviour:
     - Octaves: 6
       Weight: 0.55
       Lacunarity: 2
-      Persistance: 0.4
+      Persistance: 0.45
       FeatureFrequency: 0.2
       NoiseType: 0
       FractalType: 0

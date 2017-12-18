@@ -27,9 +27,7 @@ namespace Assets.World.Heightmap
                     {
                         dy *= 2;
                     }
-                    NormalMap[y, x].x = dx * Depth;
-                    NormalMap[y, x].z = dy * StepSize;
-                    NormalMap[y, x].y = 2 * Depth;
+                    NormalMap[y,x].Set(-dx * Depth, 2 * StepSize, dy * Depth);
                     NormalMap[y, x].Normalize();
                 }
             }

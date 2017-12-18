@@ -210,21 +210,21 @@ public static class PathTools
 
     public class ConnectivityLabel
     {
-        private readonly TerrainData Data;
         private DIsWalkable IsWalkable;
         public int[,] Labels;
         public int NumLabels;
         private int nextLabel;
+        private int Resolution;
         private readonly int lowerX, lowerY, upperX;
 
-        public ConnectivityLabel(TerrainData data, IGetNeighbors neighborSource, DIsWalkable isWalkable)
+        public ConnectivityLabel(int Resolution, IGetNeighbors neighborSource, DIsWalkable isWalkable)
         {
-            Data = data;
-            Labels = new int[data.heightmapResolution, data.heightmapResolution];
+            this.Resolution = Resolution;
+            Labels = new int[Resolution, Resolution];
             IsWalkable = isWalkable;
             lowerX = 0;
             lowerY = 0;
-            upperX = data.heightmapResolution -1;
+            upperX = Resolution -1;
             CalculateLabels();
         }
 
@@ -235,9 +235,9 @@ public static class PathTools
             int validPredecessors;
             List<UnionFindNode<int>> UnionFindTree = new List<UnionFindNode<int>>();
 
-            for (int y = 0; y < Data.heightmapResolution; y++)
+            for (int y = 0; y < Resolution; y++)
             {
-                for (int x = 0; x < Data.heightmapResolution; x++)
+                for (int x = 0; x < Resolution; x++)
                 {
                     if (!IsWalkable(x, y))
                     {
@@ -334,9 +334,9 @@ public static class PathTools
                     valueRemap.Add(UnionFindTree[i].Value, NumLabels++);
                 }
             }
-            for (int y = 0; y < Data.heightmapResolution; y++)
+            for (int y = 0; y < Resolution; y++)
             {
-                for (int x = 0; x < Data.heightmapResolution; x++)
+                for (int x = 0; x < Resolution; x++)
                 {
                     if (Labels[y, x] >= 0)
                     {

@@ -22,7 +22,7 @@ using UnityEngine;
  * 									  -> Neightbors (List<GraphNode>)
  * 			 
  */
-public class KMeansClustering : ICluster {
+public class KMeansClustering {
 
 	private struct ClusterStruct{
 		public List<int> X_Ck ;
