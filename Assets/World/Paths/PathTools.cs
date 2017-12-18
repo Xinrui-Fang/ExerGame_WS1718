@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using PathInterfaces;
+using Assets.World.Heightmap;
 
 public static class PathTools
 {
@@ -46,11 +47,12 @@ public static class PathTools
     public class NormalYThresholdWalkable
     {
         public float thresholdPercentile;
-        private TerrainData terrainData;
+        private Vector3[,] Normals;
+        private Vector3 normal;
         public int lowerX, lowerY, upperX, upperY;
         float Resolution;
 
-        public NormalYThresholdWalkable(float percentile, TerrainData terrainData, int Resolution , ref Vector2Int boundA, ref Vector2Int boundB)
+        public NormalYThresholdWalkable(float percentile, Vector3[,] Normals, int Resolution , ref Vector2Int boundA, ref Vector2Int boundB)
         {
             lowerX = Mathf.Min(boundA.x, boundB.x);
             lowerY = Mathf.Min(boundA.y, boundB.y);
@@ -58,7 +60,9 @@ public static class PathTools
             upperY = Mathf.Max(boundA.y, boundB.y);
             thresholdPercentile = percentile;
             this.Resolution = Resolution;
-            this.terrainData = terrainData;
+            this.Normals = Normals;
+            normal = new Vector3();
+
         }
 
         public bool IsWalkable(int x, int y)
@@ -68,7 +72,8 @@ public static class PathTools
                 //Debug.Log(string.Format("{0}, {1} not walkable because it is outside of the grid.", x, y));
                 return false;
             }
-            return (terrainData.GetInterpolatedNormal(x / Resolution, y / Resolution).y >= thresholdPercentile);
+            
+            return Normals[y,x].y >= thresholdPercentile;
         }
     }
 

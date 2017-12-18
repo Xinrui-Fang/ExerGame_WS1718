@@ -2,7 +2,7 @@
 
 using UnityEngine;
 using System.Linq; // used for Sum of array
-using NoiseInterfaces;
+using Assets.World.Heightmap;
 
 public static class TerrainLabeler
 {
@@ -15,34 +15,35 @@ public static class TerrainLabeler
         return 1;
     }
 
-    public static TerrainData MapTerrain(float[,] moisture, float[,] Heights, TerrainData terrainData, bool[,] streetMap, float WaterLevel, float VegetationMaxHeight, Vector2 TerrainOffset)
+    public static void MapTerrain(float[,] moisture, float[,] Heights, Vector3[,] Normals, float[,,] SplatMap, bool[,] streetMap, float WaterLevel, float VegetationMaxHeight, Vector2 TerrainOffset)
     {
-        Vector2Int heightmapLimits = new Vector2Int(terrainData.heightmapWidth - 1, terrainData.heightmapWidth - 1);
+        Vector2Int heightmapLimits = new Vector2Int(Heights.GetLength(0) -1, Heights.GetLength(1) -1);
         Vector2 location = new Vector2();
         // Splatmap data is stored internally as a 3d array of floats, so declare a new empty array ready for your custom splatmap data:
-        float[,,] splatmapData = new float[terrainData.alphamapWidth, terrainData.alphamapHeight, terrainData.alphamapLayers];
         MapTools.VariableDistCircle GetCircleNodes = new MapTools.VariableDistCircle(heightmapLimits, new Vector2Int(0, 0), 1, 1);
         Location2D[] CircleNodes = GetCircleNodes.AllocateArray();
 
-        for (int y = 0; y < terrainData.alphamapHeight; y++)
+        for (int y = 0; y < SplatMap.GetLength(0); y++)
         {
-            for (int x = 0; x < terrainData.alphamapWidth; x++)
+            for (int x = 0; x < SplatMap.GetLength(1); x++)
             {
                 // Normalise x/y coordinates to range 0-1 
-                float y_01 = (float)y / (float)terrainData.alphamapHeight;
-                float x_01 = (float)x / (float)terrainData.alphamapWidth;
-                int x_hm = Mathf.CeilToInt(x_01 * (terrainData.heightmapWidth - 1));
-                int y_hm = Mathf.CeilToInt(y_01 * (terrainData.heightmapHeight-1));
+                float y_01 = (float)y / (float)SplatMap.GetLength(0);
+                float x_01 = (float)x / (float)SplatMap.GetLength(1);
+                float fx_hm = x_01 * (Heights.GetLength(1) -1);
+                float fy_hm = y_01 * (Heights.GetLength(0) -1);
+                int x_hm = Mathf.CeilToInt(fx_hm);
+                int y_hm = Mathf.CeilToInt(fy_hm);
 
-                location.x = x_01 * (terrainData.heightmapWidth - 1);
-                location.y = y_01 * (terrainData.heightmapHeight - 1);
+                location.x = x_01 * fx_hm;
+                location.y = y_01 * fy_hm;
 
 
                 bool isStreetMapNeighbour = false;
                 float streetNeighbourFactor = 0f;
 
                 // Setup an array to record the mix of texture weights at this point
-                float[] splatWeights = new float[terrainData.alphamapLayers];
+                float[] splatWeights = new float[SplatMap.GetLength(2)];
 
 
                 if (streetMap[x_hm, y_hm])
@@ -61,7 +62,9 @@ public static class TerrainLabeler
                             streetNeighbourFactor += .125f / (1f + MapTools.OctileDistance(x_hm, y_hm, node.x, node.y));
                         }
                     }
-                    Vector3 normal = terrainData.GetInterpolatedNormal(x_01, y_01);
+                    //Vector3 normal = new Vector3();
+                    //NormalsFromHeightMap.InterpolateNormal(fx_hm, fy_hm, normal, Normals);
+                    Vector3 normal = Normals[y_hm, x_hm];
                     float height = Heights[y_hm, x_hm];
                     float moist = moisture[y_hm, x_hm];
                     
@@ -104,20 +107,16 @@ public static class TerrainLabeler
                 // Sum of all textures weights must add to 1, so calculate normalization factor from sum of weights
                 float z = splatWeights.Sum();
                 // Loop through each terrain texture
-                for (int i = 0; i < terrainData.alphamapLayers; i++)
+                for (int i = 0; i < SplatMap.GetLength(2); i++)
                 {
 
                     // Normalize so that sum of all texture weights = 1
                     splatWeights[i] /= z;
 
                     // Assign this point to the splatmap array
-                    splatmapData[y, x, i] = splatWeights[i];
+                    SplatMap[y, x, i] = splatWeights[i];
                 }
             }
         }
-
-        // Finally assign the new splatmap to the terrainData:
-        terrainData.SetAlphamaps(0, 0, splatmapData);
-        return terrainData;
     }
 }
