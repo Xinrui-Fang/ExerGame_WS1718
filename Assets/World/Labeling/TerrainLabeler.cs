@@ -15,7 +15,7 @@ public static class TerrainLabeler
         return 1;
     }
 
-    public static void MapTerrain(float[,] moisture, float[,] Heights, Vector3[,] Normals, float[,,] SplatMap, bool[,] streetMap, float WaterLevel, float VegetationMaxHeight, Vector2 TerrainOffset)
+    public static void MapTerrain(float[,] moisture, float[,] Heights, Vector3[,] Normals, float[,,] SplatMap, int[,] streetMap, float WaterLevel, float VegetationMaxHeight, Vector2 TerrainOffset)
     {
         Vector2Int heightmapLimits = new Vector2Int(Heights.GetLength(0) -1, Heights.GetLength(1) -1);
         Vector2 location = new Vector2();
@@ -46,7 +46,7 @@ public static class TerrainLabeler
                 float[] splatWeights = new float[SplatMap.GetLength(2)];
 
 
-                if (streetMap[x_hm, y_hm])
+                if (streetMap[x_hm, y_hm] > 0)
                 {
 
                     splatWeights[4] = 1f;
@@ -56,7 +56,7 @@ public static class TerrainLabeler
                     GetCircleNodes.GetNeighbors(x_hm, y_hm, ref CircleNodes);
                     foreach (var node in CircleNodes)
                     {
-                        if (node.valid && streetMap[node.x, node.y])
+                        if (node.valid && streetMap[node.x, node.y] > 0)
                         {
                             isStreetMapNeighbour = true;
                             streetNeighbourFactor += .125f / (1f + MapTools.OctileDistance(x_hm, y_hm, node.x, node.y));

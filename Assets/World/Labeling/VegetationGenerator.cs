@@ -6,7 +6,7 @@ public class VegetationGenerator
 {
     public VegetationGenerator(){}
 
-    public List<TreeInstance> PaintGras(long Seed, float[,] Heights, int NumOfTrees, bool[,] streetMap, float WaterLevel, float VegetationMaxHeight, Vector3[,] Normals)
+    public List<TreeInstance> PaintGras(long Seed, float[,] Heights, int NumOfTrees, int[,] streetMap, float WaterLevel, float VegetationMaxHeight, Vector3[,] Normals)
     {
         int x_res, y_res;
         x_res = Heights.GetLength(1);
@@ -21,7 +21,7 @@ public class VegetationGenerator
 
             x = prng.Next(0, x_res);
             y = prng.Next(0, y_res);
-            if (streetMap[x, y] || TreeMap[x,y] || Heights[y,x] <= WaterLevel || Heights[y,x] > VegetationMaxHeight) continue;
+            if (streetMap[x, y] > 0 || TreeMap[x,y] || Heights[y,x] <= WaterLevel || Heights[y,x] > VegetationMaxHeight) continue;
             if (Normals[y, x].y < .7f) continue;
             float heightScale = (float)prng.Next(256, 512) / 512.0f;
             trees.Add(new TreeInstance

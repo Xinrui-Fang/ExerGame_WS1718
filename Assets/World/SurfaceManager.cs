@@ -6,7 +6,7 @@ public class SurfaceManager : MonoBehaviour {
 	public GameSettings Settings;
 
 	// Contains tiles that need to be finalized on the main thread!
-	ConcurrentQueue<TerrainChunk> FinalizationQueue = new ConcurrentQueue<TerrainChunk>();
+	ConcurrentQueue<TerrainChunk> FinalizationQueue = new ConcurrentQueue<TerrainChunk>(17);
 	TerrainChunk[,] ChunkMap = null;
 	//Vector2Int WindowOffset = new Vector2Int();
 	
@@ -35,15 +35,22 @@ public class SurfaceManager : MonoBehaviour {
 	{
 		Vector2Int[] directions = new Vector2Int[] {
 			new Vector2Int(0, 0),
+
 			new Vector2Int(-1, 0),
 			new Vector2Int(1, 0),
 			new Vector2Int(0, 1),
 			new Vector2Int(0, -1),
+
 			new Vector2Int(-1, -1),
 			new Vector2Int(1, 1),
 			new Vector2Int(-1, 1),
-			new Vector2Int(1, -1)
-		};
+			new Vector2Int(1, -1),
+
+            new Vector2Int(2, 0),
+            new Vector2Int(-2, 0),
+            new Vector2Int(0, 2),
+            new Vector2Int(0, -2),
+        };
 		
 		for(int i = 0; i < directions.Length; i++)
 		{
@@ -63,8 +70,8 @@ public class SurfaceManager : MonoBehaviour {
 	void OnEnable() // TODO Maybe even when player moves?
 	{
 		ChunkMap = new TerrainChunk[Settings.ChunkMapSize, Settings.ChunkMapSize];
-		Vector2Int playerPos = new Vector2Int((int)Mathf.Floor(Settings.MainObject.transform.position.x) / Settings.Size,
-				(int)Mathf.Floor(Settings.MainObject.transform.position.z) / Settings.Size);
+        Vector2Int playerPos = new Vector2Int(2, 2);
+        Settings.MainObject.transform.position.Set(2.5f * Settings.Size, Settings.Depth + 10f, 2.5f * Settings.Size);
 
 
 		ExtendAt(playerPos);

@@ -1,6 +1,5 @@
 ﻿using Assets.Utils;
 using Assets.World.Heightmap;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
@@ -141,9 +140,12 @@ public class TerrainChunk
             stopWatch.Start();
             FloatImageExporter HimgExp = new FloatImageExporter(0f, 1f);
             IntImageExporter CimgExp = new IntImageExporter(-1, Connectivity.NumLabels - 1);
+            IntImageExporter SimgExp = new IntImageExporter(0, paths.paths.Count);
             HimgExp.Export(string.Format("HeightmapAt{0}-{1}", GridCoords.x, GridCoords.y), Heights);
             HimgExp.Export(string.Format("MoistureAt{0}-{1}", GridCoords.x, GridCoords.y), Moisture);
             CimgExp.Export(string.Format("ConnectivityMapAt{0}-{1}", GridCoords.x, GridCoords.y), Connectivity.Labels);
+            SimgExp.Export(string.Format("StreetMapAt{0}-{1}", GridCoords.x, GridCoords.y), paths.StreetMap);
+           
             UnityEngine.Debug.Log(string.Format("Took {0} ms to export debug Images at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
             stopWatch.Stop();
         }
