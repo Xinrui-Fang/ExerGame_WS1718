@@ -43,10 +43,9 @@ public class ConcurrentQueue<T>
 	
 	public void Push(T elem)
 	{
-		m_mtx.WaitOne();
+		m_mtx.WaitOne();	
+		m_data[m_last] = elem;
 		m_last = (m_last + 1) % m_data.Length;	
-		
-		m_data[m_last] = elem;		
 		m_mtx.ReleaseMutex();
 	}
 };
