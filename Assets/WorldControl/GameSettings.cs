@@ -132,6 +132,10 @@ public class GameSettings
     public static SplatPrototype[] SpatProtoTypes;
     public static DetailPrototype[] DetailPrototypes;
 
+    public float TreeBillBoardDistance { get; internal set; }
+    public float TreeRenderDistance { get; internal set; }
+    public float DetailRenderDistance { get; internal set; }
+
     public void Prepare()
     {
         GetSplat();
