@@ -57,11 +57,14 @@ public class BicycleV2 : MonoBehaviour {
 				// if the position of the player is not at the path point
 				// move until it reach it
 				Vector3 pos = Vector3.MoveTowards(transform.position, path[current_node], maxSpeed*Time.deltaTime);
-				Vector3 rotation = Vector3.RotateTowards(transform.forward, pos - transform.position, maxRotation*Time.deltaTime, 5);
-					
-				Quaternion rotationQ = Quaternion.LookRotation(rotation);
+				Transform copy = transform;
+				copy.rotation *= Quaternion.Euler(0, -90, 0);
+				Vector3 newDir = Vector3.RotateTowards(copy.forward,  path[current_node] - transform.position, maxRotation*Time.deltaTime, 0.0f);
+				Quaternion rotationQ = Quaternion.LookRotation(newDir);
 				transform.position = pos;
 				transform.rotation = rotationQ;
+				transform.rotation *= Quaternion.Euler(0, 90, 0);
+
 			}else{
 				current_node = (current_node +1) % path.Count;
 			}
@@ -72,11 +75,11 @@ public class BicycleV2 : MonoBehaviour {
 					// if the position of the player is not at the path point
 					// move until it reach it
 					Vector3 pos = Vector3.MoveTowards(transform.position, path[current_node-1], maxSpeed*Time.deltaTime);
-					Vector3 rotation = Vector3.RotateTowards(transform.forward, pos - transform.position, maxRotation*Time.deltaTime, 5);
-					
-					Quaternion rotationQ = Quaternion.LookRotation(rotation);
+					Quaternion rotationQ = Quaternion.LookRotation(path[current_node-1] - transform.position);
 					transform.position = pos;
 					transform.rotation = rotationQ;
+					transform.rotation *= Quaternion.Euler(0, 90, 0);
+
 				}else{
 					current_node = (current_node -1) % path.Count;
 				}
@@ -85,11 +88,11 @@ public class BicycleV2 : MonoBehaviour {
 					// if the position of the player is not at the path point
 					// move until it reach it
 					Vector3 pos = Vector3.MoveTowards(transform.position, startPosition, maxSpeed*Time.deltaTime);
-					Vector3 rotation = Vector3.RotateTowards(transform.forward, pos - transform.position, maxRotation*Time.deltaTime, 5);
-					
-					Quaternion rotationQ = Quaternion.LookRotation(rotation);
+					Quaternion rotationQ = Quaternion.LookRotation(path[0] - transform.position);
 					transform.position = pos;
 					transform.rotation = rotationQ;
+					transform.rotation *= Quaternion.Euler(0, 90, 0);
+
 				}
 			}
 		
