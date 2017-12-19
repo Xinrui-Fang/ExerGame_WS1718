@@ -6,14 +6,14 @@ public class VegetationGenerator
 {
     public VegetationGenerator(){}
 
-    public List<TreeInstance> PaintGras(long Seed, float[,] Heights, int NumOfTrees, int[,] streetMap, float WaterLevel, float VegetationMaxHeight, Vector3[,] Normals)
+    public List<TreeInstance> PaintGras(long Seed, float[,] Heights, int NumOfTrees, int[,] streetMap, float WaterLevel, float VegetationMaxHeight, int MaxTreeCount, Vector3[,] Normals)
     {
         int x_res, y_res;
         x_res = Heights.GetLength(1);
         y_res = Heights.GetLength(0);
         bool[,] TreeMap = new bool[y_res, x_res];
         System.Random prng = new System.Random((int)Seed);
-        List<TreeInstance> trees = new List<TreeInstance>(256);
+        List<TreeInstance> trees = new List<TreeInstance>(MaxTreeCount);
         int n = 0;
         for (int i = 0; i < 128; i++)
         {
