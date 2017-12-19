@@ -250,7 +250,7 @@ public class TerrainChunk
         {
            GameObject.Destroy(UnityTerrain.gameObject);
         }
-        
+
         ChunkTerrainData = new TerrainData
         {
             heightmapResolution = Settings.HeightmapResolution,
@@ -275,6 +275,9 @@ public class TerrainChunk
         Terrain terrain =  UnityTerrain.GetComponent<Terrain>();
         terrain.materialType = Terrain.MaterialType.Custom;
         terrain.materialTemplate = Settings.TerrainMaterial;
+        terrain.treeBillboardDistance = Settings.TreeBillBoardDistance;
+        terrain.treeDistance = Settings.TreeRenderDistance;
+        terrain.detailObjectDistance = Settings.DetailRenderDistance;
         UnityTerrain.SetActive(true);
         UnityTerrain.transform.position = new Vector3(GridCoords.x, 0, GridCoords.y) * (float) Settings.Size;
         isFinished = true;
@@ -284,5 +287,9 @@ public class TerrainChunk
     public void DestroyTerrain()
     {
         GameObject.Destroy(UnityTerrain);
+    }
+
+    public PathFinder GetPathFinder(){
+        return paths;
     }
 }

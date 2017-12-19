@@ -27,6 +27,11 @@ public class SurfaceManager : MonoBehaviour {
 			
 			ChunkCount++;
 			Debug.Log(string.Format("We now have {0} chunks loaded.", ChunkCount));
+
+            if (tile.GridCoords.x == 2 && tile.GridCoords.y == 2)
+            {
+                // TODO: enable player and ai.
+            }
 		}
 	}
 	
@@ -78,21 +83,6 @@ public class SurfaceManager : MonoBehaviour {
         Settings.MainObject.transform.position.Set(2.5f * Settings.Size, Settings.Depth + 10f, 2.5f * Settings.Size);
         
 		ExtendAt(playerPos);
-		// TODO Save in TerrainChunk so we can defer this until it is handled in Update
-		// Setting Neighbors will reduce Detail seams.
-		// Heightmap seams have to be taken care of separately.
-		/** reenable once heightmap seams are gone.
-		terrain.SetNeighbors(W, N, O, S);
-		S.SetNeighbors(SW, terrain, SO, null);
-		N.SetNeighbors(NW, null, NO, terrain);
-		O.SetNeighbors(terrain, NO, null, SO);
-		W.SetNeighbors(null, NW, terrain, SW);
-
-		SW.SetNeighbors(null, W, S, null);
-		NO.SetNeighbors(N, null, null, O);
-		SO.SetNeighbors(S, O, null, null);
-		NW.SetNeighbors(null, null, N, W);
-		**/
 	}
 	
 	public TerrainChunk GetTile(Vector2Int pos)
