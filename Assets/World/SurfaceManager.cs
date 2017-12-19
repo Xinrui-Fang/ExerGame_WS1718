@@ -45,7 +45,7 @@ public class SurfaceManager : MonoBehaviour {
 			new Vector2Int(1, 1),
 			new Vector2Int(-1, 1),
 			new Vector2Int(1, -1),
-
+            
             new Vector2Int(2, 0),
             new Vector2Int(-2, 0),
             new Vector2Int(0, 2),
@@ -66,14 +66,17 @@ public class SurfaceManager : MonoBehaviour {
 			}
 		}
 	}
-	
-	void OnEnable() // TODO Maybe even when player moves?
-	{
+    void OnEnable() // TODO Maybe even when player moves?
+    {
+        GameObject DummyTerrainObj = GameObject.Find("Dummy Terrain");
+        Terrain DummyTerrain = DummyTerrainObj.GetComponent<Terrain>();
+        GameSettings.DetailPrototypes = DummyTerrain.terrainData.detailPrototypes;
+        GameSettings.SpatProtoTypes = DummyTerrain.terrainData.splatPrototypes;
+        GameSettings.TreeProtoTypes = DummyTerrain.terrainData.treePrototypes;
 		ChunkMap = new TerrainChunk[Settings.ChunkMapSize, Settings.ChunkMapSize];
         Vector2Int playerPos = new Vector2Int(2, 2);
         Settings.MainObject.transform.position.Set(2.5f * Settings.Size, Settings.Depth + 10f, 2.5f * Settings.Size);
-
-
+        
 		ExtendAt(playerPos);
 		// TODO Save in TerrainChunk so we can defer this until it is handled in Update
 		// Setting Neighbors will reduce Detail seams.
@@ -92,11 +95,12 @@ public class SurfaceManager : MonoBehaviour {
 		**/
 	}
 	
-	TerrainChunk GetTile(Vector2Int pos)
+	public TerrainChunk GetTile(Vector2Int pos)
 	{
 		if(pos.x >= 0 && pos.x < Settings.ChunkMapSize
 				&& pos.y >= 0 && pos.y < Settings.ChunkMapSize)
 		{
+            if (ChunkMap[pos.x, pos.y] == null) return null;
 			return ChunkMap[pos.x, pos.y];
 		}
 		

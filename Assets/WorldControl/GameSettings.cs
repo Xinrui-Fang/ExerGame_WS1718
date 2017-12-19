@@ -128,9 +128,9 @@ public class GameSettings
     public long WorldSeed;
     public Material TerrainMaterial;
 
-    private static TreePrototype[] TreeProtoTypes;
-    private static SplatPrototype[] SpatProtoTypes;
-    private static DetailPrototype[] DetailPrototypes;
+    public static TreePrototype[] TreeProtoTypes;
+    public static SplatPrototype[] SpatProtoTypes;
+    public static DetailPrototype[] DetailPrototypes;
 
     public void Prepare()
     {

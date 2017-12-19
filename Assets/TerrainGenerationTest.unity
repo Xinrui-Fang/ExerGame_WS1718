@@ -112,6 +112,53 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1001 &397585192
+Prefab:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 1519617107}
+    m_Modifications:
+    - target: {fileID: 4240905516133348, guid: 6c7216329722d4440b101e5b3cb34c07, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4240905516133348, guid: 6c7216329722d4440b101e5b3cb34c07, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4240905516133348, guid: 6c7216329722d4440b101e5b3cb34c07, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4240905516133348, guid: 6c7216329722d4440b101e5b3cb34c07, type: 2}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4240905516133348, guid: 6c7216329722d4440b101e5b3cb34c07, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4240905516133348, guid: 6c7216329722d4440b101e5b3cb34c07, type: 2}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4240905516133348, guid: 6c7216329722d4440b101e5b3cb34c07, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4240905516133348, guid: 6c7216329722d4440b101e5b3cb34c07, type: 2}
+      propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: 6c7216329722d4440b101e5b3cb34c07, type: 2}
+  m_IsPrefabParent: 0
+--- !u!4 &397585193 stripped
+Transform:
+  m_PrefabParentObject: {fileID: 4240905516133348, guid: 6c7216329722d4440b101e5b3cb34c07,
+    type: 2}
+  m_PrefabInternal: {fileID: 397585192}
 --- !u!1001 &429788283
 Prefab:
   m_ObjectHideFlags: 0
@@ -376,7 +423,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1330100697}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b2ddb70c3222774419bdb4e3d1064ddb, type: 3}
+  m_Script: {fileID: 11500000, guid: ceb5cde41593aec4da16379767294475, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   mainSpeed: 100
@@ -477,11 +524,12 @@ MonoBehaviour:
   Settings:
     MainObject: {fileID: 1330100697}
     ChunkMapSize: 16
-    Depth: 240
+    MaxTreeCount: 64
+    Depth: 300
     WaterLevel: 0.1
     VegetationLevel: 0.6
-    HeightmapResolution: 129
-    DetailResolution: 129
+    HeightmapResolution: 257
+    DetailResolution: 257
     DetailResolutionPerPatch: 33
     Size: 127
     Trees:
@@ -489,7 +537,7 @@ MonoBehaviour:
     - {fileID: 100000, guid: 6aab193b7693b5e4c9741f1917d2987c, type: 3}
     - {fileID: 100016, guid: 469edab27ab6d004d84af2c4a851bd7f, type: 3}
     - {fileID: 100004, guid: d027af1092f6b434090f040565e7e656, type: 3}
-    - {fileID: 112922, guid: 0018a0d5fcd38d34d81764846a43c4bd, type: 2}
+    - {fileID: 0}
     HeightmapLayers:
     - Octaves: 8
       Weight: 0.45
@@ -593,7 +641,8 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
+  m_Children:
+  - {fileID: 397585193}
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

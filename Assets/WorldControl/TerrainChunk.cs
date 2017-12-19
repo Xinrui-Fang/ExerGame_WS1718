@@ -2,7 +2,6 @@
 using Assets.World.Heightmap;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System;
 using UnityEngine;
 
 public class TerrainChunk
@@ -22,12 +21,14 @@ public class TerrainChunk
     private VegetationGenerator vGen;
     private PathFinder paths;
     public PathTools.ConnectivityLabel Connectivity;
-    GameObject UnityTerrain;
+    public GameObject UnityTerrain;
 
     public bool DEBUG_ON = false;
 
     public List<TreeInstance> Trees { get; private set; }
+    public bool isFinished = false;
 
+    public TerrainChunk N, E, S, W;
     public override int GetHashCode()
     {
         unchecked
@@ -42,19 +43,7 @@ public class TerrainChunk
     {
         Settings = settings;
         WorldSeed = Settings.WorldSeed;
-        ChunkTerrainData = new TerrainData
-        {
-            heightmapResolution = Settings.HeightmapResolution,
-            size = new Vector3(Settings.Size, Settings.Depth, Settings.Size),
-            splatPrototypes = Settings.GetSplat(),
-            alphamapResolution = Settings.HeightmapResolution,
-            detailPrototypes = Settings.GetDetail(),
-            treePrototypes = settings.GetTreePrototypes()
-        };
-        ChunkTerrainData.SetDetailResolution(Settings.DetailResolution, Settings.DetailResolutionPerPatch);
-        ChunkTerrainData.RefreshPrototypes();
         vGen = new VegetationGenerator();
-
         Heights = new float[0, 0];
         SplatmapData = new float[0, 0, 0];
         Trees = new List<TreeInstance>(0);
@@ -62,7 +51,7 @@ public class TerrainChunk
 
     public void Build(Vector2Int gridCoords)
     {
-
+        isFinished = false;
         Stopwatch stopWatch = new Stopwatch();
         stopWatch.Start();
         // Resetting all the Arrays
@@ -131,9 +120,116 @@ public class TerrainChunk
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create Vegetation and Splatmap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Stop();
     }
+    
+    public void CheckNeighbors()
+    {
+        if (N != null && S != null && W != null && E != null && isFinished)
+        {
+            UnityTerrain.GetComponent<Terrain>().SetNeighbors(
+                W.UnityTerrain.GetComponent<Terrain>(),
+                N.UnityTerrain.GetComponent<Terrain>(),
+                E.UnityTerrain.GetComponent<Terrain>(),
+                S.UnityTerrain.GetComponent<Terrain>()
+            );
+        }
+    }
+    
+    public void PushTop(TerrainChunk tile)
+    {
+        //tile.WriteToHeightMap.WaitOne();
+        tile.S = this;
+        var terrain = tile.UnityTerrain.GetComponent<Terrain>();
+        var myterrain = UnityTerrain.GetComponent<Terrain> ();
+        terrain.terrainData.SetHeights(0, 0, myterrain.terrainData.GetHeights(0, Settings.HeightmapResolution -1, Settings.HeightmapResolution -1, 1));
+        terrain.Flush();
+        N = tile;
+        tile.CheckNeighbors();
+        //tile.WriteToHeightMap.Release();
+    }
+
+    public void PushRight(TerrainChunk tile)
+    {
+        //tile.WriteToHeightMap.WaitOne();
+        tile.W = this;
+        var terrain = tile.UnityTerrain.GetComponent<Terrain>();
+        var myterrain = UnityTerrain.GetComponent<Terrain>();
+        terrain.terrainData.SetHeights(0, 0, myterrain.terrainData.GetHeights(Settings.HeightmapResolution - 1, 0, 1, Settings.HeightmapResolution - 1));
+        terrain.Flush();
+        tile.CheckNeighbors();
+        //tile.WriteToHeightMap.Release();
+    }
+
+    public void PullBotton(TerrainChunk tile)
+    {
+        //tile.WriteToHeightMap.WaitOne();
+        tile.N = this;
+        var terrain = tile.UnityTerrain.GetComponent<Terrain>();
+        var myterrain = UnityTerrain.GetComponent<Terrain>();
+        myterrain.terrainData.SetHeights(0, 0, terrain.terrainData.GetHeights(0, Settings.HeightmapResolution - 1, Settings.HeightmapResolution - 1, 1));
+        //tile.WriteToHeightMap.Release();
+    }
+
+    public void PUllLeft(TerrainChunk tile)
+    {
+        //tile.WriteToHeightMap.WaitOne();
+        tile.E = this;
+        var terrain = tile.UnityTerrain.GetComponent<Terrain>();
+        var myterrain = UnityTerrain.GetComponent<Terrain>();
+        myterrain.terrainData.SetHeights(0, 0, terrain.terrainData.GetHeights(Settings.HeightmapResolution - 1, 0, 1, Settings.HeightmapResolution - 1));
+        tile.CheckNeighbors();
+        //tile.WriteToHeightMap.Release();
+    }
+
+    public void PullCorner(TerrainChunk tile, int x, int y)
+    {
+        var terrain = tile.UnityTerrain.GetComponent<Terrain>();
+        var myterrain = UnityTerrain.GetComponent<Terrain>();
+        myterrain.terrainData.SetHeights(x, y, terrain.terrainData.GetHeights(Settings.HeightmapResolution - 1, Settings.HeightmapResolution - 1, 1, 1));
+    }
+
+    public void PushCroner(TerrainChunk tile, int x, int y)
+    {
+        var terrain = tile.UnityTerrain.GetComponent<Terrain>();
+        var myterrain = UnityTerrain.GetComponent<Terrain>();
+        terrain.terrainData.SetHeights(x, y, myterrain.terrainData.GetHeights(Settings.HeightmapResolution - 1, Settings.HeightmapResolution - 1, 1, 1));
+    }
+
+    public void Synchronize(SurfaceManager SM)
+    {
+        // Push Master Values
+        var N = SM.GetTile(GridCoords + new Vector2Int(0, 1));
+        var E = SM.GetTile(GridCoords + new Vector2Int(1, 0));
+        var S = SM.GetTile(GridCoords + new Vector2Int(0, -1));
+        var W = SM.GetTile(GridCoords + new Vector2Int(-1, 0));
+
+        if (N != null && N.isFinished)
+        {
+            PushTop(N);
+        }
+        if (E != null && E.isFinished)
+        {
+            PushRight(E);
+        }
+        if (S != null && S.isFinished)
+        {
+            PullBotton(S);
+        }
+        if (W != null && W.isFinished)
+        {
+            PUllLeft(W);
+        }
+        CheckNeighbors();
+        
+        var NE = SM.GetTile(GridCoords + new Vector2Int(1, 1));
+        var SW = SM.GetTile(GridCoords + new Vector2Int(-1, -1));
+
+        if (NE != null) PushCroner(NE, 0, 0);
+        if (SW != null) PullCorner(SW, 0, 0);
+    }
 
     public void Flush(SurfaceManager SM)
     {
+        //
         if (DEBUG_ON)
         {
 
@@ -152,12 +248,24 @@ public class TerrainChunk
         }
         if (UnityTerrain != null)
         {
-           // GameObject.Destroy(UnityTerrain.gameObject);
+           GameObject.Destroy(UnityTerrain.gameObject);
         }
         
+        ChunkTerrainData = new TerrainData
+        {
+            heightmapResolution = Settings.HeightmapResolution,
+            size = new Vector3(Settings.Size, Settings.Depth, Settings.Size),
+            splatPrototypes = Settings.GetSplat(),
+            alphamapResolution = Settings.HeightmapResolution,
+            detailPrototypes = Settings.GetDetail(),
+            treePrototypes = Settings.GetTreePrototypes(),
+            treeInstances = Trees.ToArray(),
+        };
+        ChunkTerrainData.SetDetailResolution(Settings.DetailResolution, Settings.DetailResolutionPerPatch);
+        ChunkTerrainData.RefreshPrototypes();
+
         ChunkTerrainData.SetHeights(0, 0, Heights);
         ChunkTerrainData.SetAlphamaps(0, 0, SplatmapData);
-        ChunkTerrainData.treeInstances = Trees.ToArray();
 
         Heights = new float[0, 0];
         SplatmapData = new float[0, 0, 0];
@@ -168,7 +276,9 @@ public class TerrainChunk
         terrain.materialType = Terrain.MaterialType.Custom;
         terrain.materialTemplate = Settings.TerrainMaterial;
         UnityTerrain.SetActive(true);
-        UnityTerrain.transform.position = new Vector3(GridCoords.x, 0, GridCoords.y) * (float) Settings.Size;       
+        UnityTerrain.transform.position = new Vector3(GridCoords.x, 0, GridCoords.y) * (float) Settings.Size;
+        isFinished = true;
+        Synchronize(SM);
     }
     
     public void DestroyTerrain()

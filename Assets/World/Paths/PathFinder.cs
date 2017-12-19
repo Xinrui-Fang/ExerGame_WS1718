@@ -181,13 +181,11 @@ public class PathFinder
         {
             //Debug.Log(string.Format("Inspecting edge to {0} from {1}", edge.ChunkPos2, edge.ChunkPos1));
             edge.GenerateRoadPoints();
-            Debug.Log(edge.RoadPoints.Count);
             foreach (int roadPoint in edge.RoadPoints)
             {
                 Vector2Int p = MapTools.UnfoldToPerimeter(roadPoint + Offset, Resolution - 1);
                 //Debug.Log(string.Format("Got point {0} for {1} and Offset {2}", p, roadPoint, Offset));
                 int label = Connectivity.Labels[p.y, p.x];
-                Debug.Log(label);
                 if (label >= 0)
                 {
                     Points[label].Add(p);                   
@@ -201,7 +199,7 @@ public class PathFinder
 
         for (int i=0; i < Connectivity.NumLabels; i++)
         {
-            Debug.Log(string.Format("Looking at Connectivity group {0}", i));
+            //Debug.Log(string.Format("Looking at Connectivity group {0}", i));
             if (Points[i].Count == 1)
             {
                 DiscardedPoints.Add(Points[i][0]);
