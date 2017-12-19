@@ -22,7 +22,7 @@ public class TerrainChunk
     private VegetationGenerator vGen;
     private PathFinder paths;
     public PathTools.ConnectivityLabel Connectivity;
-    GameObject UnityTerrain;
+    public GameObject UnityTerrain;
 
     public bool DEBUG_ON = false;
 
@@ -166,5 +166,9 @@ public class TerrainChunk
         terrain.materialTemplate = Settings.TerrainMaterial;
         UnityTerrain.SetActive(true);
         UnityTerrain.transform.Translate(new Vector3(GridCoords.x, 0, GridCoords.y) * Settings.Size);
+    }
+
+    public PathFinder GetPathFinder(){
+        return paths;
     }
 }

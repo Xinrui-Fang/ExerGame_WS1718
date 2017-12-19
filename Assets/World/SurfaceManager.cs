@@ -2,11 +2,13 @@ using UnityEngine;
 using NoiseInterfaces;
 using HeightMapInterfaces;
 using HeightPostProcessors;
+using System.Collections.Generic;
 
 public class SurfaceManager : MonoBehaviour {
 
     public GameSettings Settings;
 
+    private List<TerrainChunk> listTerrain = new List<TerrainChunk>();
 	TerrainChunk Build(TerrainChunk tile, Vector2Int offset)
 	{
         tile.Build(offset);
@@ -41,6 +43,16 @@ public class SurfaceManager : MonoBehaviour {
         NO.Flush();
         SO.Flush();
         NW.Flush();
+
+        listTerrain.Add(root);
+        listTerrain.Add(S);
+        listTerrain.Add(SO);
+        listTerrain.Add(SW);
+        listTerrain.Add(N);
+        listTerrain.Add(NO);
+        listTerrain.Add(NW);
+        listTerrain.Add(O);
+        listTerrain.Add(W);
         // Setting Neighbors will reduce Detail seams.
         // Heightmap seams have to be taken care of separately.
         /** reenable once heightmap seams are gone.
@@ -55,6 +67,11 @@ public class SurfaceManager : MonoBehaviour {
         SO.SetNeighbors(S, O, null, null);
         NW.SetNeighbors(null, null, N, W);
         **/
+    }
+
+    public List<TerrainChunk> GetTerrain(){
+        return listTerrain;
+        
     }
 }
  
