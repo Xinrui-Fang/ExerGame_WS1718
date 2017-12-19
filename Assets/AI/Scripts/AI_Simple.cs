@@ -1,10 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using Assets.Utils;
-using Assets.World.Heightmap;
+﻿using System.Collections.Generic;
 using Assets.World.Paths;
 using UnityEngine;
-using UnityEditor;
 
 /*
 this class manage the Player's bicycle : gameplay like a train on rails
