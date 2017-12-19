@@ -2,6 +2,7 @@
 using Assets.World.Heightmap;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System;
 using UnityEngine;
 
 public class TerrainChunk
@@ -9,7 +10,6 @@ public class TerrainChunk
     public Vector2Int GridCoords;
     public int ChunkSeed;
     public float[,] Heights, Moisture;
-    public Vector3[,] Normals;
     public Terrain ChunkTerrain;
 
     private long WorldSeed;
@@ -48,16 +48,12 @@ public class TerrainChunk
             size = new Vector3(Settings.Size, Settings.Depth, Settings.Size),
             splatPrototypes = Settings.GetSplat(),
             alphamapResolution = Settings.HeightmapResolution,
-
             detailPrototypes = Settings.GetDetail(),
             treePrototypes = settings.GetTreePrototypes()
         };
         ChunkTerrainData.SetDetailResolution(Settings.DetailResolution, Settings.DetailResolutionPerPatch);
         ChunkTerrainData.RefreshPrototypes();
-
-        SplatmapData = new float[ChunkTerrainData.alphamapWidth, ChunkTerrainData.alphamapHeight, ChunkTerrainData.alphamapLayers];
         vGen = new VegetationGenerator();
-        Trees = new List<TreeInstance>();
     }
 
     public void Build(Vector2Int gridCoords)
@@ -67,8 +63,9 @@ public class TerrainChunk
         stopWatch.Start();
         // Resetting all the Arrays
         Heights = new float[Settings.HeightmapResolution, Settings.HeightmapResolution];
-        Normals = new Vector3[Settings.HeightmapResolution, Settings.HeightmapResolution];
+        Vector3[,] Normals = new Vector3[Settings.HeightmapResolution, Settings.HeightmapResolution];
         Moisture = new float[Settings.HeightmapResolution, Settings.HeightmapResolution];
+        SplatmapData = new float[Settings.HeightmapResolution, Settings.HeightmapResolution, Settings.SplatMaps.Length];
 
         GridCoords = gridCoords;
         ChunkSeed = GetHashCode();
@@ -127,7 +124,7 @@ public class TerrainChunk
         stopWatch.Start();
 
         TerrainLabeler.MapTerrain(Moisture, Heights, Normals, SplatmapData, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, gridCoords * Settings.HeightmapResolution);
-        Trees = vGen.PaintGras(ChunkSeed, Heights, Settings.Trees.Length, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, Normals);
+        Trees = vGen.PaintGras(ChunkSeed, Heights, Settings.Trees.Length, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, Settings.MaxTreeCount, Normals);
 
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create Vegetation and Splatmap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Stop();
@@ -158,6 +155,11 @@ public class TerrainChunk
         ChunkTerrainData.SetHeights(0, 0, Heights);
         ChunkTerrainData.SetAlphamaps(0, 0, SplatmapData);
         ChunkTerrainData.treeInstances = Trees.ToArray();
+
+        Heights = new float[0, 0];
+        SplatmapData = new float[0, 0, 0];
+        Trees.Clear();
+        
         UnityTerrain = Terrain.CreateTerrainGameObject(ChunkTerrainData);
         Terrain terrain =  UnityTerrain.GetComponent<Terrain>();
         terrain.materialType = Terrain.MaterialType.Custom;

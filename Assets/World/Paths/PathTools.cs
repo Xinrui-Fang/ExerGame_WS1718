@@ -50,7 +50,6 @@ public static class PathTools
         private Vector3[,] Normals;
         private Vector3 normal;
         public int lowerX, lowerY, upperX, upperY;
-        float Resolution;
 
         public NormalYThresholdWalkable(float percentile, Vector3[,] Normals, int Resolution , ref Vector2Int boundA, ref Vector2Int boundB)
         {
@@ -59,7 +58,6 @@ public static class PathTools
             upperX = Mathf.Max(boundA.x, boundB.x);
             upperY = Mathf.Max(boundA.y, boundB.y);
             thresholdPercentile = percentile;
-            this.Resolution = Resolution;
             this.Normals = Normals;
             normal = new Vector3();
 

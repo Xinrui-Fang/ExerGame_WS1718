@@ -15,6 +15,11 @@ public class SurfaceManager : MonoBehaviour {
 
     void OnEnable() // TODO Maybe even when player moves?
     {
+        GameObject DummyTerrainObj = GameObject.Find("Dummy Terrain");
+        Terrain DummyTerrain = DummyTerrainObj.GetComponent<Terrain>();
+        GameSettings.DetailPrototypes = DummyTerrain.terrainData.detailPrototypes;
+        GameSettings.SpatProtoTypes = DummyTerrain.terrainData.splatPrototypes;
+        GameSettings.TreeProtoTypes = DummyTerrain.terrainData.treePrototypes;
 	    var root = Build(new TerrainChunk(Settings), new Vector2Int(0, 0));
 	
 	    var S = Build(new TerrainChunk(Settings), new Vector2Int(-1, 0));

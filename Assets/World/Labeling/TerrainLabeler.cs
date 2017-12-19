@@ -2,7 +2,6 @@
 
 using UnityEngine;
 using System.Linq; // used for Sum of array
-using Assets.World.Heightmap;
 
 public static class TerrainLabeler
 {

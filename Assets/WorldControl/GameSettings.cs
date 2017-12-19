@@ -115,6 +115,9 @@ public class  DetailObject
 [System.Serializable]
 public class GameSettings
 {
+    public GameObject MainObject;
+    public int ChunkMapSize = 32;
+    public int MaxTreeCount = 64;
     public float Depth, WaterLevel, VegetationLevel;
     public int HeightmapResolution, DetailResolution, DetailResolutionPerPatch, Size;
     public GameObject[] Trees;
@@ -125,24 +128,41 @@ public class GameSettings
     public long WorldSeed;
     public Material TerrainMaterial;
 
+    public static TreePrototype[] TreeProtoTypes;
+    public static SplatPrototype[] SpatProtoTypes;
+    public static DetailPrototype[] DetailPrototypes;
+
+    public void Prepare()
+    {
+        GetSplat();
+        GetTreePrototypes();
+        GetDetail();
+    }
+
     public SplatPrototype[] GetSplat()
     {
-        var prototypes = new SplatPrototype[SplatMaps.Length];
-        for (int i=0; i < SplatMaps.Length; i++)
+        if (SpatProtoTypes == null)
         {
-            prototypes[i] = SplatMaps[i].ToSplatPrototype();
+            SpatProtoTypes = new SplatPrototype[SplatMaps.Length];
+            for (int i = 0; i < SplatMaps.Length; i++)
+            {
+                SpatProtoTypes[i] = SplatMaps[i].ToSplatPrototype();
+            }
         }
-        return prototypes;
+        return SpatProtoTypes;
     }
 
     public DetailPrototype[] GetDetail()
     {
-        var prototypes = new DetailPrototype[TerrainDetails.Length];
-        for (int i = 0; i < TerrainDetails.Length; i++)
+        if (DetailPrototypes == null)
         {
-            prototypes[i] = TerrainDetails[i].ToDetailProtoType();
+            DetailPrototypes = new DetailPrototype[TerrainDetails.Length];
+            for (int i = 0; i < TerrainDetails.Length; i++)
+            {
+                DetailPrototypes[i] = TerrainDetails[i].ToDetailProtoType();
+            }
         }
-        return prototypes;
+        return DetailPrototypes;
     }
 
     public IHeightSource GetHeightMapGenerator(Vector2Int Offset)
@@ -162,15 +182,18 @@ public class GameSettings
 
     public TreePrototype[] GetTreePrototypes()
     {
-        TreePrototype[] protos = new TreePrototype[Trees.Length];
-        for (int j = 0; j < Trees.Length; j++)
+        if (TreeProtoTypes == null)
         {
-            protos[j] = new TreePrototype
+            TreeProtoTypes = new TreePrototype[Trees.Length];
+            for (int j = 0; j < Trees.Length; j++)
             {
-                prefab = Trees[j],
-                bendFactor = .5f
-            };
+                TreeProtoTypes[j] = new TreePrototype
+                {
+                    prefab = Trees[j],
+                    bendFactor = .5f
+                };
+            }
         }
-        return protos;
+        return TreeProtoTypes;
     }
 }
