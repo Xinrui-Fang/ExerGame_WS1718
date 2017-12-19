@@ -4,7 +4,6 @@
 ; ----------------------------------------------------
 
 FBXHeaderExtension:  {
-	FBXHeaderVersion: 1003
 	FBXVersion: 6100
 	CreationTimeStamp:  {
 		Version: 1000
