@@ -116,6 +116,7 @@ public class  DetailObject
 public class GameSettings
 {
     public GameObject MainObject;
+    public GameObject[] AIs;
     public int ChunkMapSize = 32;
     public int MaxTreeCount = 64;
     public float Depth, WaterLevel, VegetationLevel;
@@ -132,9 +133,9 @@ public class GameSettings
     public static SplatPrototype[] SpatProtoTypes;
     public static DetailPrototype[] DetailPrototypes;
 
-    public float TreeBillBoardDistance { get; internal set; }
-    public float TreeRenderDistance { get; internal set; }
-    public float DetailRenderDistance { get; internal set; }
+    public float TreeBillBoardDistance;
+    public float TreeRenderDistance;
+    public float DetailRenderDistance;
 
     public void Prepare()
     {

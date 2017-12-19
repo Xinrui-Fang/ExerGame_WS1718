@@ -24,9 +24,8 @@ public class AI_Simple : MonoBehaviour
     private TerrainChunk ActiveTerrain;
 
     // Use this for initialization
-    void OnEnable()
+    public void Init()
     {
-
         ActiveTerrain = surfaceManager.GetTile(new Vector2Int(2,2));
         GameSettings Settings = surfaceManager.Settings;
         // initial terrainChunk 
@@ -35,6 +34,8 @@ public class AI_Simple : MonoBehaviour
         List<NavigationPath> listOfPath = ActiveTerrain.GetPathFinder().paths;
         UnityEngine.Debug.Log(string.Format("Path length {0}", listOfPath[0].Waypoints.Count));
 
+        Vector3 Offset = ActiveTerrain.UnityTerrain.transform.position;
+
         LinkedList<Vector2Int> path2D = listOfPath[0].Waypoints;
         // Le path est dans les coordonnées du TerrainChunk
         // Pour les passer en coordonnées monde -> P_terrain(x, y)*Settings.Size/Settings.HeighMapResolution + Offset_TerrainChunk
@@ -42,9 +43,9 @@ public class AI_Simple : MonoBehaviour
         while (pathNode != null)
         {
             Vector2Int pathPoint = pathNode.Value;
-            float x = pathPoint.x * Settings.Size / Settings.HeightmapResolution + ActiveTerrain.GridCoords.x;
-            float z = pathPoint.y * Settings.Size / Settings.HeightmapResolution + ActiveTerrain.GridCoords.y;
-            float y = terrain.SampleHeight(new Vector3(x, 0, z));
+            float x = pathPoint.x * Settings.Size / Settings.HeightmapResolution + Offset.x;
+            float z = pathPoint.y * Settings.Size / Settings.HeightmapResolution + Offset.z;
+            float y = terrain.SampleHeight(new Vector3(x, 0, z)) + Offset.y;
 
             path.Add(new Vector3(x, y, z));
             pathNode = pathNode.Next;

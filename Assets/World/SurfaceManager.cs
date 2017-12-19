@@ -30,7 +30,21 @@ public class SurfaceManager : MonoBehaviour {
 
             if (tile.GridCoords.x == 2 && tile.GridCoords.y == 2)
             {
-                // TODO: enable player and ai.
+                GameObject.Find("Camera").SetActive(false);
+
+                Settings.MainObject.GetComponent<BicycleV2>().Init();
+
+                Settings.MainObject.GetComponent<BicycleV2>().enabled = true;
+                Settings.MainObject.SetActive(true);
+
+                foreach (GameObject AI in Settings.AIs)
+                {
+                    AI.GetComponent<AI_Simple>().Init();
+                    AI.GetComponent<AI_Simple>().enabled = true;
+                    AI.SetActive(true);
+                }
+                //player.SetActiveRecursively(true);
+                //AI.SetActiveRecursively(true);
             }
 		}
 	}
