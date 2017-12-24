@@ -273,6 +273,8 @@ public class TerrainChunk
         
         UnityTerrain = Terrain.CreateTerrainGameObject(ChunkTerrainData);
         Terrain terrain =  UnityTerrain.GetComponent<Terrain>();
+        terrain.castShadows = true;
+        terrain.heightmapPixelError = 10;
         terrain.materialType = Terrain.MaterialType.Custom;
         terrain.materialTemplate = Settings.TerrainMaterial;
         terrain.treeBillboardDistance = Settings.TreeBillBoardDistance;
