@@ -1,73 +1,121 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using Assets.World.Heightmap;
+using Assets.Utils;
 
 public class VegetationGenerator
 {
     public VegetationGenerator(){}
 
-    public List<TreeInstance> PaintGras(long Seed, float[,] Heights, int NumOfTrees, int[,] streetMap, float WaterLevel, float VegetationMaxHeight, int MaxTreeCount, Vector3[,] Normals)
+    public List<TreeInstance> PaintGras(TerrainChunk terrain, long Seed, int NumOfTrees, int[,] streetMap, float WaterLevel, float VegetationMaxHeight, int MaxTreeCount, Vector3[,] Normals)
     {
+        GameSettings Settings = terrain.Settings;
         int x_res, y_res;
-        x_res = Heights.GetLength(1);
-        y_res = Heights.GetLength(0);
-        bool[,] TreeMap = new bool[y_res, x_res];
-        System.Random prng = new System.Random((int)Seed);
+        x_res = terrain.Heights.GetLength(1);
+        y_res = terrain.Heights.GetLength(0);
+        float p = ((float) Settings.MaxTreeCount/((float) x_res * y_res));
+        if (p >= .5f) p = .25f;
+
+        System.Random prng = new System.Random((int) Seed);
+
         List<TreeInstance> trees = new List<TreeInstance>(MaxTreeCount);
-        int n = 0;
-        for (int i = 0; i < 128; i++)
+        CircleBound circ = new CircleBound(new Vector2(), 1.5f);
+        for (int y = 0; y < y_res; y++)
         {
-            int x, y;
-
-            x = prng.Next(0, x_res);
-            y = prng.Next(0, y_res);
-            if (streetMap[x, y] > 0 || TreeMap[x,y] || Heights[y,x] <= WaterLevel || Heights[y,x] > VegetationMaxHeight) continue;
-            if (Normals[y, x].y < .7f) continue;
-            float heightScale = (float)prng.Next(256, 512) / 512.0f;
-            trees.Add(new TreeInstance
+            for (int x = 0; x < x_res; x++)
             {
-                prototypeIndex = prng.Next(0, NumOfTrees - 1),
-                position = new Vector3((float)x / x_res,
-                        Heights[y,x],
-                        (float)y / y_res),
-                heightScale = heightScale,
-                widthScale = heightScale,
-                rotation = (float)prng.Next(0, 360) * Mathf.Deg2Rad
-            });
-            n++;
-            TreeMap[x, y] = true;
+                // Check that we are in Vegetation Height.
+                if (terrain.Heights[y, x] <= WaterLevel || terrain.Heights[y, x] > VegetationMaxHeight) continue;
 
-        }
-        /**
-        float y_01, x_01;
-        int y_hm, x_hm;
-        
-        float step = 1f / terrainData.detailWidth;
-	    for (int l = 0; l < terrainData.detailPrototypes.Length; l++)
-        {
+                // Check that terrain is not too steep.
+                if (Normals[y, x].y < .8f) continue;
 
-            int[,] detailMap = new int[terrainData.detailWidth, terrainData.detailHeight];
-            y_01 = 0f;
-            for (int y = 0; y < terrainData.detailHeight; y++)
-            {
-                y_01 += step;
-                y_hm = (int)(y_01 * (float)terrainData.heightmapHeight);
-                x_01 = 0;
-                for (int x = 0; x < terrainData.detailWidth; x++)
+                // Check moisture
+                if (terrain.Moisture[y, x] < .3f) continue;
+
+                // Check that we are not colliding with anything.
+                Vector2 WorldCoordinates = terrain.ToWorldCoordinate(x, y);
+                circ.Center = WorldCoordinates;
+                if (terrain.Objects.Collides(circ)) continue;
+
+                // Make a weighted cointoss to decide whether we create a tree.
+                if (prng.NextDouble() > p) continue;
+
+                // Create tree
+                float heightScale = (float)prng.Next(256, 512) / 512.0f;
+                trees.Add(new TreeInstance
                 {
-                    x_01 += step;
-                    x_hm = (int)(x_01 * (float)terrainData.heightmapWidth);
-                    if (terrainData.GetInterpolatedNormal(x_01, y_01).y >= .8f && Heights[y_hm, x_hm] > WaterLevel && Heights[y_hm, x_hm] <= VegetationMaxHeight)
+                    prototypeIndex = prng.Next(0, NumOfTrees - 1),
+                    position = new Vector3((x + .5f)/ x_res,
+                            terrain.Heights[y, x],
+                            (y + .5f) / y_res),
+                    heightScale = heightScale,
+                    widthScale = heightScale,
+                    rotation = (float)prng.Next(0, 360) * Mathf.Deg2Rad
+                });
+
+                // Remember tree location
+                bool success = terrain.Objects.Put(
+                    new QuadTreeData(WorldCoordinates, QuadDataType.vegetation, 0)
+                );
+                if (!success)
+                {
+                    Debug.Log(string.Format("Could not add Tree at {0} to QuadTree.", WorldCoordinates));
+                }
+
+            }
+        }
+        
+        CircleBound smallCirc = new CircleBound(new Vector2(), 1f);
+        CircleBound MediumCirc = new CircleBound(new Vector2(), 2f);
+        CircleBound BigCirc = new CircleBound(new Vector2(), 3f);
+        List<int[,]> DetailMapList = new List<int[,]>(GameSettings.DetailPrototypes.Length);
+        float fract = 1f / (float)GameSettings.DetailPrototypes.Length;
+
+        for (int l = 0; l < GameSettings.DetailPrototypes.Length; l++)
+        {
+            DetailMapList.Add(new int[Settings.DetailResolution, Settings.DetailResolution]);
+        }
+        for (int y = 0; y < Settings.DetailResolution; y++)
+        {
+            for (int x = 0; x < Settings.DetailResolution; x++)
+            {
+                // Do not grow on very steep terrain.
+                if (terrain.DEBUG_ON && x == y)
+                {
+                    Debug.Log(Normals[y, x]);
+                }
+                if (Normals[y, x].y < .9f) continue;
+
+                // Gras only grows on good soil.
+                if (terrain.Moisture[y, x] < .2f) continue;
+
+                // Check that we are in Vegetation Height.
+                if (terrain.Heights[y, x] <= WaterLevel || terrain.Heights[y, x] > VegetationMaxHeight) continue;
+
+                smallCirc.Center = terrain.ToWorldCoordinate((float)x/Settings.DetailResolution, (float)y / Settings.DetailResolution);
+                if (terrain.Objects.Collides(smallCirc)) continue;
+
+                MediumCirc.Center = smallCirc.Center;
+                BigCirc.Center = smallCirc.Center;
+                float vegetaionFactor = 1f;
+                if (terrain.Objects.Collides(MediumCirc)) vegetaionFactor *= .5f;
+                if (terrain.Objects.Collides(BigCirc)) vegetaionFactor *= .75f;
+
+                int max = Mathf.CeilToInt(terrain.Moisture[y, x] * Normals[y,x].y * Normals[y, x].y * Settings.MaxVegetaionDensity * vegetaionFactor * fract);
+                for (int l = 0; l < GameSettings.DetailPrototypes.Length; l++)
+                {
+                    if (l > 1)
                     {
-                        int r = prng.Next(-200, 8);
-                        if(!TreeMap[x_hm, y_hm] && !streetMap[x_hm, y_hm]) detailMap[y, x] = r > 0 ? r : 0;
+                        DetailMapList[l][y, x] = prng.Next(0, 3);
+                    } else
+                    {
+                        DetailMapList[l][y, x] = prng.Next(0, max);
                     }
                 }
             }
-            terrainData.SetDetailLayer(0, 0, l, detailMap);
         }
-	    terrainData.treeInstances = trees.ToArray();
-       **/
+        terrain.DetailMapList = DetailMapList;
         return trees;
     }
 }

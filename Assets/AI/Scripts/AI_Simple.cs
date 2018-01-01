@@ -39,8 +39,8 @@ public class AI_Simple : MonoBehaviour
         while (pathNode != null)
         {
             Vector2Int pathPoint = pathNode.Value;
-            float x = pathPoint.x * Settings.Size / Settings.HeightmapResolution + Offset.x;
-            float z = pathPoint.y * Settings.Size / Settings.HeightmapResolution + Offset.z;
+            float x = pathPoint.x * Settings.Size / Settings.HeightmapResolution + Offset.x + Settings.TileCorrection.x;
+            float z = pathPoint.y * Settings.Size / Settings.HeightmapResolution + Offset.z + Settings.TileCorrection.z;
             float y = terrain.SampleHeight(new Vector3(x, 0, z)) + Offset.y;
 
             path.Add(new Vector3(x, y, z));
@@ -53,22 +53,20 @@ public class AI_Simple : MonoBehaviour
     void Update()
     {
 
-        if ((transform.position - path[current_node]).sqrMagnitude > 1)
+        while ((transform.position - path[current_node]).sqrMagnitude < 2f * maxSpeed * Time.deltaTime)
         {
-            // if the position of the player is not at the path point
-            // move until it reach it
-            Vector3 pos = Vector3.MoveTowards(transform.position, path[current_node], maxSpeed * Time.deltaTime);
+
+            current_node = (current_node + 1) % path.Count;
+        }
+        // if the position of the player is not at the path point
+        // move until it reach it
+        Vector3 pos = Vector3.MoveTowards(transform.position, path[current_node], maxSpeed * Time.deltaTime);
 
             Quaternion rotationQ = Quaternion.LookRotation(path[current_node] - transform.position);
             transform.position = pos;
             transform.rotation = rotationQ;
             transform.rotation *= Quaternion.Euler(0, 90, 0);
 
-        }
-        else
-        {
-            current_node = (current_node + 1) % path.Count;
-        }
     }
 
 }

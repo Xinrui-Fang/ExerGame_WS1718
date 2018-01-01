@@ -81,6 +81,10 @@ public class SurfaceManager : MonoBehaviour {
 				&& absolutePos.y >= 0 && absolutePos.y < Settings.ChunkMapSize
 				&& ChunkMap[absolutePos.x, absolutePos.y] == null)
 			{
+                // swap the commented with the uncommented if some exception is not propagating to the maini thread.
+                //TerrainChunk terrain = new TerrainChunk(Settings);
+                //terrain.Build(absolutePos);
+                //terrain.Flush(this);
 				ThreadPool.QueueUserWorkItem((object item) => Build((TerrainChunk) item, absolutePos), new TerrainChunk(Settings));
 			}
 		}
@@ -92,6 +96,7 @@ public class SurfaceManager : MonoBehaviour {
         GameSettings.DetailPrototypes = DummyTerrain.terrainData.detailPrototypes;
         GameSettings.SpatProtoTypes = DummyTerrain.terrainData.splatPrototypes;
         GameSettings.TreeProtoTypes = DummyTerrain.terrainData.treePrototypes;
+        Settings.Prepare();
 		ChunkMap = new TerrainChunk[Settings.ChunkMapSize, Settings.ChunkMapSize];
         Vector2Int playerPos = new Vector2Int(2, 2);
         Settings.MainObject.transform.position.Set(2.5f * Settings.Size, Settings.Depth + 10f, 2.5f * Settings.Size);

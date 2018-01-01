@@ -14,7 +14,7 @@ public static class TerrainLabeler
         return 1;
     }
 
-    public static void MapTerrain(float[,] moisture, float[,] Heights, Vector3[,] Normals, float[,,] SplatMap, int[,] streetMap, float WaterLevel, float VegetationMaxHeight, Vector2 TerrainOffset)
+    public static void MapTerrain(TerrainChunk terrain, float[,] moisture, float[,] Heights, Vector3[,] Normals, float[,,] SplatMap, int[,] streetMap, float WaterLevel, float VegetationMaxHeight, Vector2 TerrainOffset)
     {
         Vector2Int heightmapLimits = new Vector2Int(Heights.GetLength(0) -1, Heights.GetLength(1) -1);
         Vector2 location = new Vector2();
@@ -70,8 +70,8 @@ public static class TerrainLabeler
                     float vegetaionLikelihood = Mathf.Sin(Mathf.InverseLerp(WaterLevel, VegetationMaxHeight, height)*Mathf.PI) * moist;
                     float snowCandidate = IsInside(VegetationMaxHeight, 1f, height);
                     float snowLikelikhood = Mathf.Pow(snowCandidate * Mathf.InverseLerp(VegetationMaxHeight, 1f, height), 2) * moist;
-                    float slope = 1f - Mathf.Pow(normal.z, 2);
-                    float RockLikelihood = IsInside(WaterLevel + .15f, .9f, height) * Mathf.InverseLerp(WaterLevel * .15f, .9f, height);
+                    float slope = Mathf.Pow(1f - Mathf.InverseLerp(.5f, .9f, normal.z), 2);
+                    float RockLikelihood = IsInside(WaterLevel + .15f, 1f, height) * Mathf.InverseLerp(WaterLevel * .15f, .9f, height) + IsInside(0f, .8f, normal.y);
                     float SandLikelihood = IsInside(0f, WaterLevel + .15f, height) * (1f - Mathf.InverseLerp(0f, WaterLevel + .15f, height));
 
                     //0 public Texture2D GrasTexture;
@@ -80,10 +80,10 @@ public static class TerrainLabeler
                     //3 public Texture2D SandTexture;
                     //4 public Texture2D PathTexture;
                     //5 public Texture2D CliffTexture;
-                    splatWeights[0] = vegetaionLikelihood * normal.y;
+                    splatWeights[0] = vegetaionLikelihood * Mathf.InverseLerp(.8f, 1f, normal.y);
                     //splatWeights[0] = moisture[y_hm, x_hm] * Mathf.InverseLerp(.6f, 1f, normal.y) * .2f * Mathf.Pow(Mathf.Clamp(0, .2f, .25f - Mathf.Abs(.25f - height)), 2f);
                     //splatWeights[1] = Mathf.InverseLerp(Mathf.Cos(45f * Mathf.Deg2Rad), 1f, normal.y) * Mathf.Pow(Mathf.InverseLerp(.6f, 1f, height), 2f) * moisture[y_hm, x_hm];
-                    splatWeights[1] = snowLikelikhood * normal.y;
+                    splatWeights[1] = snowLikelikhood * Mathf.InverseLerp(.8f, 1f, normal.y);
                     splatWeights[2] = slope * moist * RockLikelihood;
                     //splatWeights[2] = 4 * (1f - Mathf.InverseLerp(Mathf.Cos(60 * Mathf.Deg2Rad), Mathf.Cos(45f * Mathf.Deg2Rad), normal.y));
                     splatWeights[3] = SandLikelihood;

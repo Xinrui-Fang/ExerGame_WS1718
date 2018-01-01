@@ -208,6 +208,7 @@ public static class PathTools
     {
         private DIsWalkable IsWalkable;
         public int[,] Labels;
+        public int[] LabelSizes;
         public int NumLabels;
         private int nextLabel;
         private int Resolution;
@@ -330,13 +331,23 @@ public static class PathTools
                     valueRemap.Add(UnionFindTree[i].Value, NumLabels++);
                 }
             }
+            LabelSizes = new int[NumLabels];
+            /**
+             * Debug.Log("Used labels in connectivity map:");
+            foreach (int key in valueRemap.Keys)
+            {
+                Debug.Log(valueRemap[key]);
+            }
+            **/
             for (int y = 0; y < Resolution; y++)
             {
                 for (int x = 0; x < Resolution; x++)
                 {
                     if (Labels[y, x] >= 0)
                     {
-                        Labels[y, x] = valueRemap[UnionFindTree[Labels[y, x] - 1].Value];
+                        int value = valueRemap[UnionFindTree[Labels[y, x] - 1].Value];
+                        Labels[y, x] = value;
+                        LabelSizes[value]++;
                     }
                 }
             }

@@ -36,8 +36,8 @@ public class BicycleV2 : MonoBehaviour {
 		LinkedListNode<Vector2Int>  pathNode = path2D.First;
 		while(pathNode != null){
 			Vector2Int pathPoint = pathNode.Value;
-			float x = pathPoint.x*Settings.Size/Settings.HeightmapResolution + Offset.x;
-			float z = pathPoint.y*Settings.Size/Settings.HeightmapResolution + Offset.z;
+			float x = pathPoint.x*Settings.Size/Settings.HeightmapResolution + Offset.x + Settings.TileCorrection.x;
+			float z = pathPoint.y*Settings.Size/Settings.HeightmapResolution + Offset.z + Settings.TileCorrection.z;
 			float y = terrain.SampleHeight(new Vector3(x, 0, z)) + Offset.y;
 
 			path.Add(new Vector3(x, y, z));
@@ -51,21 +51,22 @@ public class BicycleV2 : MonoBehaviour {
 	void Update () {
 		if(Input.GetKey("up"))
 		{
-			if ((transform.position - path[current_node]).sqrMagnitude > 1){
-				// if the position of the player is not at the path point
-				// move until it reach it
-				Vector3 pos = Vector3.MoveTowards(transform.position, path[current_node], maxSpeed*Time.deltaTime);
-				Transform copy = transform;
-				copy.rotation *= Quaternion.Euler(0, -90, 0);
-				Vector3 newDir = Vector3.RotateTowards(copy.forward,  path[current_node] - transform.position, maxRotation*Time.deltaTime, 0.0f);
-				Quaternion rotationQ = Quaternion.LookRotation(newDir);
-				transform.position = pos;
-				transform.rotation = rotationQ;
-				transform.rotation *= Quaternion.Euler(0, 90, 0);
+            while ((transform.position - path[current_node]).sqrMagnitude < 2f * maxSpeed * Time.deltaTime)
+            {
 
-			}else{
-				current_node = (current_node +1) % path.Count;
-			}
+                current_node = (current_node + 1) % path.Count;
+            }
+            // if the position of the player is not at the path point
+            // move until it reach it
+            Vector3 pos = Vector3.MoveTowards(transform.position, path[current_node], maxSpeed*Time.deltaTime);
+			Transform copy = transform;
+			copy.rotation *= Quaternion.Euler(0, -90, 0);
+			Vector3 newDir = Vector3.RotateTowards(copy.forward,  path[current_node] - transform.position, maxRotation*Time.deltaTime, 0.0f);
+			Quaternion rotationQ = Quaternion.LookRotation(newDir);
+			transform.position = pos;
+			transform.rotation = rotationQ;
+			transform.rotation *= Quaternion.Euler(0, 90, 0);
+            
 		}
 		if(Input.GetKey("down")){
 			if(current_node > 0){

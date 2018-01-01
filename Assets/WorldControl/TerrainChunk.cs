@@ -9,11 +9,14 @@ public class TerrainChunk
     public Vector2Int GridCoords;
     public int ChunkSeed;
     public float[,] Heights, Moisture;
+    public int[,] ClusterMap;
+    public int ClusterCount;
     public Terrain ChunkTerrain;
 
     private long WorldSeed;
     public TerrainChunkEdge[] TerrainEdges;
     public GameSettings Settings;
+    public QuadTree Objects;
     private TerrainData ChunkTerrainData;
 
     public float[,,] SplatmapData;
@@ -23,9 +26,11 @@ public class TerrainChunk
     public PathTools.ConnectivityLabel Connectivity;
     public GameObject UnityTerrain;
 
-    public bool DEBUG_ON = false;
+    public bool DEBUG_ON = true;
 
     public List<TreeInstance> Trees { get; private set; }
+    public List<int[,]> DetailMapList { get; internal set; }
+
     public bool isFinished = false;
 
     public TerrainChunk N, E, S, W;
@@ -49,8 +54,47 @@ public class TerrainChunk
         Trees = new List<TreeInstance>(0);
     }
 
+    public RectangleBound GetBoundary()
+    {
+        float halfSize = (float)Settings.Size / 2f;
+        Vector2 center = new Vector2(GridCoords.x + .5f, GridCoords.y + .5f) * (float)Settings.Size;
+        return new RectangleBound(center, halfSize);
+    }
+
+    public Vector2 ToWorldCoordinate(int x, int y)
+    {
+        return new Vector2(
+            GridCoords.x + ((float)x + .5f) / (float)Settings.HeightmapResolution, 
+            GridCoords.y + ((float)y + .5f) / (float)Settings.HeightmapResolution
+        ) * (float)Settings.Size;
+    }
+
+    public Vector2 ToWorldCoordinate(float x, float y)
+    {
+        return new Vector2(GridCoords.x + x, GridCoords.y + y) * (float)Settings.Size;
+    }
+
+    public void ToWorldCoordinate(int x, int y, ref Vector2 Out)
+    {
+        Out.x = GridCoords.x + ((float)x + .5f) / (float)Settings.HeightmapResolution;
+        Out.y = GridCoords.y + ((float)y + .5f) / (float)Settings.HeightmapResolution;
+        Out *= (float)Settings.Size;
+    }
+
+    public void ToWorldCoordinate(float x, float y, ref Vector2 Out)
+    {
+        Out.x = GridCoords.x + x;
+        Out.y = GridCoords.y + y;
+        Out *= (float)Settings.Size;
+    }
+
+
     public void Build(Vector2Int gridCoords)
     {
+        GridCoords = gridCoords;
+        ChunkSeed = GetHashCode();
+
+        Objects = new QuadTree(GetBoundary());
         isFinished = false;
         Stopwatch stopWatch = new Stopwatch();
         stopWatch.Start();
@@ -59,9 +103,7 @@ public class TerrainChunk
         Vector3[,] Normals = new Vector3[Settings.HeightmapResolution, Settings.HeightmapResolution];
         Moisture = new float[Settings.HeightmapResolution, Settings.HeightmapResolution];
         SplatmapData = new float[Settings.HeightmapResolution, Settings.HeightmapResolution, Settings.SplatMaps.Length];
-
-        GridCoords = gridCoords;
-        ChunkSeed = GetHashCode();
+;
         TerrainEdges = new TerrainChunkEdge[4]
         {
             new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(0,-1), WorldSeed, Settings.HeightmapResolution),
@@ -76,9 +118,9 @@ public class TerrainChunk
 
         Settings.GetHeightMapGenerator(GridCoords * Settings.HeightmapResolution).ManipulateHeight(ref Heights, Settings.HeightmapResolution, Settings.Size);
         Settings.Moisture.GetHeightSource(GridCoords * Settings.HeightmapResolution).ManipulateHeight(ref Moisture, Settings.HeightmapResolution, Settings.Size);
-        NormalsFromHeightMap.GenerateNormals(Heights, Normals, Settings.Depth, (float)Settings.Size / Settings.HeightmapResolution);
+        NormalsFromHeightMap.GenerateNormals(Heights, Normals, Settings.Depth, (float)Settings.Size / (float)Settings.HeightmapResolution);
 
-        UnityEngine.Debug.Log(string.Format("Took {0} ms to create Heightmap and Moisture at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        UnityEngine.Debug.Log(string.Format("Took {0} ms to create Heightmap, Normals and Moisture at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         
         stopWatch.Reset();
         stopWatch.Start();
@@ -87,7 +129,7 @@ public class TerrainChunk
         Vector2Int upperBound = new Vector2Int(Settings.HeightmapResolution - 1, Settings.HeightmapResolution - 1);
         PathTools.Bounded8Neighbours neighbours = new PathTools.Bounded8Neighbours(ref lowerBound, ref upperBound);
         PathTools.NormalYThresholdWalkable walkable_src = new PathTools.NormalYThresholdWalkable(
-            Mathf.Cos(Mathf.Deg2Rad * 25),
+            Mathf.Cos(Mathf.Deg2Rad * 30),
             Normals, 
             Settings.HeightmapResolution, ref lowerBound, ref upperBound);
         PathTools.CachedWalkable walkable = new PathTools.CachedWalkable(walkable_src.IsWalkable, lowerBound, upperBound, Settings.HeightmapResolution);
@@ -98,7 +140,56 @@ public class TerrainChunk
         stopWatch.Start();
         Connectivity = new PathTools.ConnectivityLabel(Settings.HeightmapResolution, neighbours, walkable.IsWalkable);
 
-        UnityEngine.Debug.Log(string.Format("Took {0} ms to create ConnectivityMap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        
+        ClusterMap = new int[Settings.HeightmapResolution, Settings.HeightmapResolution];
+        for (int i = 0; i < ClusterMap.GetLength(0); i++)
+        {
+            for (int j = 0; j < ClusterMap.GetLength(1); j++)
+            {
+                ClusterMap[i, j] = -1;
+            }
+        }
+        float ClusterSize = ((float)(Settings.HeightmapResolution * Settings.HeightmapResolution)) * .25f;
+        int offset = 0;
+        int clusters = 0;
+        for (int i = 0; i < Connectivity.NumLabels; i++)
+        {
+            clusters = Mathf.CeilToInt((float)Connectivity.LabelSizes[i] / ClusterSize);
+            UnityEngine.Debug.Log(string.Format("Run Kmeans with {0} clusters for Label of size {1}", clusters, Connectivity.LabelSizes[i]));
+            KMeansClustering.Cluster(Heights, Connectivity.Labels, ClusterMap, i, ref clusters, offset, Settings.Depth);
+            offset += clusters;
+        }
+        ClusterCount = offset;
+
+        float[] clusterHeight = new float[ClusterCount];
+        Vector3[] clusterNormal = new Vector3[ClusterCount];
+        float[] clusterMoisture = new float[ClusterCount];
+        int[] clusterSize = new int[ClusterCount];
+
+        for (int y = 0; y < Heights.GetLength(0); y++)
+        {
+            for (int x = 0; x < Heights.GetLength(1); x ++)
+            {
+                int label = ClusterMap[y, x];
+                if (label == -1) continue;
+                clusterSize[label]++;
+                clusterHeight[label] += Heights[y, x];
+                clusterNormal[label] += Normals[y, x];
+                clusterMoisture[label] += Moisture[y, x];
+            }
+        }
+        for (int c = 0; c < ClusterCount; c++)
+        {
+            if (clusterSize[c] <= 1) continue;
+            clusterHeight[c] /= clusterSize[c];
+            clusterNormal[c] /= clusterSize[c];
+            clusterMoisture[c] /= clusterSize[c];
+        }
+
+        stopWatch.Reset();
+        stopWatch.Start();
+
+        UnityEngine.Debug.Log(string.Format("Took {0} ms to create ConnectivityMap and ClusterMap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         
         stopWatch.Reset();
         stopWatch.Start();
@@ -106,16 +197,16 @@ public class TerrainChunk
         AStar search = new AStar(walkable.IsWalkable, neighbours, paths.StepCostsRoad, MapTools.OctileDistance, 2f);
         paths.SetSearch(search);
         search.PrepareSearch(Settings.HeightmapResolution * Settings.HeightmapResolution);
-        paths.CreateNetwork(TerrainEdges);
+        paths.CreateNetwork(this, TerrainEdges);
         search.CleanUp();
 
         NormalsFromHeightMap.GenerateNormals(Heights, Normals, Settings.Depth, (float)Settings.Size / Settings.HeightmapResolution);
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create route network at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Reset();
         stopWatch.Start();
-        
-        TerrainLabeler.MapTerrain(Moisture, Heights, Normals, SplatmapData, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, gridCoords * Settings.HeightmapResolution);
-        Trees = vGen.PaintGras(ChunkSeed, Heights, Settings.Trees.Length, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, Settings.MaxTreeCount, Normals);
+
+        Trees = vGen.PaintGras(this, ChunkSeed, Settings.Trees.Length, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, Settings.MaxTreeCount, Normals);
+        TerrainLabeler.MapTerrain(this, Moisture, Heights, Normals, SplatmapData, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, gridCoords * Settings.HeightmapResolution);
 
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create Vegetation and Splatmap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Stop();
@@ -237,10 +328,12 @@ public class TerrainChunk
             stopWatch.Start();
             FloatImageExporter HimgExp = new FloatImageExporter(0f, 1f);
             IntImageExporter CimgExp = new IntImageExporter(-1, Connectivity.NumLabels - 1);
+            IntImageExporter KMimgExp = new IntImageExporter(-1, (ClusterCount - 1));
             IntImageExporter SimgExp = new IntImageExporter(0, paths.paths.Count);
             HimgExp.Export(string.Format("HeightmapAt{0}-{1}", GridCoords.x, GridCoords.y), Heights);
             HimgExp.Export(string.Format("MoistureAt{0}-{1}", GridCoords.x, GridCoords.y), Moisture);
             CimgExp.Export(string.Format("ConnectivityMapAt{0}-{1}", GridCoords.x, GridCoords.y), Connectivity.Labels);
+            KMimgExp.Export(string.Format("ClusterMapAt{0}-{1}", GridCoords.x, GridCoords.y), ClusterMap);
             SimgExp.Export(string.Format("StreetMapAt{0}-{1}", GridCoords.x, GridCoords.y), paths.StreetMap);
            
             UnityEngine.Debug.Log(string.Format("Took {0} ms to export debug Images at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
@@ -266,6 +359,10 @@ public class TerrainChunk
 
         ChunkTerrainData.SetHeights(0, 0, Heights);
         ChunkTerrainData.SetAlphamaps(0, 0, SplatmapData);
+        for (int i=0; i < DetailMapList.Count; i++)
+        {
+            ChunkTerrainData.SetDetailLayer(0, 0, i, DetailMapList[i]);
+        }
 
         Heights = new float[0, 0];
         SplatmapData = new float[0, 0, 0];

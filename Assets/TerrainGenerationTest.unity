@@ -225,6 +225,23 @@ Prefab:
       propertyPath: maxSpeed
       value: 4
       objectReference: {fileID: 0}
+    - target: {fileID: 114575636183675542, guid: 61717b4acaa16fd4eb1d517afb847259,
+        type: 2}
+      propertyPath: maxRotation
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4692524294396400, guid: 61717b4acaa16fd4eb1d517afb847259, type: 2}
+      propertyPath: m_LocalScale.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4692524294396400, guid: 61717b4acaa16fd4eb1d517afb847259, type: 2}
+      propertyPath: m_LocalScale.y
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4692524294396400, guid: 61717b4acaa16fd4eb1d517afb847259, type: 2}
+      propertyPath: m_LocalScale.z
+      value: 2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 61717b4acaa16fd4eb1d517afb847259, type: 2}
   m_IsPrefabParent: 0
@@ -410,13 +427,13 @@ MonoBehaviour:
     AIs:
     - {fileID: 72460361}
     ChunkMapSize: 16
-    MaxTreeCount: 64
+    MaxTreeCount: 128
     Depth: 300
     WaterLevel: 0.1
     VegetationLevel: 0.6
     HeightmapResolution: 257
-    DetailResolution: 257
-    DetailResolutionPerPatch: 33
+    DetailResolution: 256
+    DetailResolutionPerPatch: 32
     Size: 127
     Trees:
     - {fileID: 100000, guid: c91c1eb85782d5748ace27eb4d7415bb, type: 3}
@@ -450,14 +467,14 @@ MonoBehaviour:
         value3: 0
       HeightmapType: 0
     Moisture:
-      Octaves: 0
+      Octaves: 8
       Weight: 0
-      Lacunarity: 0
-      Persistance: 0
-      FeatureFrequency: 0
+      Lacunarity: 2
+      Persistance: 0.5
+      FeatureFrequency: 2
       NoiseType: 0
       FractalType: 0
-      Seed: 0
+      Seed: 271
       postprocessors: []
       HeightmapType: 0
     SplatMaps:
@@ -494,10 +511,10 @@ MonoBehaviour:
     TerrainDetails:
     - BendFactor: 1
       NoiseSpread: 2
-      MaxHeight: 0.5
-      MaxWidth: 0.5
-      MinHeight: 0.1
-      MinWidth: 0.1
+      MaxHeight: 0.05
+      MaxWidth: 0.05
+      MinHeight: 0.01
+      MinWidth: 0.01
       DryColor: {r: 0.54185116, g: 0.58823526, b: 0.13764706, a: 0}
       HealthyColor: {r: 0.2129482, g: 0.647, b: 0.055775873, a: 0}
       Prototype: {fileID: 0}
@@ -506,21 +523,25 @@ MonoBehaviour:
       RenderMode: 0
     - BendFactor: 1
       NoiseSpread: 2
-      MaxHeight: 0.5
-      MaxWidth: 0.5
-      MinHeight: 0.1
-      MinWidth: 0.1
+      MaxHeight: 0.05
+      MaxWidth: 0.05
+      MinHeight: 0.01
+      MinWidth: 0.01
       DryColor: {r: 0.6764706, g: 0.6486308, b: 0.29785, a: 0}
       HealthyColor: {r: 0, g: 0.578, b: 0, a: 0}
       Prototype: {fileID: 0}
       PrototypeTexture: {fileID: 2800000, guid: 2c528fec5d95e4ac28cf46399b887662,
         type: 3}
       RenderMode: 0
-    WorldSeed: 42
+    WorldSeed: 21312
     TerrainMaterial: {fileID: 2100000, guid: aa92db0d7bc9ac44691bd4558ab97e8d, type: 2}
-    TreeBillBoardDistance: 37.38
-    TreeRenderDistance: 146.4
-    DetailRenderDistance: 28.71
+    TreeBillBoardDistance: 24
+    TreeRenderDistance: 64
+    DetailRenderDistance: 48
+    TreePlantOffset: 0.2
+    TileCorrection: {x: 0, y: 0, z: 0}
+    TreeCorrection: {x: 0, y: 0, z: 0}
+    MaxVegetaionDensity: 24
 --- !u!4 &1519617107
 Transform:
   m_ObjectHideFlags: 0
@@ -597,6 +618,18 @@ Prefab:
       propertyPath: surfaceManager
       value: 
       objectReference: {fileID: 1519617106}
+    - target: {fileID: 4515022488413586, guid: d2898c3b9a4149d4184c9079430c6603, type: 2}
+      propertyPath: m_LocalScale.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4515022488413586, guid: d2898c3b9a4149d4184c9079430c6603, type: 2}
+      propertyPath: m_LocalScale.y
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4515022488413586, guid: d2898c3b9a4149d4184c9079430c6603, type: 2}
+      propertyPath: m_LocalScale.z
+      value: 2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: d2898c3b9a4149d4184c9079430c6603, type: 2}
   m_IsPrefabParent: 0

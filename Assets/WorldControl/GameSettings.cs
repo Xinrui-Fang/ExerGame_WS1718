@@ -136,12 +136,21 @@ public class GameSettings
     public float TreeBillBoardDistance;
     public float TreeRenderDistance;
     public float DetailRenderDistance;
+    public float TreePlantOffset;
+    public Vector3 TileCorrection;
+    public Vector3 TreeCorrection;
+
+    public float MaxVegetaionDensity;
 
     public void Prepare()
     {
         GetSplat();
         GetTreePrototypes();
         GetDetail();
+
+        float correctionalOffset = .5f / (float)HeightmapResolution; // Put coordinates in the middle of a tile.
+        TileCorrection = new Vector3(correctionalOffset * (float)Size, 0, correctionalOffset * (float)Size);
+        TreeCorrection = new Vector3(correctionalOffset, -TreePlantOffset, correctionalOffset);
     }
 
     public SplatPrototype[] GetSplat()

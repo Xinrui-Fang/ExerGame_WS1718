@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using PathInterfaces;
 using Assets.World.Paths;
+using Assets.Utils;
 
 public class PathFinder
 {
@@ -52,7 +53,7 @@ public class PathFinder
 
     public void MakePath(Vector2Int start, Vector2Int end)
     {
-        Debug.Log(string.Format("## Building Path from {0} to {1}. ##", start, end));
+        //Debug.Log(string.Format("## Building Path from {0} to {1}. ##", start, end));
         if (Connectivity.Labels[start.y, start.x] != Connectivity.Labels[end.y, end.x])
         {
             Debug.Log(string.Format("{0} ({2}) and {1} ({3}) are not connected!", start, end, Connectivity.Labels[start.y, start.x], Connectivity.Labels[end.y, end.x]));
@@ -101,7 +102,6 @@ public class PathFinder
             Waypoints = new LinkedList<Vector2Int>()
         };
         bool PathOverride = LastLabel == 0;
-        int i = 0;
         foreach (Vector2Int point in path)
         {
             int nextLabel = StreetMap[point.x, point.y];
@@ -167,7 +167,7 @@ public class PathFinder
         paths.Add(MyPath);
     }
 
-    public void CreateNetwork(TerrainChunkEdge[] terrainEdges)
+    public void CreateNetwork(TerrainChunk terrain, TerrainChunkEdge[] terrainEdges)
     {
         List<Vector2Int> DiscardedPoints = new List<Vector2Int>();
         List<List<Vector2Int>> Points = new List<List<Vector2Int>>();
@@ -209,18 +209,34 @@ public class PathFinder
                 ConnectPoints(Points[i]);
             }
         }
+        foreach (NavigationPath path in paths)
+        {
+
+            LinkedListNode<Vector2Int> node = path.Waypoints.First;
+            while (node != null)
+            {
+                bool success = terrain.Objects.Put(
+                    new QuadTreeData(terrain.ToWorldCoordinate(node.Value.x, node.Value.y), QuadDataType.street, StreetMap[node.Value.x, node.Value.y])
+                );
+                if (!success)
+                {
+                    Debug.Log(string.Format("Could not add Street at {0} to QuadTree with {1}.", node.Value, terrain.Objects.Boundary));
+                }
+                node = node.Next;
+            }
+        }
     }
 
     private void ConnectPoints(List<Vector2Int> Points)
     {
         if(Points.Count == 2)
         {
-            Debug.Log("Making paths");
+            //Debug.Log("Making paths");
             MakePath(Points[0], Points[1]);
         }
         else
         {
-            Debug.Log("Sorting points . . .");
+            //Debug.Log("Sorting points . . .");
             var comparer = new PointDistanceComparer(Points[0]);
             Points.Sort((a,b) => -1* comparer.Compare(a,b));
             for (int  i = 1; i < Points.Count; i++)
