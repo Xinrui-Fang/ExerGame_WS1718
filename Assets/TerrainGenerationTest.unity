@@ -33,11 +33,11 @@ RenderSettings:
   m_HaloTexture: {fileID: 0}
   m_SpotCookie: {fileID: 10001, guid: 0000000000000000e000000000000000, type: 0}
   m_DefaultReflectionMode: 0
-  m_DefaultReflectionResolution: 128
-  m_ReflectionBounces: 1
+  m_DefaultReflectionResolution: 256
+  m_ReflectionBounces: 2
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
-  m_Sun: {fileID: 0}
+  m_Sun: {fileID: 1194882777}
   m_IndirectSpecularColor: {r: 0.6735129, g: 0.623706, b: 0.5370834, a: 1}
 --- !u!157 &3
 LightmapSettings:
@@ -156,6 +156,11 @@ Prefab:
       propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 218328037279209770, guid: 6c7216329722d4440b101e5b3cb34c07,
+        type: 2}
+      propertyPath: m_BakeLightProbesForTrees
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 6c7216329722d4440b101e5b3cb34c07, type: 2}
   m_IsPrefabParent: 0
@@ -164,6 +169,23 @@ Transform:
   m_PrefabParentObject: {fileID: 4240905516133348, guid: 6c7216329722d4440b101e5b3cb34c07,
     type: 2}
   m_PrefabInternal: {fileID: 397585192}
+--- !u!1 &676249872 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1348626342310748, guid: 61717b4acaa16fd4eb1d517afb847259,
+    type: 2}
+  m_PrefabInternal: {fileID: 876822336}
+--- !u!114 &676249873
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 676249872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff26db721962cdf4a8edcdfa9a767d2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  profile: {fileID: 11400000, guid: 4e0f43a55603c944b83cd54e153611c6, type: 2}
 --- !u!1001 &876822336
 Prefab:
   m_ObjectHideFlags: 0
@@ -241,6 +263,16 @@ Prefab:
     - target: {fileID: 4692524294396400, guid: 61717b4acaa16fd4eb1d517afb847259, type: 2}
       propertyPath: m_LocalScale.z
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 20065134182373638, guid: 61717b4acaa16fd4eb1d517afb847259,
+        type: 2}
+      propertyPath: m_RenderingPath
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 20065134182373638, guid: 61717b4acaa16fd4eb1d517afb847259,
+        type: 2}
+      propertyPath: m_AllowMSAA
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 61717b4acaa16fd4eb1d517afb847259, type: 2}
@@ -326,6 +358,7 @@ GameObject:
   - component: {fileID: 1330100701}
   - component: {fileID: 1330100700}
   - component: {fileID: 1330100699}
+  - component: {fileID: 1330100698}
   m_Layer: 0
   m_Name: Camera
   m_TagString: Untagged
@@ -333,6 +366,18 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &1330100698
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1330100697}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff26db721962cdf4a8edcdfa9a767d2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  profile: {fileID: 11400000, guid: 4e0f43a55603c944b83cd54e153611c6, type: 2}
 --- !u!81 &1330100699
 AudioListener:
   m_ObjectHideFlags: 0
@@ -372,7 +417,7 @@ Camera:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_RenderingPath: -1
+  m_RenderingPath: 1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
   m_TargetEye: 3
@@ -450,7 +495,15 @@ MonoBehaviour:
       NoiseType: 0
       FractalType: 1
       Seed: 435
-      postprocessors: []
+      postprocessors:
+      - type: 0
+        value1: 1.5
+        value2: 0
+        value3: 0
+      - type: 2
+        value1: 0
+        value2: 0.85
+        value3: 0
       HeightmapType: 1
     - Octaves: 6
       Weight: 0.55
@@ -537,11 +590,15 @@ MonoBehaviour:
     TerrainMaterial: {fileID: 2100000, guid: aa92db0d7bc9ac44691bd4558ab97e8d, type: 2}
     TreeBillBoardDistance: 24
     TreeRenderDistance: 64
-    DetailRenderDistance: 48
-    TreePlantOffset: 0.2
+    DetailRenderDistance: 32
+    TreePlantOffset: 200
     TileCorrection: {x: 0, y: 0, z: 0}
     TreeCorrection: {x: 0, y: 0, z: 0}
-    MaxVegetaionDensity: 24
+    MaxVegetaionDensity: 20
+    MaxGrasCount: 30000
+    HealthyGrasColor: {r: 0.071, g: 0.497, b: 0.078, a: 0.78431374}
+    DryGrasColor: {r: 0.703, g: 0.634, b: 0.284, a: 0.78431374}
+    GrasMaterial: {fileID: 2100000, guid: c730df763a826a14e9c7ab714faca271, type: 2}
 --- !u!4 &1519617107
 Transform:
   m_ObjectHideFlags: 0
@@ -553,6 +610,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 397585193}
+  - {fileID: 1718068171}
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -633,3 +691,66 @@ Prefab:
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: d2898c3b9a4149d4184c9079430c6603, type: 2}
   m_IsPrefabParent: 0
+--- !u!1 &1718068170
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1718068171}
+  - component: {fileID: 1718068172}
+  m_Layer: 0
+  m_Name: Dummy Gras Filter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1718068171
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1718068170}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1519617107}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!23 &1718068172
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1718068170}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_Materials:
+  - {fileID: 2100000, guid: c730df763a826a14e9c7ab714faca271, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 0
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0

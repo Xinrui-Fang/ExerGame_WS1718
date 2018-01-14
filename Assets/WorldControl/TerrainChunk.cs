@@ -1,5 +1,6 @@
 ﻿using Assets.Utils;
 using Assets.World.Heightmap;
+using Assets.World.Paths;
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
@@ -10,6 +11,7 @@ public class TerrainChunk
     public int ChunkSeed;
     public float[,] Heights, Moisture;
     public int[,] ClusterMap;
+    public Vector3[,] Normals;
     public int ClusterCount;
     public Terrain ChunkTerrain;
 
@@ -100,16 +102,16 @@ public class TerrainChunk
         stopWatch.Start();
         // Resetting all the Arrays
         Heights = new float[Settings.HeightmapResolution, Settings.HeightmapResolution];
-        Vector3[,] Normals = new Vector3[Settings.HeightmapResolution, Settings.HeightmapResolution];
+        Normals = new Vector3[Settings.HeightmapResolution, Settings.HeightmapResolution];
         Moisture = new float[Settings.HeightmapResolution, Settings.HeightmapResolution];
-        SplatmapData = new float[Settings.HeightmapResolution, Settings.HeightmapResolution, Settings.SplatMaps.Length];
+        SplatmapData = new float[Settings.HeightmapResolution, Settings.HeightmapResolution, GameSettings.SpatProtoTypes.Length];
 ;
         TerrainEdges = new TerrainChunkEdge[4]
         {
-            new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(0,-1), WorldSeed, Settings.HeightmapResolution),
-            new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(1,0), WorldSeed, Settings.HeightmapResolution),
-            new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(0,1), WorldSeed, Settings.HeightmapResolution),
-            new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(-1,0), WorldSeed, Settings.HeightmapResolution)
+            new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(0,-1), WorldSeed, Settings.HeightmapResolution), // S
+            new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(1,0), WorldSeed, Settings.HeightmapResolution), // E
+            new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(0,1), WorldSeed, Settings.HeightmapResolution), // N
+            new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(-1,0), WorldSeed, Settings.HeightmapResolution) // W
         };
 
         UnityEngine.Debug.Log(string.Format("Took {0} ms to prepare arrays and edges at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
@@ -186,10 +188,7 @@ public class TerrainChunk
             clusterMoisture[c] /= clusterSize[c];
         }
 
-        stopWatch.Reset();
-        stopWatch.Start();
-
-        UnityEngine.Debug.Log(string.Format("Took {0} ms to create ConnectivityMap and ClusterMap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        UnityEngine.Debug.Log(string.Format("Took {0} ms to create ConnectivityMap K-Means and ClusterMap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         
         stopWatch.Reset();
         stopWatch.Start();
@@ -205,24 +204,22 @@ public class TerrainChunk
         stopWatch.Reset();
         stopWatch.Start();
 
-        Trees = vGen.PaintGras(this, ChunkSeed, Settings.Trees.Length, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, Settings.MaxTreeCount, Normals);
+        
+        Trees = vGen.PaintGras(this, ChunkSeed, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, Settings.MaxTreeCount, Normals);
         TerrainLabeler.MapTerrain(this, Moisture, Heights, Normals, SplatmapData, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, gridCoords * Settings.HeightmapResolution);
-
+        
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create Vegetation and Splatmap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Stop();
     }
     
     public void CheckNeighbors()
     {
-        if (N != null && S != null && W != null && E != null && isFinished)
-        {
-            UnityTerrain.GetComponent<Terrain>().SetNeighbors(
-                W.UnityTerrain.GetComponent<Terrain>(),
-                N.UnityTerrain.GetComponent<Terrain>(),
-                E.UnityTerrain.GetComponent<Terrain>(),
-                S.UnityTerrain.GetComponent<Terrain>()
-            );
-        }
+        UnityTerrain.GetComponent<Terrain>().SetNeighbors(
+            W != null ? W.UnityTerrain.GetComponent<Terrain>(): null,
+            N != null ? N.UnityTerrain.GetComponent<Terrain>(): null,
+            E != null ? E.UnityTerrain.GetComponent<Terrain>(): null,
+            S != null ? S.UnityTerrain.GetComponent<Terrain>(): null
+        );
     }
     
     public void PushTop(TerrainChunk tile)
@@ -232,9 +229,39 @@ public class TerrainChunk
         var terrain = tile.UnityTerrain.GetComponent<Terrain>();
         var myterrain = UnityTerrain.GetComponent<Terrain> ();
         terrain.terrainData.SetHeights(0, 0, myterrain.terrainData.GetHeights(0, Settings.HeightmapResolution -1, Settings.HeightmapResolution -1, 1));
+        tile.CheckNeighbors();
         terrain.Flush();
         N = tile;
-        tile.CheckNeighbors();
+
+        // mount paths
+        Vector2Int familiar, alien;
+        foreach (int roadpoint in TerrainEdges[2].RoadPoints)
+        {
+            familiar = MapTools.UnfoldToPerimeter(roadpoint + 2 * (Settings.HeightmapResolution - 1), Settings.HeightmapResolution - 1);
+            if (paths.Hub.Contains(familiar))
+            {
+                alien = MapTools.UnfoldToPerimeter(roadpoint, Settings.HeightmapResolution - 1);
+
+                UnityEngine.Debug.Log(string.Format("Point on this side: {0}; Point on other side: {1}", familiar, alien));
+                if (tile.paths.Hub.Contains(alien))
+                {
+                    UnityEngine.Debug.Log("Found both points.");
+                    WayVertex fVertex = paths.Hub.Get(familiar);
+                    WayVertex aVertex = tile.paths.Hub.Get(alien);
+                    List<PathWithDirection> fpaths = fVertex.GetPaths();
+                    List<PathWithDirection> apaths = aVertex.GetPaths();
+                    foreach (PathWithDirection p in fpaths)
+                    {
+                        aVertex.Mount(p.path, p.forward);
+                    }
+
+                    foreach (PathWithDirection p in apaths)
+                    {
+                        fVertex.Mount(p.path, p.forward);
+                    }
+                }
+            }
+        }
         //tile.WriteToHeightMap.Release();
     }
 
@@ -242,33 +269,123 @@ public class TerrainChunk
     {
         //tile.WriteToHeightMap.WaitOne();
         tile.W = this;
+        tile.CheckNeighbors();
         var terrain = tile.UnityTerrain.GetComponent<Terrain>();
         var myterrain = UnityTerrain.GetComponent<Terrain>();
         terrain.terrainData.SetHeights(0, 0, myterrain.terrainData.GetHeights(Settings.HeightmapResolution - 1, 0, 1, Settings.HeightmapResolution - 1));
         terrain.Flush();
-        tile.CheckNeighbors();
         //tile.WriteToHeightMap.Release();
+        // mount paths
+        Vector2Int familiar, alien;
+        foreach (int roadpoint in TerrainEdges[1].RoadPoints)
+        {
+            familiar = MapTools.UnfoldToPerimeter(roadpoint + (Settings.HeightmapResolution - 1), Settings.HeightmapResolution - 1);
+            if (paths.Hub.Contains(familiar))
+            {
+                alien = MapTools.UnfoldToPerimeter(roadpoint + 3 * (Settings.HeightmapResolution -1),  Settings.HeightmapResolution - 1);
+                
+                UnityEngine.Debug.Log(string.Format("Point on this side: {0}; Point on other side: {1}", familiar, alien));
+                if (tile.paths.Hub.Contains(alien))
+                {
+                    UnityEngine.Debug.Log("Found both points.");
+                    WayVertex fVertex = paths.Hub.Get(familiar);
+                    WayVertex aVertex = tile.paths.Hub.Get(alien);
+                    List<PathWithDirection> fpaths = fVertex.GetPaths();
+                    List<PathWithDirection> apaths = aVertex.GetPaths();
+                    foreach (PathWithDirection p in fpaths)
+                    {
+                        aVertex.Mount(p.path, p.forward);
+                    }
+
+                    foreach (PathWithDirection p in apaths)
+                    {
+                        fVertex.Mount(p.path, p.forward);
+                    }
+                }
+            }
+        }
     }
 
     public void PullBotton(TerrainChunk tile)
     {
         //tile.WriteToHeightMap.WaitOne();
         tile.N = this;
+        tile.CheckNeighbors();
         var terrain = tile.UnityTerrain.GetComponent<Terrain>();
         var myterrain = UnityTerrain.GetComponent<Terrain>();
         myterrain.terrainData.SetHeights(0, 0, terrain.terrainData.GetHeights(0, Settings.HeightmapResolution - 1, Settings.HeightmapResolution - 1, 1));
         //tile.WriteToHeightMap.Release();
+
+        // mount paths
+        Vector2Int familiar, alien;
+        foreach (int roadpoint in TerrainEdges[0].RoadPoints)
+        {
+            familiar = MapTools.UnfoldToPerimeter(roadpoint, Settings.HeightmapResolution - 1);
+            if (paths.Hub.Contains(familiar))
+            {
+                alien = MapTools.UnfoldToPerimeter(roadpoint + 2 * (Settings.HeightmapResolution -1), Settings.HeightmapResolution - 1);
+
+                UnityEngine.Debug.Log(string.Format("Point on this side: {0}; Point on other side: {1}", familiar, alien));
+                if (tile.paths.Hub.Contains(alien))
+                {
+                    UnityEngine.Debug.Log("Found both points.");
+                    WayVertex fVertex = paths.Hub.Get(familiar);
+                    WayVertex aVertex = tile.paths.Hub.Get(alien);
+                    List<PathWithDirection> fpaths = fVertex.GetPaths();
+                    List<PathWithDirection> apaths = aVertex.GetPaths();
+                    foreach (PathWithDirection p in fpaths)
+                    {
+                        aVertex.Mount(p.path, p.forward);
+                    }
+
+                    foreach (PathWithDirection p in apaths)
+                    {
+                        fVertex.Mount(p.path, p.forward);
+                    }
+                }
+            }
+        }
     }
 
     public void PUllLeft(TerrainChunk tile)
     {
         //tile.WriteToHeightMap.WaitOne();
         tile.E = this;
+        tile.CheckNeighbors();
         var terrain = tile.UnityTerrain.GetComponent<Terrain>();
         var myterrain = UnityTerrain.GetComponent<Terrain>();
         myterrain.terrainData.SetHeights(0, 0, terrain.terrainData.GetHeights(Settings.HeightmapResolution - 1, 0, 1, Settings.HeightmapResolution - 1));
-        tile.CheckNeighbors();
+        
         //tile.WriteToHeightMap.Release();
+
+        // mount paths
+        Vector2Int familiar, alien;
+        foreach (int roadpoint in TerrainEdges[3].RoadPoints)
+        {
+            familiar = MapTools.UnfoldToPerimeter(roadpoint + 3 * (Settings.HeightmapResolution - 1), Settings.HeightmapResolution - 1);
+            if (paths.Hub.Contains(familiar))
+            {
+                alien = MapTools.UnfoldToPerimeter(roadpoint + (Settings.HeightmapResolution -1), Settings.HeightmapResolution - 1);
+                UnityEngine.Debug.Log(string.Format("Point on this side: {0}; Point on other side: {1}", familiar, alien));
+                if (tile.paths.Hub.Contains(alien))
+                {
+                    UnityEngine.Debug.Log("Found both points.");
+                    WayVertex fVertex = paths.Hub.Get(familiar);
+                    WayVertex aVertex = tile.paths.Hub.Get(alien);
+                    List<PathWithDirection> fpaths = fVertex.GetPaths();
+                    List<PathWithDirection> apaths = aVertex.GetPaths();
+                    foreach (PathWithDirection p in fpaths)
+                    {
+                        aVertex.Mount(p.path, p.forward);
+                    }
+
+                    foreach (PathWithDirection p in apaths)
+                    {
+                        fVertex.Mount(p.path, p.forward);
+                    }
+                }
+            }
+        }
     }
 
     public void PullCorner(TerrainChunk tile, int x, int y)
@@ -316,6 +433,9 @@ public class TerrainChunk
 
         if (NE != null) PushCroner(NE, 0, 0);
         if (SW != null) PullCorner(SW, 0, 0);
+
+        var myterrain = UnityTerrain.GetComponent<Terrain>();
+        myterrain.Flush();
     }
 
     public void Flush(SurfaceManager SM)
@@ -329,7 +449,7 @@ public class TerrainChunk
             FloatImageExporter HimgExp = new FloatImageExporter(0f, 1f);
             IntImageExporter CimgExp = new IntImageExporter(-1, Connectivity.NumLabels - 1);
             IntImageExporter KMimgExp = new IntImageExporter(-1, (ClusterCount - 1));
-            IntImageExporter SimgExp = new IntImageExporter(0, paths.paths.Count);
+            IntImageExporter SimgExp = new IntImageExporter(-1, paths.paths.Count + 1);
             HimgExp.Export(string.Format("HeightmapAt{0}-{1}", GridCoords.x, GridCoords.y), Heights);
             HimgExp.Export(string.Format("MoistureAt{0}-{1}", GridCoords.x, GridCoords.y), Moisture);
             CimgExp.Export(string.Format("ConnectivityMapAt{0}-{1}", GridCoords.x, GridCoords.y), Connectivity.Labels);
@@ -353,19 +473,20 @@ public class TerrainChunk
             detailPrototypes = Settings.GetDetail(),
             treePrototypes = Settings.GetTreePrototypes(),
             treeInstances = Trees.ToArray(),
+            thickness = 10f
         };
         ChunkTerrainData.SetDetailResolution(Settings.DetailResolution, Settings.DetailResolutionPerPatch);
         ChunkTerrainData.RefreshPrototypes();
 
         ChunkTerrainData.SetHeights(0, 0, Heights);
         ChunkTerrainData.SetAlphamaps(0, 0, SplatmapData);
-        for (int i=0; i < DetailMapList.Count; i++)
+        /*
+         for (int i=0; i < DetailMapList.Count; i++)
         {
             ChunkTerrainData.SetDetailLayer(0, 0, i, DetailMapList[i]);
         }
-
-        Heights = new float[0, 0];
-        SplatmapData = new float[0, 0, 0];
+        */
+        
         Trees.Clear();
         
         UnityTerrain = Terrain.CreateTerrainGameObject(ChunkTerrainData);
@@ -377,10 +498,21 @@ public class TerrainChunk
         terrain.treeBillboardDistance = Settings.TreeBillBoardDistance;
         terrain.treeDistance = Settings.TreeRenderDistance;
         terrain.detailObjectDistance = Settings.DetailRenderDistance;
+        terrain.heightmapPixelError = 32;
+        
+        terrain.castShadows = true;
+        terrain.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.BlendProbesAndSkybox;
         UnityTerrain.SetActive(true);
         UnityTerrain.transform.position = new Vector3(GridCoords.x, 0, GridCoords.y) * (float) Settings.Size;
         isFinished = true;
         Synchronize(SM);
+        GrasField MyGras = new GrasField(this, this.GetHashCode());
+
+        // Cleanup
+        Heights = new float[0, 0];
+        Moisture = new float[0, 0];
+        Normals = new Vector3[0, 0];
+        SplatmapData = new float[0, 0, 0];
     }
     
     public void DestroyTerrain()

@@ -54,7 +54,7 @@ public class SurfaceManager : MonoBehaviour {
 	{
 		Vector2Int[] directions = new Vector2Int[] {
 			new Vector2Int(0, 0),
-
+            ///**
 			new Vector2Int(-1, 0),
 			new Vector2Int(1, 0),
 			new Vector2Int(0, 1),
@@ -69,6 +69,7 @@ public class SurfaceManager : MonoBehaviour {
             new Vector2Int(-2, 0),
             new Vector2Int(0, 2),
             new Vector2Int(0, -2),
+            //**/
         };
 		
 		for(int i = 0; i < directions.Length; i++)
@@ -82,9 +83,11 @@ public class SurfaceManager : MonoBehaviour {
 				&& ChunkMap[absolutePos.x, absolutePos.y] == null)
 			{
                 // swap the commented with the uncommented if some exception is not propagating to the maini thread.
-                //TerrainChunk terrain = new TerrainChunk(Settings);
-                //terrain.Build(absolutePos);
-                //terrain.Flush(this);
+                /*
+                TerrainChunk terrain = new TerrainChunk(Settings);
+                terrain.Build(absolutePos);
+                terrain.Flush(this);
+                */
 				ThreadPool.QueueUserWorkItem((object item) => Build((TerrainChunk) item, absolutePos), new TerrainChunk(Settings));
 			}
 		}

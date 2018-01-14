@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using HeightMapInterfaces;
 using HeightPostProcessors;
+using System.Collections.Generic;
 
 [System.Serializable]
 public class HeightMapPostProcessor
@@ -142,12 +143,18 @@ public class GameSettings
 
     public float MaxVegetaionDensity;
 
+    public int MaxGrasCount;
+    public Color HealthyGrasColor;
+    public Color DryGrasColor;
+
+    public Material GrasMaterial;
+
     public void Prepare()
     {
         GetSplat();
         GetTreePrototypes();
         GetDetail();
-
+        
         float correctionalOffset = .5f / (float)HeightmapResolution; // Put coordinates in the middle of a tile.
         TileCorrection = new Vector3(correctionalOffset * (float)Size, 0, correctionalOffset * (float)Size);
         TreeCorrection = new Vector3(correctionalOffset, -TreePlantOffset, correctionalOffset);

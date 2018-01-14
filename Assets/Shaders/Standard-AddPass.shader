@@ -27,6 +27,7 @@ Shader "Hidden/Exergame/TerrainEngine/Splatmap/Standard-AddPass-UVMix" {
             "Queue" = "Geometry-99"
             "IgnoreProjector"="True"
             "RenderType" = "Opaque"
+			Lighting On
         }
 
         CGPROGRAM

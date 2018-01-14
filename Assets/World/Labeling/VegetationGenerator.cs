@@ -1,13 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using Assets.World.Heightmap;
 using Assets.Utils;
 
 public class VegetationGenerator
 {
     public VegetationGenerator(){}
 
-    public List<TreeInstance> PaintGras(TerrainChunk terrain, long Seed, int NumOfTrees, int[,] streetMap, float WaterLevel, float VegetationMaxHeight, int MaxTreeCount, Vector3[,] Normals)
+    public List<TreeInstance> PaintGras(TerrainChunk terrain, long Seed, int[,] streetMap, float WaterLevel, float VegetationMaxHeight, int MaxTreeCount, Vector3[,] Normals)
     {
         GameSettings Settings = terrain.Settings;
         int x_res, y_res;
@@ -45,9 +44,9 @@ public class VegetationGenerator
                 float heightScale = (float)prng.Next(256, 512) / 512.0f;
                 trees.Add(new TreeInstance
                 {
-                    prototypeIndex = prng.Next(0, NumOfTrees - 1),
+                    prototypeIndex = prng.Next(0, GameSettings.TreeProtoTypes.Length - 1),
                     position = new Vector3((x + .5f)/ x_res,
-                            terrain.Heights[y, x],
+                            0f,
                             (y + .5f) / y_res),
                     heightScale = heightScale,
                     widthScale = heightScale,
@@ -65,7 +64,7 @@ public class VegetationGenerator
 
             }
         }
-        
+        /*
         CircleBound smallCirc = new CircleBound(new Vector2(), 1f);
         CircleBound MediumCirc = new CircleBound(new Vector2(), 2f);
         CircleBound BigCirc = new CircleBound(new Vector2(), 3f);
@@ -81,14 +80,11 @@ public class VegetationGenerator
             for (int x = 0; x < Settings.DetailResolution; x++)
             {
                 // Do not grow on very steep terrain.
-                if (terrain.DEBUG_ON && x == y)
-                {
-                    Debug.Log(Normals[y, x]);
-                }
+                
                 if (Normals[y, x].y < .9f) continue;
 
                 // Gras only grows on good soil.
-                if (terrain.Moisture[y, x] < .2f) continue;
+                if (terrain.Moisture[y, x] > .3f) continue;
 
                 // Check that we are in Vegetation Height.
                 if (terrain.Heights[y, x] <= WaterLevel || terrain.Heights[y, x] > VegetationMaxHeight) continue;
@@ -102,13 +98,9 @@ public class VegetationGenerator
                 if (terrain.Objects.Collides(MediumCirc)) vegetaionFactor *= .5f;
                 if (terrain.Objects.Collides(BigCirc)) vegetaionFactor *= .75f;
 
-                int max = Mathf.CeilToInt(terrain.Moisture[y, x] * Normals[y,x].y * Normals[y, x].y * Settings.MaxVegetaionDensity * vegetaionFactor * fract);
+                int max = Mathf.RoundToInt(terrain.Moisture[y, x] * Normals[y,x].y * Normals[y, x].y * Settings.MaxVegetaionDensity * vegetaionFactor * fract);
                 for (int l = 0; l < GameSettings.DetailPrototypes.Length; l++)
                 {
-                    if (l > 1)
-                    {
-                        DetailMapList[l][y, x] = prng.Next(0, 3);
-                    } else
                     {
                         DetailMapList[l][y, x] = prng.Next(0, max);
                     }
@@ -116,6 +108,7 @@ public class VegetationGenerator
             }
         }
         terrain.DetailMapList = DetailMapList;
+        */
         return trees;
     }
 }

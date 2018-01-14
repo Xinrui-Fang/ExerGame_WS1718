@@ -13,60 +13,89 @@ public class AI_Simple : MonoBehaviour
     public float speedMultiplier = 1;
     public float maxSpeed = 5;
     public float maxRotation = 5;
-    private Vector3 startPosition;
-    private Vector3 endPosition;
-    private List<Vector3> path = new List<Vector3>();
-    private int current_node;
     private TerrainChunk ActiveTerrain;
+    private bool forward;
+    private NavigationPath path;
+    private int nextNode;
 
+
+    private int GetNextPath(WayVertex vertex, int node)
+    {
+        PathWithDirection dpath = vertex.GetLongest(new PathWithDirection(path, forward));
+        if (dpath.path.WorldWaypoints != null)
+        {
+            Debug.Log(string.Format("Found Path of lenght {0}", dpath.path.WorldWaypoints.Length));
+            path = dpath.path;
+            forward = dpath.forward;
+            if (!forward)
+            {
+                return path.WorldWaypoints.Length - 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+        forward = !forward;
+        return node;
+    }
+
+    private int RetrieveNext(int node, bool reverse = false)
+    {
+
+        if (forward ^ reverse)
+        {
+            if (node >= path.WorldWaypoints.Length - 2)
+            {
+                return GetNextPath(path.End, node);
+            }
+            return node + 1;
+        }
+        else
+        {
+            if (node <= 1)
+            {
+                return GetNextPath(path.Start, node);
+            }
+            return node - 1;
+        }
+    }
     // Use this for initialization
     public void Init()
     {
         ActiveTerrain = surfaceManager.GetTile(new Vector2Int(2,2));
-        GameSettings Settings = surfaceManager.Settings;
-        // initial terrainChunk 
-        Terrain terrain = ActiveTerrain.UnityTerrain.GetComponent<Terrain>();
         // Initial Position
-        List<NavigationPath> listOfPath = ActiveTerrain.GetPathFinder().paths;
-        UnityEngine.Debug.Log(string.Format("Path length {0}", listOfPath[0].Waypoints.Count));
-
-        Vector3 Offset = ActiveTerrain.UnityTerrain.transform.position;
-
-        LinkedList<Vector2Int> path2D = listOfPath[0].Waypoints;
-        // Le path est dans les coordonnées du TerrainChunk
-        // Pour les passer en coordonnées monde -> P_terrain(x, y)*Settings.Size/Settings.HeighMapResolution + Offset_TerrainChunk
-        LinkedListNode<Vector2Int> pathNode = path2D.First;
-        while (pathNode != null)
+        WayVertex StartingPoint = ActiveTerrain.GetPathFinder().StartingPoint;
+        var longestPath = StartingPoint.GetLongest();
+        path = longestPath.path;
+        forward = longestPath.forward;
+        if (!forward)
         {
-            Vector2Int pathPoint = pathNode.Value;
-            float x = pathPoint.x * Settings.Size / Settings.HeightmapResolution + Offset.x + Settings.TileCorrection.x;
-            float z = pathPoint.y * Settings.Size / Settings.HeightmapResolution + Offset.z + Settings.TileCorrection.z;
-            float y = terrain.SampleHeight(new Vector3(x, 0, z)) + Offset.y;
-
-            path.Add(new Vector3(x, y, z));
-            pathNode = pathNode.Next;
+            nextNode = path.WorldWaypoints.Length;
+        } else
+        {
+            nextNode = 0;
         }
-        startPosition = path[0];
-        transform.position = startPosition;
+        transform.position = path.WorldWaypoints[nextNode];
+        transform.rotation = Quaternion.LookRotation(path.WorldWaypoints[RetrieveNext(nextNode)] - path.WorldWaypoints[nextNode]);
+        transform.rotation *= Quaternion.Euler(0, 90, 0);
     }
     // Update is called once per frame
     void Update()
     {
-
-        while ((transform.position - path[current_node]).sqrMagnitude < 2f * maxSpeed * Time.deltaTime)
+        int count = 0;
+        while ((transform.position - path.WorldWaypoints[nextNode]).sqrMagnitude < 2f * maxSpeed * Time.deltaTime && count < 5)
         {
-
-            current_node = (current_node + 1) % path.Count;
+            nextNode = RetrieveNext(nextNode);
+            count++;
         }
         // if the position of the player is not at the path point
         // move until it reach it
-        Vector3 pos = Vector3.MoveTowards(transform.position, path[current_node], maxSpeed * Time.deltaTime);
+        Vector3 pos = Vector3.MoveTowards(transform.position, path.WorldWaypoints[nextNode], maxSpeed * Time.deltaTime);
 
-            Quaternion rotationQ = Quaternion.LookRotation(path[current_node] - transform.position);
+            Quaternion rotationQ = Quaternion.LookRotation(path.WorldWaypoints[nextNode] - transform.position);
             transform.position = pos;
             transform.rotation = rotationQ;
             transform.rotation *= Quaternion.Euler(0, 90, 0);
-
     }
-
 }

@@ -11,6 +11,8 @@ public class PathFinder
     public Vector2Int SearchPerimeterUpper { get; private set; }
     public Vector2Int SearchPermieterLower { get; private set; }
 
+    public VertexHub Hub;
+
     public int[,] StreetMap;
     public float[,] Heights;
     public int Resolution;
@@ -21,10 +23,12 @@ public class PathFinder
     private MapTools.Flatten RoadFlatten;
     private MapTools.KernelAppliance TerrainSmoother;
     public List<NavigationPath> paths;
+    public WayVertex StartingPoint;
 
     public PathFinder(DGetStepCost stepCosts, int Resolution, float[,] heights, PathTools.ConnectivityLabel connectivity)
     {
         paths = new List<NavigationPath>();
+        Hub = new VertexHub();
         StreetMap = new int[Resolution, Resolution];
         Heights = heights;
         RoadFlatArea = 4;
@@ -48,17 +52,18 @@ public class PathFinder
     public void SetSearch(IPathSearch search)
     {
         SearchAlgo = search;
-
     }
 
     public void MakePath(Vector2Int start, Vector2Int end)
     {
         //Debug.Log(string.Format("## Building Path from {0} to {1}. ##", start, end));
+        // Check that start and end are on the same label
         if (Connectivity.Labels[start.y, start.x] != Connectivity.Labels[end.y, end.x])
         {
             Debug.Log(string.Format("{0} ({2}) and {1} ({3}) are not connected!", start, end, Connectivity.Labels[start.y, start.x], Connectivity.Labels[end.y, end.x]));
             return;
         }
+        // Find the path using the search algorithm
         List<Vector2Int> path = SearchAlgo.Search(ref start, ref end);
         if (path.Count == 0)
         {
@@ -66,9 +71,13 @@ public class PathFinder
             //Debug.Log("!FALLBACK Use line for path.");
             //path = new List<Vector2Int>(MapTools.BresenhamOrthogonalLine(start, end));
         }
+        // Remember Path
         AddToStreetMap(path);
     }
 
+    /* For use with Pathfinding on heightmap.
+     * Doubles the cost of traveling outside of streets. Used to enforce reusage of streets.
+     */
     public float StepCostsRoad(int ax, int ay, int bx, int by)
     {
         if (StreetMap[ax, ay] > 0  && StreetMap[bx, by] > 0) return StepCosts(ax, ay, bx, by);
@@ -76,95 +85,24 @@ public class PathFinder
         return 4f * StepCosts(ax, ay, bx, by);
     }
 
+    /* Smooth terrain around road with the defined Kernels
+     * Flatten road itself with another kernel.
+     */
     public void RoadSmooth(Vector2Int linePoint)
     {
         TerrainSmoother.Apply(linePoint.y, linePoint.x);
         RoadFlatten.Apply(linePoint.y, linePoint.x);
     }
 
+
+    /* Add Path to StreetMap. 
+     * If path xy intersetcs existing path za at point i split the paths to xi, iy, zi, ia.
+     */
     public void AddToStreetMap(List<Vector2Int> path, int width = 1)
     {
         // don't bother with empty path
         if (path.Count == 0) return;
-
-        //Debug.Log("Adding Path to Streetmap.");
-
-        // load label from start point
-        int LastLabel = StreetMap[path[0].x, path[0].y];
-        int MyLabel = paths.Count + 1;
-
-        // remember previous point for branching
-        Vector2Int oldPoint = path[0];
-
-        NavigationPath MyPath = new NavigationPath()
-        {
-            Start = path[0],
-            Waypoints = new LinkedList<Vector2Int>()
-        };
-        bool PathOverride = LastLabel == 0;
-        foreach (Vector2Int point in path)
-        {
-            int nextLabel = StreetMap[point.x, point.y];
-            //Debug.Log(string.Format("working on point {0} : {1} - {2}, NL {3}, LL {4}", i++, point, paths.Count, nextLabel, LastLabel));
-            if (nextLabel == LastLabel)
-            {
-                if (PathOverride)
-                {
-                    //Debug.Log("overide");
-                    StreetMap[point.x, point.y] = MyLabel;
-                    MyPath.Waypoints.AddLast(point);
-                }
-            }
-            else if (nextLabel != 0)
-            {
-                MyPath.End = point;
-                if (MyPath.Start != MyPath.End)
-                {
-                    paths.Add(MyPath);
-                    NavigationPath branch = new NavigationPath();
-                    if (paths[StreetMap[point.x, point.y] - 1].Split(point, ref branch))
-                    {
-                        foreach (Vector2Int waypoint in branch.Waypoints)
-                        {
-                            StreetMap[waypoint.x, waypoint.y] = paths.Count + 1;
-                        }
-                        paths.Add(branch);
-                    }
-                    LastLabel = StreetMap[point.x, point.y];
-                    PathOverride = false;
-                }
-            }
-            else
-            {
-                NavigationPath branch = new NavigationPath();
-                //Debug.Log(string.Format("point {0}, paths {1}, Streetmap {2}, LastLabel {3}, nextLabel {4}", oldPoint, paths.Count, StreetMap[oldPoint.x, oldPoint.y], LastLabel, nextLabel));
-                if (paths[StreetMap[oldPoint.x, oldPoint.y] - 1].Split(oldPoint, ref branch))
-                {
-                    foreach (Vector2Int waypoint in branch.Waypoints)
-                    {
-                        StreetMap[waypoint.x, waypoint.y] = paths.Count + 1;
-                    }
-                    paths.Add(branch);
-                }
-                LastLabel = StreetMap[point.x, point.y];
-                MyLabel = paths.Count + 1;
-                MyPath = new NavigationPath()
-                {
-                    Start = oldPoint,
-                    Waypoints = new LinkedList<Vector2Int>()
-                };
-                MyPath.Waypoints.AddLast(oldPoint);
-                MyPath.Waypoints.AddLast(point);
-                StreetMap[point.x, point.y] = MyLabel;
-                PathOverride = true;
-                LastLabel = 0;
-            }
-            RoadSmooth(point);
-            oldPoint = point;
-        }
-
-        MyPath.End = MyPath.Waypoints.Last.Value;
-        paths.Add(MyPath);
+        PathBranchAutomaton.BranchPaths(path, StreetMap, Hub, paths);
     }
 
     public void CreateNetwork(TerrainChunk terrain, TerrainChunkEdge[] terrainEdges)
@@ -209,10 +147,19 @@ public class PathFinder
                 ConnectPoints(Points[i]);
             }
         }
+        int maxLength = 0; // length of the entry path.
         foreach (NavigationPath path in paths)
         {
-
-            LinkedListNode<Vector2Int> node = path.Waypoints.First;
+            path.Finalize(Hub);
+            path.TranslateToWorldSpace(terrain);
+            Debug.Log(string.Format("Chunk {0}, got path from {1} to {2} of lenght {3}", terrain.GridCoords, path.Start.Pos, path.End.Pos, path.WorldWaypoints.Length));
+            path.Start.Mount(path);
+            path.End.Mount(path, false);
+            if (maxLength < path.Waypoints.Count)
+            {
+                StartingPoint = path.Start;
+            }
+            Assets.Utils.LinkedListNode<Vector2Int> node = path.Waypoints.First;
             while (node != null)
             {
                 bool success = terrain.Objects.Put(
@@ -225,6 +172,8 @@ public class PathFinder
                 node = node.Next;
             }
         }
+        //paths.Clear();
+
     }
 
     private void ConnectPoints(List<Vector2Int> Points)

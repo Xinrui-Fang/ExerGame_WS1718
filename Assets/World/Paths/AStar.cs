@@ -6,9 +6,9 @@ using System;
 
 public struct PathNode : IEquatable<PathNode>
 {
-    public int x, y;  // 2 * 4 Byte
-    public int CameFrom;// 4 Byte
-    public float GScore;    // 4 Byte
+    public int x, y;  
+    public int CameFrom;
+    public float GScore;
     public bool Closed;
     public bool Walkable;
 

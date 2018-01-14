@@ -311,8 +311,20 @@ public static class KMeansClustering {
 		}
 		return E;
 	}
+     /**
+    private static GraphNode CreateCenterGraph(ClusterStruct Ck, int [,] clusterMap, int clusterCount, int clusterOffset, int indI_min, int indJ_min, int indI_max, int indJ_max)
+    {
+        for (int i = indI_min; i < indI_max; i++)
+        {
+            for (int j = indI_min; j < indI_max; j++)
+            {
 
-	private static GraphNode CreateGraphNodeAt(int x, int y, int[,] clusterMap, int indI_min, int indJ_min, LinkedList<Couple> list_positions){
+            }
+        }
+    }
+    **/
+
+	private static GraphNode CreateGraphNodeAt(int x, int y, int[,] clusterMap, int indI_min, int indJ_min, System.Collections.Generic.LinkedList<Couple> list_positions){
 		// For loop --> comme au début
 		int Value = clusterMap[x, y];
 		Vector2Int Position = new Vector2Int(x+indI_min, y+indJ_min);
