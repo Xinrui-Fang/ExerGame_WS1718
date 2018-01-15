@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 1194882777}
-  m_IndirectSpecularColor: {r: 0.6735129, g: 0.623706, b: 0.5370834, a: 1}
+  m_IndirectSpecularColor: {r: 0.6735087, g: 0.62369853, b: 0.537091, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -112,6 +112,48 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &64563979
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 64563981}
+  - component: {fileID: 64563980}
+  m_Layer: 0
+  m_Name: WindZone
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!182 &64563980
+WindZone:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 64563979}
+  m_Enabled: 1
+  m_Mode: 0
+  m_Radius: 20
+  m_WindMain: 0.25
+  m_WindTurbulence: 0.1
+  m_WindPulseMagnitude: 2
+  m_WindPulseFrequency: 0.25
+--- !u!4 &64563981
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 64563979}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &72460361 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 1504429272108366, guid: d2898c3b9a4149d4184c9079430c6603,
@@ -594,7 +636,7 @@ MonoBehaviour:
     TreePlantOffset: 200
     TileCorrection: {x: 0, y: 0, z: 0}
     TreeCorrection: {x: 0, y: 0, z: 0}
-    MaxVegetaionDensity: 20
+    MaxVegetaionDensity: 5
     MaxGrasCount: 30000
     HealthyGrasColor: {r: 0.071, g: 0.497, b: 0.078, a: 0.78431374}
     DryGrasColor: {r: 0.703, g: 0.634, b: 0.284, a: 0.78431374}

@@ -6,7 +6,7 @@ public class GrasField
 {
     private GameObject GrasFieldObject;
     private TerrainChunk Terrain;
-    public float Spread = 2f;
+    public float Spread = 1f;
     float probeDelta = .5f;
 
     public GrasField(TerrainChunk Terrain, int seed)
@@ -15,9 +15,11 @@ public class GrasField
 
         Terrain UnityTerrain = Terrain.UnityTerrain.GetComponent<Terrain>();
         TerrainData UnityTerrainData = UnityTerrain.terrainData;
+
         GrasFieldObject = new GameObject(
             "GrasField"
         );
+        GrasFieldObject.transform.SetParent(Terrain.UnityTerrain.transform);
         GrasFieldObject.AddComponent<MeshFilter>();
         GrasFieldObject.AddComponent<MeshRenderer>();
 
@@ -43,61 +45,61 @@ public class GrasField
         System.Random prng = new System.Random(seed);
 
         CircleBound SmallCircle = new CircleBound(new Vector2(), 1f);
-        CircleBound BigCircle = new CircleBound(new Vector2(), 1.5f);
+        CircleBound BigCircle = new CircleBound(new Vector2(), 1.3f);
+        CircleBound LargeCircle = new CircleBound(new Vector2(), 2f);
         Vector2 flatCoord = new Vector2();
         int i = 0;
         int n = 0;
         float ToTerrainOffset = (float) 1f / Terrain.Settings.HeightmapResolution;
-        while (i < grasCount && n < grasCount)
+        while (i < grasCount && n < grasCount * 5)
         {
             n++;
             float fx = (float)prng.NextDouble();
             float fy = (float)prng.NextDouble();
             int x = Mathf.RoundToInt(fx * (Resolution -1));
             int z = Mathf.RoundToInt(fy * (Resolution - 1));
-            Terrain.ToWorldCoordinate(x, z, ref flatCoord);
+            Terrain.ToWorldCoordinate(fx, fy, ref flatCoord);
             SmallCircle.Center = flatCoord;
             BigCircle.Center = flatCoord;
             if (Terrain.Objects.Collides(BigCircle, QuadDataType.street)) continue;
             if (Terrain.Objects.Collides(SmallCircle)) continue;
             float height = heights[z, x];
             if (height < WaterLevel || height > MaxVegLevel) continue;
-            if (TerrainNormals[z, x].y < .85f) continue;
+            if (TerrainNormals[z, x].y < .85) continue;
             if (moisture[z, x] < .3f) continue;
-            float health = moisture[z, x] * Mathf.InverseLerp(0.9f, 1f, TerrainNormals[z, x].y);
-            
+            float health = (Mathf.InverseLerp(.3f, 1f, moisture[z, x]) + Mathf.InverseLerp(0.85f, 1f, TerrainNormals[z, x].y)) / 2f;
+            LargeCircle.Center = flatCoord;
+            if (Terrain.Objects.Collides(LargeCircle, QuadDataType.vegetation)) health *= .75f;
+            if (health < .3f) continue;
             Color healthColor = Color.Lerp(DryColor, HealtyColor, health * health);
-            int density = (int)(health * Terrain.Settings.MaxVegetaionDensity);
-            density = prng.Next(0,density);
-            for (int d = 1; d < density; d++)
+            float xd = -spreadHalf + Spread * (float)prng.NextDouble();
+            float yd = -spreadHalf + Spread * (float)prng.NextDouble();
+            float MinHeight = UnityTerrainData.GetInterpolatedHeight(fx + xd * ToTerrainOffset, fy + yd * ToTerrainOffset);
+            if (TerrainNormals[z, x].y < .9f) // on steep terrain seek grass correction
             {
-                if (i == grasCount) break;
-                float xd = -spreadHalf + Spread * (float)prng.NextDouble();
-                float yd = -spreadHalf + Spread * (float)prng.NextDouble();
-                float MinHeight = UnityTerrainData.GetInterpolatedHeight(fx + xd * ToTerrainOffset, fy + yd * ToTerrainOffset);
-                if (TerrainNormals[z, x].y < .95f) // on steep terrain seek grass correction
-                {
-                    float HeightProbe = UnityTerrainData.GetInterpolatedHeight(fx + (xd + probeDelta) * ToTerrainOffset, fy + (yd + probeDelta) * ToTerrainOffset);
-                    MinHeight = MinHeight > HeightProbe ? HeightProbe : MinHeight;
-                    HeightProbe = UnityTerrainData.GetInterpolatedHeight(fx + (xd - probeDelta) * ToTerrainOffset, fy + (yd - probeDelta) * ToTerrainOffset);
-                    MinHeight = MinHeight > HeightProbe ? HeightProbe : MinHeight;
-                    HeightProbe = UnityTerrainData.GetInterpolatedHeight(fx + (xd - probeDelta) * ToTerrainOffset, fy + (yd + probeDelta) * ToTerrainOffset);
-                    MinHeight = MinHeight > HeightProbe ? HeightProbe : MinHeight;
-                    HeightProbe = UnityTerrainData.GetInterpolatedHeight(fx + (xd + probeDelta) * ToTerrainOffset, fy + (yd - probeDelta) * ToTerrainOffset);
-                    MinHeight = MinHeight > HeightProbe ? HeightProbe : MinHeight;
-                }
-
-                positions.Add( new Vector3(
-                    flatCoord.x + xd,
-                    MinHeight, 
-                    flatCoord.y + yd)
-                );
-                DetailLayer.Add(new Vector2(Mathf.Round((float)prng.NextDouble()), 0f));
-                colors.Add(healthColor);
-                indices[i] = i;
-                normals.Add(UnityTerrainData.GetInterpolatedNormal(x + xd * ToTerrainOffset, fy + yd * ToTerrainOffset));
-                i++;
+                float HeightProbe = UnityTerrainData.GetInterpolatedHeight(fx + (xd + probeDelta) * ToTerrainOffset, fy + (yd + probeDelta) * ToTerrainOffset);
+                MinHeight = MinHeight > HeightProbe ? HeightProbe : MinHeight;
+                HeightProbe = UnityTerrainData.GetInterpolatedHeight(fx + (xd - probeDelta) * ToTerrainOffset, fy + (yd - probeDelta) * ToTerrainOffset);
+                MinHeight = MinHeight > HeightProbe ? HeightProbe : MinHeight;
+                HeightProbe = UnityTerrainData.GetInterpolatedHeight(fx + (xd - probeDelta) * ToTerrainOffset, fy + (yd + probeDelta) * ToTerrainOffset);
+                MinHeight = MinHeight > HeightProbe ? HeightProbe : MinHeight;
+                HeightProbe = UnityTerrainData.GetInterpolatedHeight(fx + (xd + probeDelta) * ToTerrainOffset, fy + (yd - probeDelta) * ToTerrainOffset);
+                MinHeight = MinHeight > HeightProbe ? HeightProbe : MinHeight;
             }
+
+            positions.Add( new Vector3(
+                flatCoord.x + xd,
+                MinHeight, 
+                flatCoord.y + yd)
+            );
+            DetailLayer.Add(new Vector2(Mathf.Round((float)prng.NextDouble()), .5f * (health + (float) prng.NextDouble())));
+            colors.Add(healthColor);
+            indices[i] = i;
+            Vector3 GrasNormal = new Vector3(0, 1f, 0);
+            GrasNormal += UnityTerrainData.GetInterpolatedNormal(x + xd * ToTerrainOffset, fy + yd * ToTerrainOffset);
+            GrasNormal.Normalize();
+            normals.Add(GrasNormal);//UnityTerrainData.GetInterpolatedNormal(x + xd * ToTerrainOffset, fy + yd * ToTerrainOffset));
+            i++;
         }
 
         Mesh mesh = new Mesh();

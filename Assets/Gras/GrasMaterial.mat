@@ -60,13 +60,16 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _BumpScale: 1
-    - _Cutoff: 0.5
+    - _Cutoff: 0.4
+    - _CutoffShadow: 0.6
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
     - _GrassHeight: 0.8
+    - _GrassMaxHeight: 1
+    - _GrassMinHeight: 0.6
     - _GrassWidth: 0.8
     - _MaxCameraDistance: 250
     - _MaxDrawDistance: 150

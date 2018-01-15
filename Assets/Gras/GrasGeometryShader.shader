@@ -1,11 +1,5 @@
-﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
-
-// Upgrade NOTE: replaced 'V2F_POS_FOG' with 'fixed4 pos : SV_POSITION'
-
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
-
+﻿// GrasShader by Jan F.
+// Based upon:
 // Low Poly Shader developed as part of World of Zero: http://youtube.com/worldofzerodevelopment
 // Based upon the example at: http://www.battlemaze.com/?p=153
 
@@ -13,8 +7,10 @@ Shader "Custom/Grass Geometry Shader" {
 	Properties{
 		_MainTex("Albedo (RGB)", 2D) = "white" {}
 		_MainTex2("Albedo (RGB) 2", 2D) = "white" {}
-		_Cutoff("Cutoff", Range(0,1)) = 0.25
-		_GrassHeight("Grass Height", Float) = 0.25
+		_Cutoff("Texture Alpha Cutoff", Range(0,1)) = 0.25
+		_CutoffShadow("Shadow Alpha Cutoff", Range(0,1)) = 0.25
+		_GrassMaxHeight("Grass Max Height", Float) = 1
+		_GrassMinHeight("Grass Min Height", Float) = 0.5
 		_GrassWidth("Grass Width", Float) = 0.25
 		_WindSpeed("Wind Speed", Float) = 100
 		_WindStength("Wind Strength", Float) = 0.05
@@ -24,11 +20,12 @@ Shader "Custom/Grass Geometry Shader" {
 
 		SubShader{
 				Tags{ "Queue" = "Geometry" }
-				Blend SrcAlpha OneMinusSrcAlpha
-				//basepass
-				Pass
+				
+				Pass //basepass
 			{
 				Tags{ "LightMode" = "ForwardBase" }
+				Blend SrcAlpha OneMinusSrcAlpha
+				
 				CULL OFF
 				LOD 200
 
@@ -55,7 +52,7 @@ Shader "Custom/Grass Geometry Shader" {
 		fixed4 pos : SV_POSITION;
 		fixed3 norm : NORMAL;
 		fixed4 color : TEXCOORD0;
-		fixed2 GrasType : TEXCOORD1;
+		fixed2 DetailPatchUV2 : TEXCOORD1;
 	};
 
 	struct g2f
@@ -63,7 +60,7 @@ Shader "Custom/Grass Geometry Shader" {
 		fixed4 pos : SV_POSITION;
 		fixed3 norm : NORMAL;
 		fixed4 color : TEXCOORD0;
-		fixed2 GrasType : TEXCOORD1;
+		fixed2 DetailPatchUV2 : TEXCOORD1;
 		fixed2 uv : TEXCOORD2;
 		UNITY_FOG_COORDS(3)
 		LIGHTING_COORDS(4,5)
@@ -71,7 +68,8 @@ Shader "Custom/Grass Geometry Shader" {
 
 	sampler2D _MainTex;
 	sampler2D _MainTex2;
-	half _GrassHeight;
+	half _GrassMaxHeight;
+	half _GrassMinHeight;
 	half _GrassWidth;
 	half _Cutoff;
 	half _WindStength;
@@ -94,7 +92,7 @@ Shader "Custom/Grass Geometry Shader" {
 		OUT.pos = v.vertex;
 		OUT.norm = v.normal;
 		OUT.color = v.color;
-		OUT.GrasType = v.uv2;
+		OUT.DetailPatchUV2 = v.uv2;
 		return OUT;
 	}
 
@@ -106,8 +104,9 @@ Shader "Custom/Grass Geometry Shader" {
 		fixed3 perpendicularAngle = fixed3(0, 0, 1);
 		fixed3 faceNormal = cross(perpendicularAngle, IN[0].norm);
 
+		fixed grassheight = lerp(_GrassMinHeight, _GrassMaxHeight, IN[0].DetailPatchUV2.y);
 		fixed3 v0 = IN[0].pos.xyz;
-		fixed3 v1 = IN[0].pos.xyz + IN[0].norm * _GrassHeight;
+		fixed3 v1 = IN[0].pos.xyz + IN[0].norm * grassheight;
 
 		fixed3 wind = fixed3(sin(_Time.x * _WindSpeed + v0.x) + sin(_Time.x * _WindSpeed + v0.z * 2) + sin(_Time.x * _WindSpeed * 0.1 + v0.x), 0,
 			cos(_Time.x * _WindSpeed + v0.x * 2) + cos(_Time.x * _WindSpeed + v0.z));
@@ -123,21 +122,21 @@ Shader "Custom/Grass Geometry Shader" {
 		g2f OUT;
 		// Quad 1
 
-		OUT.pos = UnityObjectToClipPos(v0 + perpendicularAngle * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v0 + perpendicularAngle * 0.5 * grassheight);
 		OUT.norm = faceNormal;
 		OUT.color = color;
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		OUT.uv = fixed2(1, 0);
 
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		triStream.Append(OUT);
 
-		OUT.pos = UnityObjectToClipPos(v1 + perpendicularAngle * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v1 + perpendicularAngle * 0.5 * grassheight);
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(1, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
@@ -147,7 +146,7 @@ Shader "Custom/Grass Geometry Shader" {
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(0.5, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
@@ -157,27 +156,27 @@ Shader "Custom/Grass Geometry Shader" {
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(0.5, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
 		triStream.Append(OUT);
 
-		OUT.pos = UnityObjectToClipPos(v1 - perpendicularAngle * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v1 - perpendicularAngle * 0.5 * grassheight);
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(0, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
 		triStream.Append(OUT);
 
-		OUT.pos = UnityObjectToClipPos(v0 - perpendicularAngle * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v0 - perpendicularAngle * 0.5 * grassheight);
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(0, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
@@ -187,7 +186,7 @@ Shader "Custom/Grass Geometry Shader" {
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(0.5, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
@@ -197,7 +196,7 @@ Shader "Custom/Grass Geometry Shader" {
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(0.5, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
@@ -205,21 +204,21 @@ Shader "Custom/Grass Geometry Shader" {
 
 		// Quad 2
 
-		OUT.pos = UnityObjectToClipPos(v0 + fixed3(sin60, 0, -cos60) * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v0 + fixed3(sin60, 0, -cos60) * 0.5 * grassheight);
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(1, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
 		triStream.Append(OUT);
 
-		OUT.pos = UnityObjectToClipPos(v1 + fixed3(sin60, 0, -cos60)* 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v1 + fixed3(sin60, 0, -cos60)* 0.5 * grassheight);
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(1, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
@@ -229,7 +228,7 @@ Shader "Custom/Grass Geometry Shader" {
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(0.5, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
@@ -239,27 +238,27 @@ Shader "Custom/Grass Geometry Shader" {
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(0.5, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
 		triStream.Append(OUT);
 
-		OUT.pos = UnityObjectToClipPos(v0 - fixed3(sin60, 0, -cos60) * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v0 - fixed3(sin60, 0, -cos60) * 0.5 * grassheight);
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(0, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
 		triStream.Append(OUT);
 
-		OUT.pos = UnityObjectToClipPos(v1 - fixed3(sin60, 0, -cos60) * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v1 - fixed3(sin60, 0, -cos60) * 0.5 * grassheight);
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(0, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
@@ -269,7 +268,7 @@ Shader "Custom/Grass Geometry Shader" {
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(0.5, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
@@ -279,7 +278,7 @@ Shader "Custom/Grass Geometry Shader" {
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(0.5, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
@@ -287,21 +286,21 @@ Shader "Custom/Grass Geometry Shader" {
 
 		// Quad 3 - Positive
 
-		OUT.pos = UnityObjectToClipPos(v0 + fixed3(sin60, 0, cos60) * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v0 + fixed3(sin60, 0, cos60) * 0.5 * grassheight);
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(1, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
 		triStream.Append(OUT);
 
-		OUT.pos = UnityObjectToClipPos(v1 + fixed3(sin60, 0, cos60)* 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v1 + fixed3(sin60, 0, cos60)* 0.5 * grassheight);
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(1, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
@@ -311,7 +310,7 @@ Shader "Custom/Grass Geometry Shader" {
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(0.5, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
@@ -321,7 +320,7 @@ Shader "Custom/Grass Geometry Shader" {
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(0.5, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
@@ -329,21 +328,21 @@ Shader "Custom/Grass Geometry Shader" {
 
 		// Quad 3 - NEgative
 
-		OUT.pos = UnityObjectToClipPos(v0 - fixed3(sin60, 0, cos60) * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v0 - fixed3(sin60, 0, cos60) * 0.5 * grassheight);
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(0, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
 		triStream.Append(OUT);
 
-		OUT.pos = UnityObjectToClipPos(v1 - fixed3(sin60, 0, cos60) * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v1 - fixed3(sin60, 0, cos60) * 0.5 * grassheight);
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(0, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
@@ -362,7 +361,7 @@ Shader "Custom/Grass Geometry Shader" {
 		OUT.norm = faceNormal;
 		OUT.color = color;
 		OUT.uv = fixed2(0.5, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		TRANSFER_VERTEX_TO_FRAGMENT(OUT);
 		UNITY_TRANSFER_FOG(OUT, OUT.pos);
 		
@@ -372,13 +371,13 @@ Shader "Custom/Grass Geometry Shader" {
 	half4 frag(g2f IN) : COLOR
 	{
 		fixed4 c;
-		if (IN.GrasType.x  == 0) {
+		if (IN.DetailPatchUV2.x  == 0) {
 			c = tex2D(_MainTex, IN.uv);
 		}
 		else {
 			c = tex2D(_MainTex2, IN.uv);
 		}
-		clip(c.a - _Cutoff);
+		clip(c.a - .4);
 		c = saturate(c * 2 * IN.color);
 		//c.a = 1
 		fixed atten = LIGHT_ATTENUATION(IN);
@@ -421,24 +420,26 @@ Shader "Custom/Grass Geometry Shader" {
 	{
 		fixed4 pos : SV_POSITION;
 		fixed3 norm : NORMAL;
-		fixed2 GrasType : TEXCOORD0;
+		fixed2 DetailPatchUV2 : TEXCOORD0;
 	};
 
 	struct g2fS
 	{
 		V2F_SHADOW_CASTER;
-		fixed2 GrasType : TEXCOORD2;
+		fixed2 DetailPatchUV2 : TEXCOORD2;
 		fixed2 uv : TEXCOORD1;
 	};
 
 	sampler2D _MainTex;
 	sampler2D _MainTex2;
-	half _GrassHeight;
+	half _GrassMinHeight;
+	half _GrassMaxHeight;
 	half _GrassWidth;
 	half _Cutoff;
 	half _WindStength;
 	half _WindSpeed;
 	half _MaxShadowDrawDistance;
+	half _CutoffShadow;
 
 	struct appdata {
 		fixed4 vertex : POSITION;
@@ -452,7 +453,7 @@ Shader "Custom/Grass Geometry Shader" {
 		v2gS OUT;
 		OUT.pos = v.vertex;
 		OUT.norm = v.normal;
-		OUT.GrasType = v.uv2;
+		OUT.DetailPatchUV2 = v.uv2;
 		return OUT;
 	}
 
@@ -464,8 +465,9 @@ Shader "Custom/Grass Geometry Shader" {
 		fixed3 perpendicularAngle = fixed3(0, 0, 1);
 		fixed3 faceNormal = cross(perpendicularAngle, IN[0].norm);
 
+		fixed grassheight = lerp(_GrassMinHeight, _GrassMaxHeight, IN[0].DetailPatchUV2.y);
 		fixed3 v0 = IN[0].pos.xyz;
-		fixed3 v1 = IN[0].pos.xyz + IN[0].norm * _GrassHeight;
+		fixed3 v1 = IN[0].pos.xyz + IN[0].norm * grassheight;
 
 		fixed3 wind = fixed3(sin(_Time.x * _WindSpeed + v0.x) + sin(_Time.x * _WindSpeed + v0.z * 2) + sin(_Time.x * _WindSpeed * 0.1 + v0.x), 0,
 			cos(_Time.x * _WindSpeed + v0.x * 2) + cos(_Time.x * _WindSpeed + v0.z));
@@ -481,130 +483,130 @@ Shader "Custom/Grass Geometry Shader" {
 		UNITY_INITIALIZE_OUTPUT(g2fS, OUT);
 		// Quad 1
 
-		OUT.pos = UnityObjectToClipPos(v0 + perpendicularAngle * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v0 + perpendicularAngle * 0.5 * grassheight);
 		OUT.uv = fixed2(1, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
-		OUT.pos = UnityObjectToClipPos(v1 + perpendicularAngle * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v1 + perpendicularAngle * 0.5 * grassheight);
 		OUT.uv = fixed2(1, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
 		OUT.pos = UnityObjectToClipPos(v0);
 		OUT.uv = fixed2(0.5, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
 		OUT.pos = UnityObjectToClipPos(v1);
 		OUT.uv = fixed2(0.5, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
-		OUT.pos = UnityObjectToClipPos(v1 - perpendicularAngle * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v1 - perpendicularAngle * 0.5 * grassheight);
 		OUT.uv = fixed2(0, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
-		OUT.pos = UnityObjectToClipPos(v0 - perpendicularAngle * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v0 - perpendicularAngle * 0.5 * grassheight);
 		OUT.uv = fixed2(0, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
 		OUT.pos = UnityObjectToClipPos(v0);
 		OUT.uv = fixed2(0.5, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
 		OUT.pos = UnityObjectToClipPos(v1);
 		OUT.uv = fixed2(0.5, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
 		// Quad 2
 
-		OUT.pos = UnityObjectToClipPos(v0 + fixed3(sin60, 0, -cos60) * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v0 + fixed3(sin60, 0, -cos60) * 0.5 * grassheight);
 		OUT.uv = fixed2(1, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
-		OUT.pos = UnityObjectToClipPos(v1 + fixed3(sin60, 0, -cos60)* 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v1 + fixed3(sin60, 0, -cos60)* 0.5 * grassheight);
 		OUT.uv = fixed2(1, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
 		OUT.pos = UnityObjectToClipPos(v0);
 		OUT.uv = fixed2(0.5, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
 		OUT.pos = UnityObjectToClipPos(v1);
 		OUT.uv = fixed2(0.5, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
-		OUT.pos = UnityObjectToClipPos(v0 - fixed3(sin60, 0, -cos60) * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v0 - fixed3(sin60, 0, -cos60) * 0.5 * grassheight);
 		OUT.uv = fixed2(0, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
-		OUT.pos = UnityObjectToClipPos(v1 - fixed3(sin60, 0, -cos60) * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v1 - fixed3(sin60, 0, -cos60) * 0.5 * grassheight);
 		OUT.uv = fixed2(0, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
 		OUT.pos = UnityObjectToClipPos(v0);
 		OUT.uv = fixed2(0.5, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
 		OUT.pos = UnityObjectToClipPos(v1);
 		OUT.uv = fixed2(0.5, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
 		// Quad 3 - Positive
 
-		OUT.pos = UnityObjectToClipPos(v0 + fixed3(sin60, 0, cos60) * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v0 + fixed3(sin60, 0, cos60) * 0.5 * grassheight);
 		OUT.uv = fixed2(1, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
-		OUT.pos = UnityObjectToClipPos(v1 + fixed3(sin60, 0, cos60)* 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v1 + fixed3(sin60, 0, cos60)* 0.5 * grassheight);
 		OUT.uv = fixed2(1, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
 		OUT.pos = UnityObjectToClipPos(v0);
 		OUT.uv = fixed2(0.5, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
 		OUT.pos = UnityObjectToClipPos(v1);
 		OUT.uv = fixed2(0.5, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
 		// Quad 3 - NEgative
 
-		OUT.pos = UnityObjectToClipPos(v0 - fixed3(sin60, 0, cos60) * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v0 - fixed3(sin60, 0, cos60) * 0.5 * grassheight);
 		OUT.uv = fixed2(0, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
-		OUT.pos = UnityObjectToClipPos(v1 - fixed3(sin60, 0, cos60) * 0.5 * _GrassHeight);
+		OUT.pos = UnityObjectToClipPos(v1 - fixed3(sin60, 0, cos60) * 0.5 * grassheight);
 		OUT.uv = fixed2(0, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
 		OUT.pos = UnityObjectToClipPos(v0);
 		OUT.uv = fixed2(0.5, 0);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 
 		OUT.pos = UnityObjectToClipPos(v1);
 		OUT.uv = fixed2(0.5, 1);
-		OUT.GrasType = IN[0].GrasType;
+		OUT.DetailPatchUV2 = IN[0].DetailPatchUV2;
 		triStream.Append(OUT);
 	}
 
@@ -612,11 +614,11 @@ Shader "Custom/Grass Geometry Shader" {
 	{
 
 		fixed4 c;
-		if (IN.GrasType.x == 0)
+		if (IN.DetailPatchUV2.x == 0)
 			c = tex2D(_MainTex, IN.uv);
 		else
 			c = tex2D(_MainTex2, IN.uv);
-		clip(c.a - _Cutoff);
+		clip(c.a - _CutoffShadow);
 		SHADOW_CASTER_FRAGMENT(IN)
 	}
 		ENDCG

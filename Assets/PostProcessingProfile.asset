@@ -31,24 +31,24 @@ MonoBehaviour:
   antialiasing:
     m_Enabled: 1
     m_Settings:
-      method: 0
+      method: 1
       fxaaSettings:
-        preset: 1
+        preset: 3
       taaSettings:
-        jitterSpread: 0.23
+        jitterSpread: 0.232
         sharpen: 0
-        stationaryBlending: 0.217
-        motionBlending: 0.185
+        stationaryBlending: 0.339
+        motionBlending: 0.821
   ambientOcclusion:
     m_Enabled: 1
     m_Settings:
-      intensity: 0.15
-      radius: 2
-      sampleCount: 10
+      intensity: 0.66
+      radius: 0.05
+      sampleCount: 3
       downsampling: 1
-      forceForwardCompatibility: 1
+      forceForwardCompatibility: 0
       ambientOnly: 0
-      highPrecision: 0
+      highPrecision: 1
   screenSpaceReflection:
     m_Enabled: 0
     m_Settings:
@@ -71,11 +71,11 @@ MonoBehaviour:
   depthOfField:
     m_Enabled: 0
     m_Settings:
-      focusDistance: 10
-      aperture: 1.5
-      focalLength: 1
-      useCameraFov: 1
-      kernelSize: 2
+      focusDistance: 2.45
+      aperture: 2.5
+      focalLength: 43
+      useCameraFov: 0
+      kernelSize: 0
   motionBlur:
     m_Enabled: 1
     m_Settings:
@@ -87,27 +87,27 @@ MonoBehaviour:
     m_Settings:
       lowPercent: 1
       highPercent: 51.000008
-      minLuminance: -5
-      maxLuminance: 1
+      minLuminance: -2.49
+      maxLuminance: 88.8
       keyValue: 0.25
-      dynamicKeyValue: 1
+      dynamicKeyValue: 0
       adaptationType: 1
       speedUp: 2
       speedDown: 1
-      logMin: -16
-      logMax: 16
+      logMin: -12
+      logMax: 10
   bloom:
     m_Enabled: 1
     m_Settings:
       bloom:
-        intensity: 2.17
-        threshold: 1.29
-        softKnee: 0.56
-        radius: 2.23
+        intensity: 2
+        threshold: 1.2
+        softKnee: 0.6
+        radius: 1.2
         antiFlicker: 0
       lensDirt:
         texture: {fileID: 2800000, guid: a2960ffde020f27409e070d92fb2e00b, type: 3}
-        intensity: 3
+        intensity: 2.74
   colorGrading:
     m_Enabled: 1
     m_Settings:
@@ -289,9 +289,9 @@ MonoBehaviour:
     m_Enabled: 0
     m_Settings:
       colored: 1
-      intensity: 0.5
-      size: 1
-      luminanceContribution: 0.8
+      intensity: 0.049
+      size: 0.61
+      luminanceContribution: 0.715
   vignette:
     m_Enabled: 1
     m_Settings:

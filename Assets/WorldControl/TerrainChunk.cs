@@ -490,6 +490,12 @@ public class TerrainChunk
         Trees.Clear();
         
         UnityTerrain = Terrain.CreateTerrainGameObject(ChunkTerrainData);
+        UnityTerrain.name = string.Format("TerrainChunk at {0}", GridCoords);
+
+        GameObject SurfaceManagerObject = GameObject.Find("Surface Manager");
+        if (SurfaceManagerObject != null)
+            UnityTerrain.transform.SetParent(SurfaceManagerObject.transform);
+
         Terrain terrain =  UnityTerrain.GetComponent<Terrain>();
         terrain.castShadows = true;
         terrain.heightmapPixelError = 10;
