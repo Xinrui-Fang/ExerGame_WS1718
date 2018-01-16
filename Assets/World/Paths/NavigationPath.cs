@@ -356,6 +356,18 @@ namespace Assets.World.Paths
             return Paths.ToList<PathWithDirection>();
         }
 
+        public List<PathWithDirection> GetPaths(PathWithDirection ExcPath)
+        {
+            List<PathWithDirection> paths = Paths.ToList<PathWithDirection>();
+
+            if (paths.Count > 1)
+            {
+                paths.Remove(ExcPath);
+            }
+            return paths;
+        }
+
+
         public PathWithDirection GetLongest()
         {
             PathWithDirection longest = new PathWithDirection();

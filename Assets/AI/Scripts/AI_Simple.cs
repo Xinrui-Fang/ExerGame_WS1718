@@ -24,7 +24,7 @@ public class AI_Simple : MonoBehaviour
         PathWithDirection dpath = vertex.GetLongest(new PathWithDirection(path, forward));
         if (dpath.path.WorldWaypoints != null)
         {
-            Debug.Log(string.Format("Found Path of lenght {0}", dpath.path.WorldWaypoints.Length));
+            //Debug.Log(string.Format("Found Path of lenght {0}", dpath.path.WorldWaypoints.Length));
             path = dpath.path;
             forward = dpath.forward;
             if (!forward)

@@ -18,25 +18,43 @@ public class BicycleV2 : MonoBehaviour {
     private NavigationPath path;
     private int nextNode;
 
-    private int GetNextPath(WayVertex vertex, int node)
+    public int ChangingViewOffset = 10;
+    // Used for QTE
+    public List<PathWithDirection> ChoicesEnd, ChoicesStart;
+    public int QTEChoice;
+    public bool QTENeedsChoice;
+    public bool QTEAtStart;
+
+    private int GetNextPath(int node)
     {
-        PathWithDirection dpath = vertex.GetLongest(new PathWithDirection(path, forward));
-        if (dpath.path.WorldWaypoints != null)
+        PathWithDirection dpath;
+        if (node >= path.WorldWaypoints.Length -2)
         {
-            Debug.Log(string.Format("Found Path of lenght {0}", dpath.path.WorldWaypoints.Length));
-            path = dpath.path;
-            forward = dpath.forward;
-            if (!forward)
-            {
-                return path.WorldWaypoints.Length - 1;
-            }
-            else
-            {
-                return 0;
-            }
+            dpath = ChoicesEnd[QTEChoice];
+        } else
+        {
+            dpath = ChoicesStart[QTEChoice];
         }
-        forward = !forward;
-        return node;
+        
+        Debug.Log(string.Format("Found Path of lenght {0}", dpath.path.WorldWaypoints.Length));
+        forward = dpath.forward;
+        if (forward) {
+            ChoicesEnd = path.End.GetPaths(new PathWithDirection(path, true));
+            ChoicesStart = path.Start.GetPaths(new PathWithDirection(path, true));
+        }
+        {
+            ChoicesStart = path.End.GetPaths(new PathWithDirection(path, true));
+            ChoicesEnd = path.Start.GetPaths(new PathWithDirection(path, true));
+        }
+        path = dpath.path;
+        if (!forward)
+        {
+            return path.WorldWaypoints.Length - 1;
+        }
+        else
+        {
+            return 0;
+        }
     }
 
     private int RetrieveNext(int node, bool reverse = false)
@@ -46,7 +64,7 @@ public class BicycleV2 : MonoBehaviour {
         {
             if (node >= path.WorldWaypoints.Length - 2)
             {
-                return GetNextPath(path.End, node);
+                return GetNextPath(node);
             }
             return node + 1;
         }
@@ -54,7 +72,7 @@ public class BicycleV2 : MonoBehaviour {
         {
             if (node <= 1)
             {
-                return GetNextPath(path.Start, node);
+                return GetNextPath(node);
             }
             return node - 1;
         }
@@ -68,6 +86,8 @@ public class BicycleV2 : MonoBehaviour {
         WayVertex StartingPoint = ActiveTerrain.GetPathFinder().StartingPoint;
         var longestPath = StartingPoint.GetLongest();
         path = longestPath.path;
+
+        QTEChoice = 0;
         forward = longestPath.forward;
         if (!forward)
         {
@@ -77,6 +97,16 @@ public class BicycleV2 : MonoBehaviour {
         {
             nextNode = 0;
         }
+
+        if (forward)
+        {
+            ChoicesEnd = path.End.GetPaths(longestPath);
+            ChoicesStart = path.Start.GetPaths(longestPath);
+        }
+        {
+            ChoicesStart = path.End.GetPaths(longestPath);
+            ChoicesEnd = path.Start.GetPaths(longestPath);
+        }
         transform.position = path.WorldWaypoints[nextNode];
         transform.rotation = Quaternion.LookRotation(path.WorldWaypoints[RetrieveNext(nextNode)] - path.WorldWaypoints[nextNode]);
         transform.rotation *= Quaternion.Euler(0, 90, 0);
@@ -84,6 +114,7 @@ public class BicycleV2 : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
+        
 		if(Input.GetKey("up") || Input.GetKey("down"))
 		{
             bool reverse = Input.GetKey("down");
@@ -92,6 +123,22 @@ public class BicycleV2 : MonoBehaviour {
             {
                 nextNode = RetrieveNext(nextNode, reverse);
                 count++;
+            }
+            if (forward ^ reverse) 
+            {
+                if (nextNode > path.WorldWaypoints.Length - ChangingViewOffset)
+                {
+                    QTENeedsChoice = true;
+                    QTEAtStart = false;
+                }
+            }
+            else
+            {
+                if (nextNode < ChangingViewOffset)
+                {
+                    QTENeedsChoice = true;
+                    QTEAtStart = true;
+                }
             }
             // if the position of the player is not at the path point
             // move until it reach it
