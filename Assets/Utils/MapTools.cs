@@ -198,6 +198,33 @@ public class MapTools
         }
     }
 
+
+    public class LevelOnCenter
+    {
+        private readonly IGetNeighbors NeighbourSource;
+        public float[,] Data;
+        private Location2D[] Neighbours;
+
+        public LevelOnCenter(IGetNeighbors neighborSource, float[,] data)
+        {
+            NeighbourSource = neighborSource;
+            Data = data;
+            Neighbours = NeighbourSource.AllocateArray();
+        }
+
+        public void Apply(int x, int y)
+        {
+            NeighbourSource.GetNeighbors(x, y, ref Neighbours);
+            float avg = Data[x, y];
+            foreach (Location2D neighbor in Neighbours)
+            {
+                if (!neighbor.valid) continue;
+                if (Data[neighbor.x, neighbor.y] >= avg) continue;
+                Data[neighbor.x, neighbor.y] = avg;
+            }
+        }
+    }
+
     // This function is not correct!
     public static float OctileDistance(int ax, int ay, int bx, int by)
     {

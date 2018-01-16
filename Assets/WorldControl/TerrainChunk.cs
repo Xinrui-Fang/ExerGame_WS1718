@@ -199,13 +199,13 @@ public class TerrainChunk
         paths.CreateNetwork(this, TerrainEdges);
         search.CleanUp();
 
-        NormalsFromHeightMap.GenerateNormals(Heights, Normals, Settings.Depth, (float)Settings.Size / Settings.HeightmapResolution);
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create route network at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Reset();
         stopWatch.Start();
 
         
         Trees = vGen.PaintGras(this, ChunkSeed, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, Settings.MaxTreeCount, Normals);
+        NormalsFromHeightMap.GenerateNormals(Heights, Normals, Settings.Depth, (float)Settings.Size / Settings.HeightmapResolution);
         TerrainLabeler.MapTerrain(this, Moisture, Heights, Normals, SplatmapData, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, gridCoords * Settings.HeightmapResolution);
         
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create Vegetation and Splatmap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
@@ -498,7 +498,7 @@ public class TerrainChunk
 
         Terrain terrain =  UnityTerrain.GetComponent<Terrain>();
         terrain.castShadows = true;
-        terrain.heightmapPixelError = 10;
+        terrain.heightmapPixelError = 6;
         terrain.materialType = Terrain.MaterialType.Custom;
         terrain.materialTemplate = Settings.TerrainMaterial;
         terrain.treeBillboardDistance = Settings.TreeBillBoardDistance;

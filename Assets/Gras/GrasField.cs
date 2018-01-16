@@ -44,9 +44,9 @@ public class GrasField
 
         System.Random prng = new System.Random(seed);
 
-        CircleBound SmallCircle = new CircleBound(new Vector2(), 1f);
-        CircleBound BigCircle = new CircleBound(new Vector2(), 1.3f);
-        CircleBound LargeCircle = new CircleBound(new Vector2(), 2f);
+        CircleBound SmallCircle = new CircleBound(new Vector2(), 1.5f);
+        CircleBound BigCircle = new CircleBound(new Vector2(), 2f);
+        CircleBound LargeCircle = new CircleBound(new Vector2(), 3f);
         Vector2 flatCoord = new Vector2();
         int i = 0;
         int n = 0;
@@ -61,7 +61,7 @@ public class GrasField
             Terrain.ToWorldCoordinate(fx, fy, ref flatCoord);
             SmallCircle.Center = flatCoord;
             BigCircle.Center = flatCoord;
-            if (Terrain.Objects.Collides(BigCircle, QuadDataType.street)) continue;
+            //if (Terrain.Objects.Collides(BigCircle, QuadDataType.street)) continue;
             if (Terrain.Objects.Collides(SmallCircle)) continue;
             float height = heights[z, x];
             if (height < WaterLevel || height > MaxVegLevel) continue;

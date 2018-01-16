@@ -19,6 +19,18 @@ public class VegetationGenerator
 
         List<TreeInstance> trees = new List<TreeInstance>(MaxTreeCount);
         CircleBound circ = new CircleBound(new Vector2(), 1.5f);
+        Vector2Int LowerLimits = new Vector2Int(0, 0);
+        Vector2Int UpperLimits = new Vector2Int(terrain.Settings.HeightmapResolution - 1, terrain.Settings.HeightmapResolution - 1);
+        MapTools.VariableDistCircle VDistCirc = new MapTools.VariableDistCircle(
+            LowerLimits, UpperLimits, 1, 5
+        );
+        MapTools.LevelOnCenter Level = new MapTools.LevelOnCenter(VDistCirc, terrain.Heights);
+        MapTools.KernelAppliance TerrainSmoother = new MapTools.KernelAppliance(
+            new MapTools.VariableDistCircle(LowerLimits, UpperLimits, 1, 5),
+            new MapTools.VariableDistCircle(LowerLimits, UpperLimits, 1, 2),
+            new OctileDistKernel(),
+            terrain.Heights
+        );
         for (int y = 0; y < y_res; y++)
         {
             for (int x = 0; x < x_res; x++)
@@ -42,6 +54,9 @@ public class VegetationGenerator
 
                 // Create tree
                 float heightScale = (float)prng.Next(256, 512) / 512.0f;
+
+                Level.Apply(y, x);
+                TerrainSmoother.Apply(y, x);
                 trees.Add(new TreeInstance
                 {
                     prototypeIndex = prng.Next(0, GameSettings.TreeProtoTypes.Length - 1),
@@ -64,51 +79,6 @@ public class VegetationGenerator
 
             }
         }
-        /*
-        CircleBound smallCirc = new CircleBound(new Vector2(), 1f);
-        CircleBound MediumCirc = new CircleBound(new Vector2(), 2f);
-        CircleBound BigCirc = new CircleBound(new Vector2(), 3f);
-        List<int[,]> DetailMapList = new List<int[,]>(GameSettings.DetailPrototypes.Length);
-        float fract = 1f / (float)GameSettings.DetailPrototypes.Length;
-
-        for (int l = 0; l < GameSettings.DetailPrototypes.Length; l++)
-        {
-            DetailMapList.Add(new int[Settings.DetailResolution, Settings.DetailResolution]);
-        }
-        for (int y = 0; y < Settings.DetailResolution; y++)
-        {
-            for (int x = 0; x < Settings.DetailResolution; x++)
-            {
-                // Do not grow on very steep terrain.
-                
-                if (Normals[y, x].y < .9f) continue;
-
-                // Gras only grows on good soil.
-                if (terrain.Moisture[y, x] > .3f) continue;
-
-                // Check that we are in Vegetation Height.
-                if (terrain.Heights[y, x] <= WaterLevel || terrain.Heights[y, x] > VegetationMaxHeight) continue;
-
-                smallCirc.Center = terrain.ToWorldCoordinate((float)x/Settings.DetailResolution, (float)y / Settings.DetailResolution);
-                if (terrain.Objects.Collides(smallCirc)) continue;
-
-                MediumCirc.Center = smallCirc.Center;
-                BigCirc.Center = smallCirc.Center;
-                float vegetaionFactor = 1f;
-                if (terrain.Objects.Collides(MediumCirc)) vegetaionFactor *= .5f;
-                if (terrain.Objects.Collides(BigCirc)) vegetaionFactor *= .75f;
-
-                int max = Mathf.RoundToInt(terrain.Moisture[y, x] * Normals[y,x].y * Normals[y, x].y * Settings.MaxVegetaionDensity * vegetaionFactor * fract);
-                for (int l = 0; l < GameSettings.DetailPrototypes.Length; l++)
-                {
-                    {
-                        DetailMapList[l][y, x] = prng.Next(0, max);
-                    }
-                }
-            }
-        }
-        terrain.DetailMapList = DetailMapList;
-        */
         return trees;
     }
 }
