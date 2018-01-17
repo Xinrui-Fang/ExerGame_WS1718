@@ -163,7 +163,7 @@ public class PathFinder
             while (node != null)
             {
                 bool success = terrain.Objects.Put(
-                    new QuadTreeData(terrain.ToWorldCoordinate(node.Value.x, node.Value.y), QuadDataType.street, StreetMap[node.Value.x, node.Value.y])
+                    new QuadTreeData<int>(terrain.ToWorldCoordinate(node.Value.x, node.Value.y), QuadDataType.street, StreetMap[node.Value.x, node.Value.y])
                 );
                 if (!success)
                 {

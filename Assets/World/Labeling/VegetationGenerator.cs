@@ -70,7 +70,7 @@ public class VegetationGenerator
 
                 // Remember tree location
                 bool success = terrain.Objects.Put(
-                    new QuadTreeData(WorldCoordinates, QuadDataType.vegetation, 0)
+                    new QuadTreeData<int>(WorldCoordinates, QuadDataType.vegetation, 0)
                 );
                 if (!success)
                 {

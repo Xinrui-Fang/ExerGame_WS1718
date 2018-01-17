@@ -16,13 +16,13 @@ namespace Assets.Utils
         building
     }
 
-    public struct QuadTreeData
+    public struct QuadTreeData<T>
     {
         public Vector2 location;
         public QuadDataType type;
-        public int label;
+        public T label;
 
-        public QuadTreeData(Vector2 location, QuadDataType type, int label)
+        public QuadTreeData(Vector2 location, QuadDataType type, T label)
         {
             this.location = location;
             this.type = type;
@@ -88,22 +88,27 @@ namespace Assets.Utils
         }
     }
 
-    public class QuadTree
+    public class QuadTree<T>
     {
         public const int NodeCapacity = 4;
         public int Level = 0;
         public RectangleBound Boundary;
-        List<QuadTreeData> Data;
+        List<QuadTreeData<T>> Data;
 
-        QuadTree NW, NE, SW, SE;
+        QuadTree<T> NW, NE, SW, SE;
 
         public QuadTree(RectangleBound boundary)
         {
             Boundary = boundary;
-            Data = new List<QuadTreeData>(NodeCapacity);
+            Data = new List<QuadTreeData<T>>(NodeCapacity);
         } 
 
-        public bool Put(QuadTreeData data)
+        public bool Put(Vector2 location, QuadDataType type, T label)
+        {
+                return Put(new QuadTreeData<T>(location, type, label));
+        }
+        
+        public bool Put(QuadTreeData<T> data)
         {
             if (!Boundary.ContainsPoint(data.location)) return false;
             if (Data.Count < NodeCapacity)
@@ -123,25 +128,25 @@ namespace Assets.Utils
         private void Subdivide()
         {
             float quarterSize = Boundary.HalfSize * .5f;
-            NW = new QuadTree(
+            NW = new QuadTree<T>(
                 new RectangleBound(
                     Boundary.Center + new Vector2(quarterSize, -quarterSize),
                     quarterSize
                     )
             );
-            NE = new QuadTree(
+            NE = new QuadTree<T>(
                 new RectangleBound(
                     Boundary.Center + new Vector2(quarterSize, quarterSize),
                     quarterSize
                     )
             );
-            SW = new QuadTree(
+            SW = new QuadTree<T>(
                 new RectangleBound(
                     Boundary.Center + new Vector2(-quarterSize, quarterSize),
                     quarterSize
                     )
             );
-            SE = new QuadTree(
+            SE = new QuadTree<T>(
                 new RectangleBound(
                     Boundary.Center + new Vector2(-quarterSize, -quarterSize),
                     quarterSize
@@ -152,7 +157,7 @@ namespace Assets.Utils
         public bool Collides(IBoundary scope) 
         {
             if (!scope.Intersects(ref Boundary)) return false;
-            foreach (QuadTreeData dataPoint in Data)
+            foreach (QuadTreeData<T> dataPoint in Data)
             {
                 if (scope.ContainsPoint(dataPoint.location)) return true;
             }
@@ -169,7 +174,7 @@ namespace Assets.Utils
         public bool Collides(IBoundary scope, QuadDataType type)
         {
             if (!scope.Intersects(ref Boundary)) return false;
-            foreach (QuadTreeData dataPoint in Data)
+            foreach (QuadTreeData<T> dataPoint in Data)
             {
                 if (scope.ContainsPoint(dataPoint.location) && dataPoint.type == type) return true;
             }
@@ -183,11 +188,11 @@ namespace Assets.Utils
             return false;
         }
 
-        public bool GetCollisions(IBoundary scope, List<QuadTreeData> Out)
+        public bool GetCollisions(IBoundary scope, List<QuadTreeData<T>> Out)
         {
             bool foundSomething = false;
             if (!scope.Intersects(ref Boundary)) return false;
-            foreach (QuadTreeData dataPoint in Data)
+            foreach (QuadTreeData<T> dataPoint in Data)
             {
                 if (scope.ContainsPoint(dataPoint.location))
                 {
@@ -205,11 +210,11 @@ namespace Assets.Utils
             return foundSomething;
         }
 
-        public bool GetCollisions(IBoundary scope, QuadDataType type, List<QuadTreeData> Out)
+        public bool GetCollisions(IBoundary scope, QuadDataType type, List<QuadTreeData<T>> Out)
         {
             bool foundSomething = false;
             if (!scope.Intersects(ref Boundary)) return false;
-            foreach (QuadTreeData dataPoint in Data)
+            foreach (QuadTreeData<T> dataPoint in Data)
             {
                 if (scope.ContainsPoint(dataPoint.location) && dataPoint.type == type)
                 {

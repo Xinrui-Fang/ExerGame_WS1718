@@ -18,7 +18,7 @@ public class TerrainChunk
     private long WorldSeed;
     public TerrainChunkEdge[] TerrainEdges;
     public GameSettings Settings;
-    public QuadTree Objects;
+    public QuadTree<int> Objects;
     private TerrainData ChunkTerrainData;
 
     public float[,,] SplatmapData;
@@ -96,7 +96,7 @@ public class TerrainChunk
         GridCoords = gridCoords;
         ChunkSeed = GetHashCode();
 
-        Objects = new QuadTree(GetBoundary());
+        Objects = new QuadTree<int>(GetBoundary());
         isFinished = false;
         Stopwatch stopWatch = new Stopwatch();
         stopWatch.Start();
