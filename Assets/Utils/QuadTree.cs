@@ -107,7 +107,68 @@ namespace Assets.Utils
         {
                 return Put(new QuadTreeData<T>(location, type, label));
         }
-        
+
+        // Finds new smallest root node that includes pos 
+        private QuadTree<T>GrowToDataPoint(Vector2 pos)
+        {
+            var root = this;
+            while (!root.Boundary.ContainsPoint(pos))
+            {
+                // iteratively grow tree.
+                var old = root;
+                float dx = pos.x - root.Boundary.Center.x;
+                dx = dx == 0 ? 0 : Mathf.Sign(dx); // dx \in \{-1, 0 ,1}
+                float dy = pos.y - root.Boundary.Center.x;
+                dy = dy == 0 ? 0 : Mathf.Sign(dy); // dy \in \{-1, 0, 1}
+
+                root = new QuadTree<T>(
+                    new RectangleBound(
+                        root.Boundary.Center + new Vector2(dx, dy) * root.Boundary.HalfSize, // move tree center towards pos.
+                        2f * root.Boundary.HalfSize // new tree area is 4 times of the old one.
+                    )
+                );
+                root.Subdivide(); // create subnodes.
+                // override corresponding subnode with old tree.
+                if (dx >= 0)
+                {
+                    if (dy >= 0) root.NE = old;
+                    else root.SE = old;
+                } else
+                {
+                    if (dy >= 0) root.NW = old;
+                    else root.SW = old;
+                }
+            }
+            return root;
+        }
+
+        // Puts Data in tree. returns root node. Extends tree to include new datapoint.
+        public QuadTree<T>PutAndGrow(ref bool success, QuadTreeData<T> data)
+        {
+            // if point is outside of boundary grow tree.
+            if (!Boundary.ContainsPoint(data.location))
+            {
+                var root = GrowToDataPoint(data.location);
+                success = root.Put(data);
+                return root;
+            }
+            // do normal put otherwise.
+            if (Data.Count < NodeCapacity)
+            {
+                Data.Add(data);
+                success = true;
+                return this;
+            }
+            if (NW == null) Subdivide();
+
+            if (NW.Put(data)) { success = true; return this; }
+            if (NE.Put(data)) { success = true; return this; }
+            if (SW.Put(data)) { success = true; return this; }
+            if (SE.Put(data)) { success = true; return this; }
+            success = false;
+            return this;
+        }
+
         public bool Put(QuadTreeData<T> data)
         {
             if (!Boundary.ContainsPoint(data.location)) return false;
