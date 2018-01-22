@@ -123,13 +123,13 @@ namespace Assets.Utils
                 var old = root;
                 float dx = pos.x - root.Boundary.Center.x;
                 dx = dx == 0 ? 0 : Mathf.Sign(dx); // dx \in \{-1, 0 ,1}
-                float dy = pos.y - root.Boundary.Center.x;
+                float dy = pos.y - root.Boundary.Center.y;
                 dy = dy == 0 ? 0 : Mathf.Sign(dy); // dy \in \{-1, 0, 1}
 
                 root = new QuadTree<T>(
                     new RectangleBound(
-                        root.Boundary.Center + new Vector2(dx, dy) * root.Boundary.HalfSize, // move tree center towards pos.
-                        2f * root.Boundary.HalfSize // new tree area is 4 times of the old one.
+                        old.Boundary.Center + new Vector2(dx, dy) * old.Boundary.HalfSize, // move tree center towards pos.
+                        2f * old.Boundary.HalfSize // new tree area is 4 times of the old one.
                     )
                 );
                 root.Subdivide(); // create subnodes.
@@ -191,28 +191,25 @@ namespace Assets.Utils
             return false;
         }
 
+        // Gets Data at the exact position. Returns first match only.
         public QuadTreeData<T> Get(Vector2 position)
-        {            
+        {
+            if (!Boundary.ContainsPoint(position)) return null;
             var root = this;
-            QuadTree<T> last = null;
-            while(root != null)
-            {
-               if (NW != null && NW.Boundary.ContainsPoint(position)) root = NW;
-               else if (NE != null && NE.Boundary.ContainsPoint(position)) root = NE;
-               else if (SW != null && SW.Boundary.ContainsPoint(position)) root = SW;
-               else if (SE != null && SE.Boundary.ContainsPoint(position)) root = SE;
-               else return null;
+            while (root != null) {
+                foreach (QuadTreeData<T> dataPoint in root.Data)
+                {
+                    if (position == dataPoint.location)
+                    {
+                        return dataPoint;
+                    }
+                }
+                if (NW != null && NW.Boundary.ContainsPoint(position)) root = NW;
+                else if (NE != null && NE.Boundary.ContainsPoint(position)) root = NE;
+                else if (SW != null && SW.Boundary.ContainsPoint(position)) root = SW;
+                else if (SE != null && SE.Boundary.ContainsPoint(position)) root = SE;
+                else root = null;
             }
-            
-            if(last == null)
-               return null;
-            
-            foreach(QuadTreeData<T> data in last.Data)
-            {
-               if(data.location.x == position.x && data.location.y == position.y)
-                  return data;
-            }
-
             return null;
         }
         
