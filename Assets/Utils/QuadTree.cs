@@ -16,7 +16,7 @@ namespace Assets.Utils
         building
     }
 
-    public struct QuadTreeData<T>
+    public class QuadTreeData<T>
     {
         public Vector2 location;
         public QuadDataType type;
@@ -108,6 +108,11 @@ namespace Assets.Utils
                 return Put(new QuadTreeData<T>(location, type, label));
         }
 
+        public QuadTree<T>PutAndGrow(ref bool success, Vector2 location, QuadDataType type, T label)
+        {
+                return PutAndGrow(ref success, new QuadTreeData<T>(location, type, label));
+        }
+        
         // Finds new smallest root node that includes pos 
         private QuadTree<T>GrowToDataPoint(Vector2 pos)
         {
@@ -186,6 +191,36 @@ namespace Assets.Utils
             return false;
         }
 
+        public QuadTreeData<T> Get(Vector2 position)
+        {            
+            var root = this;
+            QuadTree<T> last = null;
+            while(root != null)
+            {
+               if (NW != null && NW.Boundary.ContainsPoint(position)) root = NW;
+               else if (NE != null && NE.Boundary.ContainsPoint(position)) root = NE;
+               else if (SW != null && SW.Boundary.ContainsPoint(position)) root = SW;
+               else if (SE != null && SE.Boundary.ContainsPoint(position)) root = SE;
+               else return null;
+            }
+            
+            if(last == null)
+               return null;
+            
+            foreach(QuadTreeData<T> data in last.Data)
+            {
+               if(data.location.x == position.x && data.location.y == position.y)
+                  return data;
+            }
+
+            return null;
+        }
+        
+         public QuadTreeData<T> Get(Vector2Int position)
+         {
+            return Get(new Vector2(position.x, position.y));
+         }
+        
         private void Subdivide()
         {
             float quarterSize = Boundary.HalfSize * .5f;
