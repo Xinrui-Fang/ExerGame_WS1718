@@ -195,6 +195,7 @@ namespace Assets.Utils
         public QuadTreeData<T> Get(Vector2 position)
         {
             if (!Boundary.ContainsPoint(position)) return null;
+            
             var root = this;
             while (root != null) {
                 foreach (QuadTreeData<T> dataPoint in root.Data)
@@ -204,10 +205,11 @@ namespace Assets.Utils
                         return dataPoint;
                     }
                 }
-                if (NW != null && NW.Boundary.ContainsPoint(position)) root = NW;
-                else if (NE != null && NE.Boundary.ContainsPoint(position)) root = NE;
-                else if (SW != null && SW.Boundary.ContainsPoint(position)) root = SW;
-                else if (SE != null && SE.Boundary.ContainsPoint(position)) root = SE;
+                
+                if (root.NW != null && root.NW.Boundary.ContainsPoint(position)) root = root.NW;
+                else if (root.NE != null && NE.Boundary.ContainsPoint(position)) root = root.NE;
+                else if (root.SW != null && root.SW.Boundary.ContainsPoint(position)) root = root.SW;
+                else if (root.SE != null && root.SE.Boundary.ContainsPoint(position)) root = root.SE;
                 else root = null;
             }
             return null;
