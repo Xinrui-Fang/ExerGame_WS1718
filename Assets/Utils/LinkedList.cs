@@ -45,6 +45,7 @@ namespace Assets.Utils
             {
                 i++;
                 if (node == Last) break;
+                node = node.Next;
             }
             _count = i;
             CountValid = true;
@@ -77,6 +78,10 @@ namespace Assets.Utils
             _count++;
         }
 
+        /** Split Path in two at value.
+         * Stores path from Start to value in this object, And path from value to End in Branch.
+         * returns true if successful false otherwise.
+         */
         public bool SplitAt(ValueType value, ref LinkedList<ValueType> Branch, bool overlap = false)
         {
             if (First == null || Last == null) return false;
@@ -94,8 +99,8 @@ namespace Assets.Utils
                     Branch.First = node;
                     Branch._count = _count - i;
                     Branch.CountValid = CountValid;
-                    Last = node.Previous;
-                    node.Previous = null;
+                    Last = Branch.First.Previous;
+                    Branch.First.Previous = null;
                     Last.Next = null;
                     _count = i;
                     if (overlap) this.AddLast(node.Value);
@@ -107,7 +112,11 @@ namespace Assets.Utils
             return false;
         }
 
-        public bool SplitAt(LinkedListNode<ValueType> At, ref LinkedList<ValueType> Branch, bool overlap = false)
+
+        /** Split path at given node.
+         * WARNING: it will not be tested wheter node is in path.
+         */
+        public bool SplitAt(ref LinkedListNode<ValueType> At, ref LinkedList<ValueType> Branch, bool overlap = false)
         {
             if (At == null) return false;
             if (First == null || Last == null) return false;

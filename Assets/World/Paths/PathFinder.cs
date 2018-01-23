@@ -102,7 +102,7 @@ public class PathFinder
     {
         // don't bother with empty path
         if (path.Count == 0) return;
-        PathBranchAutomaton.BranchPaths(path, StreetMap, Hub, paths);
+        PathBranchAutomaton.BranchPaths(path, StreetMap, ref Hub, paths);
     }
 
     public void CreateNetwork(TerrainChunk terrain, TerrainChunkEdge[] terrainEdges)

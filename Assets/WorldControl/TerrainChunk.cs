@@ -458,6 +458,10 @@ public class TerrainChunk
            
             UnityEngine.Debug.Log(string.Format("Took {0} ms to export debug Images at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
             stopWatch.Stop();
+            foreach (var path in paths.paths)
+            {
+                path.DrawDebugLine(paths.paths.Count);
+            }
         }
         if (UnityTerrain != null)
         {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using Assets.Utils;
 
 namespace Assets.World.Paths
 {
@@ -10,7 +11,7 @@ namespace Assets.World.Paths
      **/
     public static class PathBranchAutomaton
     {
-        public static void BranchPaths(List<Vector2Int> path, int[,] StreetMap, VertexHub Hub, List<NavigationPath> pathStorage)
+        public static void BranchPaths(List<Vector2Int> path, int[,] StreetMap, ref VertexHub Hub, List<NavigationPath> pathStorage)
         {
             // check sanity
             int lastLabel, Status;
@@ -35,11 +36,14 @@ namespace Assets.World.Paths
                 {
                     Debug.Log(string.Format("Got Status -1 when branching path {0} -> {1}", path[0], path[path.Count - 1]));
                     //recover to this point.
+                    //rawPath.Start.Unmount(rawPath);
+                    if (rawPath.Start != null && rawPath.End != null) rawPath.Unmount();
                     rawPath.End = Hub.Get(node.Value);
                     rawPath.Mount();
                     pathStorage.Add(rawPath);
                     break;
                 }
+
                 int label = StreetMap[node.Value.x, node.Value.y];
                 if (Status == 0) // status 1 denotes normal traversal of the path. 
                 {
@@ -48,7 +52,7 @@ namespace Assets.World.Paths
                         Mark(node, rawPath.Label, StreetMap);
                     } else // we have to follow an existing path.
                     {
-                        BranchOn(node, label, rawPath, Hub, pathStorage, StreetMap, ref lastLabel, ref Status);
+                        BranchOn(node, label, rawPath, ref Hub, pathStorage, StreetMap, ref lastLabel, ref Status);
                         if (Status >= 0)
                             node = rawPath.Waypoints.First.Next;
                         continue;
@@ -97,9 +101,8 @@ namespace Assets.World.Paths
 
         private static void SplitAndRemount(int label, Vector2Int Value, List<NavigationPath> pathStorage, VertexHub Hub, int[,] Streetmap, ref NavigationPath CollisionBranch)
         {
-            CollisionBranch.Waypoints = new Utils.LinkedList<Vector2Int>();
             pathStorage[label - 1].Unmount();
-            if (pathStorage[label - 1].Split(Value, ref CollisionBranch, Hub))
+            if (pathStorage[label - 1].Split(Value, ref CollisionBranch, ref Hub))
             {
                 pathStorage[label - 1].Mount();
                 CollisionBranch.Mount();
@@ -110,8 +113,11 @@ namespace Assets.World.Paths
                 {
                     Mark(BranchNode, CollisionBranch.Label, Streetmap);
                     BranchNode = BranchNode.Next;
-                }
+                } 
                 pathStorage.Add(CollisionBranch);
+            } else
+            {
+                pathStorage[label - 1].Mount();
             }
         }
 
@@ -130,9 +136,9 @@ namespace Assets.World.Paths
 
                 // set remainder of path.
                 rawPath.Waypoints.First = node.Previous;
-                node.Previous.Previous = null;
-                rawPath.Start = Hub.Get(node.Previous.Value);
-            } else
+                rawPath.Waypoints.First.Previous = null;
+                rawPath.Start = Hub.Get(rawPath.Waypoints.First.Value);
+            } else // TODO: investigate is it possible that node.previous is not set?
             {
                 rawPath.Waypoints.First = node;
                 rawPath.Start = Hub.Get(node.Value);
@@ -152,6 +158,7 @@ namespace Assets.World.Paths
             WayVertex V, W;
             V = W = null;
 
+            
             // Check if one of the points is a WayVertex if so ignore it and continue onwards
             if (Hub.Contains(node.Value))
             {
@@ -207,13 +214,14 @@ namespace Assets.World.Paths
             rawPath.Label = pathStorage.Count + 1;
         }
 
-        private static void BranchOn(Utils.LinkedListNode<Vector2Int> node, int label, NavigationPath rawPath, VertexHub Hub, List<NavigationPath> pathStorage, int[,] Streetmap, ref int lastLabel, ref int status)
+        private static void BranchOn(Utils.LinkedListNode<Vector2Int> node, int label, NavigationPath rawPath, ref VertexHub Hub, List<NavigationPath> pathStorage, int[,] Streetmap, ref int lastLabel, ref int status)
         {
             bool WayVertexExists = Hub.Contains(node.Value);
             // finalize previous path
             NavigationPath NextRawPath = new NavigationPath();
             Vector2Int value = new Vector2Int(node.Value.x, node.Value.y);
-            if (rawPath.Split(node.Value, ref NextRawPath, Hub))
+            if (rawPath.Start != null && rawPath.End != null) rawPath.Unmount();
+            if (rawPath.SplitAt(ref node, ref NextRawPath, ref Hub))
             {
                 rawPath.Mount();
                 pathStorage.Add(rawPath);
@@ -268,6 +276,14 @@ namespace Assets.World.Paths
     {
         private Dictionary<Vector2Int, WayVertex> Storage;
 
+        public void Cleanup()
+        {
+            foreach(WayVertex V in Storage.Values)
+            {
+                V.Cleanup();
+            }
+        }
+
         public VertexHub()
         {
             Storage = new Dictionary<Vector2Int, WayVertex>();
@@ -305,7 +321,7 @@ namespace Assets.World.Paths
         }
     }
 
-    public class WayVertex
+    public class WayVertex: IEquatable<WayVertex>
     {
         public Vector2Int Pos;
         private HashSet<PathWithDirection> Paths;
@@ -324,7 +340,8 @@ namespace Assets.World.Paths
                 Paths.Remove(dpath);
                 return true;
             }
-            else return false;
+            Debug.Log(string.Format("Could not remove path {0} {1} because it is not in WayVertex", path.Start.Pos, path.End.Pos));
+            return false;
         }
 
         public bool Mount(NavigationPath path, bool forward = true)
@@ -408,6 +425,29 @@ namespace Assets.World.Paths
         {
             return Paths.Count;
         }
+
+        public bool Equals(WayVertex other)
+        {
+            return Pos.Equals(other.Pos);
+        }
+
+        internal void Cleanup()
+        {
+            foreach(PathWithDirection p in GetPaths())
+            {
+                // remove paths that have been added wrongly.
+                if (p.path.Waypoints.Count == 0) Unmount(p.path);
+                if (p.path.Start != this && p.path.End != this)
+                {
+                    Unmount(p.path);
+                    p.path.Mount();
+                }
+                if (p.path.Waypoints.First.Value != this.Pos && p.path.Waypoints.Last.Value != this.Pos) {
+                    Unmount(p.path);
+                    p.path.Mount();
+                    }
+            }
+        }
     }
 
     public class NavigationPath: IEquatable<NavigationPath>
@@ -464,7 +504,6 @@ namespace Assets.World.Paths
             return success;
         }
 
-
         public void Finalize(VertexHub Hub)
         {
             if (Waypoints.Count == 0 || Waypoints.First == null || Waypoints.Last == null) return;
@@ -490,6 +529,7 @@ namespace Assets.World.Paths
         {
             Vector2 FlatWorldCoordinate = new Vector2();
             Utils.LinkedListNode<Vector2Int> node = Waypoints.First;
+            Waypoints.RevalidateCount();
             WorldWaypoints = new Vector3[Waypoints.Count];
             int i = 0;
             while (node != null)
@@ -517,15 +557,42 @@ namespace Assets.World.Paths
             }
         }
 
+        /** Draws a line representing the world coordinates 
+         * Not thread safe Debug method.
+         * WARNING: Only run this on the main thread.
+         * 
+         * parameter: 
+         *  pathsTotal (int): Number of paths being drawn in total. Used for distincitve color mapping.
+         */
+        public void DrawDebugLine(int pathsTotal, float duration = 250f, bool zTest=false, float delta=.1f)
+        {
+            Color MyColor = Colors.RainbowColor(Label, pathsTotal + 1);
+            Vector3 Offset = new Vector3(
+                delta * ((float)(Label) / (float)(pathsTotal + 1)), 
+                1f, 
+                delta * ((float)(Label) / (float)(pathsTotal + 1))
+            );
+            for (int i=1; i<WorldWaypoints.Length; i++)
+            {
+                Debug.DrawLine(
+                    WorldWaypoints[i - 1] + Offset, 
+                    WorldWaypoints[i]     + Offset, 
+                    MyColor, 
+                    duration,
+                    zTest
+                );
+            }
+        }
+
         public bool Equals(NavigationPath other)
         {
             return (Start == other.Start && End == other.End) || (Start == other.End && End == other.Start);
         }
 
-        public bool Split(Assets.Utils.LinkedListNode<Vector2Int> At, ref NavigationPath newPath, VertexHub Hub)
+        public bool SplitAt(ref Assets.Utils.LinkedListNode<Vector2Int> At, ref NavigationPath newPath, ref VertexHub Hub)
         {
             int length = Waypoints.Count;
-            if (Waypoints.SplitAt(At, ref newPath.Waypoints, true))
+            if (Waypoints.SplitAt(ref At, ref newPath.Waypoints, true))
             {
                 // set path boundaries
                 End = Hub.Get(Waypoints.Last.Value);
@@ -537,9 +604,8 @@ namespace Assets.World.Paths
             else return false;
         }
 
-        public bool Split(Vector2Int Value, ref NavigationPath newPath, VertexHub Hub)
+        public bool Split(Vector2Int Value, ref NavigationPath newPath, ref VertexHub Hub)
         {
-            int length = Waypoints.Count;
             if (Waypoints.SplitAt(Value, ref newPath.Waypoints, true))
             {
                 // set path boundaries
