@@ -122,9 +122,9 @@ namespace Assets.Utils
                 // iteratively grow tree.
                 var old = root;
                 float dx = pos.x - root.Boundary.Center.x;
-                dx = dx == 0 ? 0 : Mathf.Sign(dx); // dx \in \{-1, 0 ,1}
+                dx = dx == 0 ? 1 : Mathf.Sign(dx); // dx \in \{-1 ,1}
                 float dy = pos.y - root.Boundary.Center.y;
-                dy = dy == 0 ? 0 : Mathf.Sign(dy); // dy \in \{-1, 0, 1}
+                dy = dy == 0 ? 1 : Mathf.Sign(dy); // dy \in \{-1, 1}
 
                 root = new QuadTree<T>(
                     new RectangleBound(
@@ -134,13 +134,13 @@ namespace Assets.Utils
                 );
                 root.Subdivide(); // create subnodes.
                 // override corresponding subnode with old tree.
-                if (dx >= 0)
+                if (dx == 1)
                 {
-                    if (dy >= 0) root.NE = old;
+                    if (dy == 1) root.NE = old;
                     else root.SE = old;
                 } else
                 {
-                    if (dy >= 0) root.NW = old;
+                    if (dy == 1) root.NW = old;
                     else root.SW = old;
                 }
             }
