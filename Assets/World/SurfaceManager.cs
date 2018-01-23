@@ -26,8 +26,7 @@ public class SurfaceManager : MonoBehaviour {
 			
 			bool success = false;
 			Chunks = Chunks.PutAndGrow(ref success, tile.GridCoords, 0, tile);
-			// TODO: Error checking
-			
+            // TODO: Error checking
 			ChunkCount++;
 			Debug.Log(string.Format("We now have {0} chunks loaded.", ChunkCount));
 
@@ -46,8 +45,6 @@ public class SurfaceManager : MonoBehaviour {
 					AI.GetComponent<AI_Simple>().enabled = true;
 					AI.SetActive(true);
 				}
-				//player.SetActiveRecursively(true);
-				//AI.SetActiveRecursively(true);
 			}
 		}
 	}
@@ -111,7 +108,7 @@ public class SurfaceManager : MonoBehaviour {
 	public TerrainChunk GetTile(Vector2Int pos)
 	{
 		var data = Chunks.Get(new Vector2(pos.x, pos.y));
-		return (data == null ? null : data.label);
+        return (data == null ? null : data.label);
 	}
 }
  

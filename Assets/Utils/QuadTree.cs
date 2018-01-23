@@ -158,19 +158,7 @@ namespace Assets.Utils
                 return root;
             }
             // do normal put otherwise.
-            if (Data.Count < NodeCapacity)
-            {
-                Data.Add(data);
-                success = true;
-                return this;
-            }
-            if (NW == null) Subdivide();
-
-            if (NW.Put(data)) { success = true; return this; }
-            if (NE.Put(data)) { success = true; return this; }
-            if (SW.Put(data)) { success = true; return this; }
-            if (SE.Put(data)) { success = true; return this; }
-            success = false;
+            success = this.Put(data);
             return this;
         }
 
@@ -192,25 +180,37 @@ namespace Assets.Utils
         }
 
         // Gets Data at the exact position. Returns first match only.
-        public QuadTreeData<T> Get(Vector2 position)
+        public QuadTreeData<T> Get(Vector2 position, float delta = .1f)
         {
             if (!Boundary.ContainsPoint(position)) return null;
             
-            var root = this;
-            while (root != null) {
-                foreach (QuadTreeData<T> dataPoint in root.Data)
+            foreach (QuadTreeData<T> dataPoint in Data)
+            {
+                if ((position - dataPoint.location).magnitude <= delta)
                 {
-                    if (position == dataPoint.location)
-                    {
-                        return dataPoint;
-                    }
+                    return dataPoint;
                 }
-                
-                if (root.NW != null && root.NW.Boundary.ContainsPoint(position)) root = root.NW;
-                else if (root.NE != null && NE.Boundary.ContainsPoint(position)) root = root.NE;
-                else if (root.SW != null && root.SW.Boundary.ContainsPoint(position)) root = root.SW;
-                else if (root.SE != null && root.SE.Boundary.ContainsPoint(position)) root = root.SE;
-                else root = null;
+            }
+            QuadTreeData<T> finding;
+            if (NW != null && NW.Boundary.ContainsPoint(position))
+            {
+                finding = NW.Get(position, delta);
+                if (finding != null) return finding;
+            }
+            if (NE != null && NE.Boundary.ContainsPoint(position))
+            {
+                finding = NE.Get(position, delta);
+                if (finding != null) return finding;
+            }
+            if (SW != null && SW.Boundary.ContainsPoint(position))
+            {
+                finding = SW.Get(position, delta);
+                if (finding != null) return finding;
+            }
+            if (SE != null && SE.Boundary.ContainsPoint(position))
+            {
+                finding = SE.Get(position, delta);
+                if (finding != null) return finding;
             }
             return null;
         }

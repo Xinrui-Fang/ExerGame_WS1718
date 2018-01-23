@@ -506,6 +506,7 @@ namespace Assets.World.Paths
 
         public void Finalize(VertexHub Hub)
         {
+            Waypoints.RevalidateCount();
             if (Waypoints.Count == 0 || Waypoints.First == null || Waypoints.Last == null) return;
             if (Start != null && Start.Pos != Waypoints.First.Value) {
                 Start.Unmount(this);
