@@ -104,8 +104,7 @@ namespace Assets.World.Paths
             pathStorage[label - 1].Unmount();
             if (pathStorage[label - 1].Split(Value, ref CollisionBranch, ref Hub))
             {
-                pathStorage[label - 1].Mount();
-                CollisionBranch.Mount();
+                pathStorage[label - 1].Finalize(Hub);
                 // remember split.
                 CollisionBranch.Label = pathStorage.Count() + 1;
                 Utils.LinkedListNode<Vector2Int> BranchNode = CollisionBranch.Waypoints.First;
@@ -115,9 +114,10 @@ namespace Assets.World.Paths
                     BranchNode = BranchNode.Next;
                 } 
                 pathStorage.Add(CollisionBranch);
+                CollisionBranch.Finalize(Hub);
             } else
             {
-                pathStorage[label - 1].Mount();
+                pathStorage[label - 1].Finalize(Hub);
             }
         }
 
@@ -223,20 +223,20 @@ namespace Assets.World.Paths
             if (rawPath.Start != null && rawPath.End != null) rawPath.Unmount();
             if (rawPath.SplitAt(ref node, ref NextRawPath, ref Hub))
             {
-                rawPath.Mount();
+                rawPath.Finalize(Hub);
                 pathStorage.Add(rawPath);
                 rawPath = NextRawPath;
             } else if (rawPath.Waypoints.Last != null && rawPath.Waypoints.Last.Value == value)
             {
-                rawPath.Mount();
+                rawPath.Finalize(Hub);
                 pathStorage.Add(rawPath);
                 rawPath = new NavigationPath();
                 status = -2;
             }
 
-            WayVertex V = Hub.Get(node.Value);
+            WayVertex V = Hub.Get(node.Value); // V is Vertex at Node position
             // split colision
-            if (WayVertexExists && V.Count() > 1)
+            if (!WayVertexExists)
             {
                 NavigationPath CollisionBranch = new NavigationPath();
                 pathStorage[label - 1].Unmount();
@@ -249,7 +249,7 @@ namespace Assets.World.Paths
                 {
                     status = 0;
                     lastLabel = 0;
-                    rawPath.Label = pathStorage.Count();
+                    rawPath.Label = pathStorage.Count() + 1;
                     return;
                 }
 
@@ -262,6 +262,7 @@ namespace Assets.World.Paths
                         return;
                     }
                 }
+
             }
             status = -1;
             return;

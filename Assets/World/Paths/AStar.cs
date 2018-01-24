@@ -72,6 +72,23 @@ public class AStar: IPathSearch
         prepared = true;
     }
 
+    private bool DirTest(uint current, Location2D nextV)
+    {
+        if (!nextV.valid) return false;
+        if (this.Nodes[current].CameFrom == -1) return true;
+        PathNode c = Nodes[current];
+        float dx = c.x - Nodes[c.CameFrom].x;
+        float dy = c.y - Nodes[c.CameFrom].y;
+        float dx2 = nextV.x - c.x;
+        float dy2 = nextV.y - c.y;
+        float a = Vector2.Angle(new Vector2(dx, dy), new Vector2(dx2, dy2));
+        if (a > 46)
+        {
+            return false;
+        }
+        return nextV.valid;
+    }
+
     public void CleanUp()
     {
         if (prepared)
@@ -147,7 +164,8 @@ public class AStar: IPathSearch
             NeighborSource.GetNeighbors(Nodes[current].x, Nodes[current].y, ref NeighBors);
             foreach (Location2D nextV in NeighBors)
             {
-                if (!nextV.valid) continue; // skip if e.g. neighbor is out of grid.
+                bool followsDir = DirTest(current, nextV);
+                if (!(nextV.valid && followsDir)) continue; // skip if e.g. neighbor is out of grid.
                 if (NodeCache.ContainsKey(nextV))
                 {
                     next = (uint) NodeCache[nextV];

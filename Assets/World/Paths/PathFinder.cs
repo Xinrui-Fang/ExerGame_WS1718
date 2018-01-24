@@ -65,6 +65,7 @@ public class PathFinder
         }
         // Find the path using the search algorithm
         List<Vector2Int> path = SearchAlgo.Search(ref start, ref end);
+        
         if (path.Count == 0)
         {
             return;
@@ -72,6 +73,7 @@ public class PathFinder
             //path = new List<Vector2Int>(MapTools.BresenhamOrthogonalLine(start, end));
         }
         // Remember Path
+        //AddToStreetMap(PathSmoother.Smoothen(path, StreetMap));
         AddToStreetMap(path);
     }
 
@@ -171,6 +173,8 @@ public class PathFinder
                 }
                 node = node.Next;
             }
+            PathStraighter.Straighten(ref path.Waypoints);
+            path.TranslateToWorldSpace(terrain);
         }
         //paths.Clear();
 
