@@ -91,7 +91,7 @@ public class BicycleV2 : MonoBehaviour {
         forward = longestPath.forward;
         if (!forward)
         {
-            nextNode = path.WorldWaypoints.Length;
+            nextNode = path.WorldWaypoints.Length -1;
         }
         else
         {

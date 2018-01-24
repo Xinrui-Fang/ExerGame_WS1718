@@ -82,9 +82,13 @@ public class PathFinder
      */
     public float StepCostsRoad(int ax, int ay, int bx, int by)
     {
-        if (StreetMap[ax, ay] > 0  && StreetMap[bx, by] > 0) return StepCosts(ax, ay, bx, by);
-        if (StreetMap[ax, ay] > 0 || StreetMap[bx, by] > 0) return 2f * StepCosts(ax, ay, bx, by);
-        return 4f * StepCosts(ax, ay, bx, by);
+        float boundaryFactor = 1f;
+        if (ax == 0 || ay == 0 || ax == Resolution - 1 || ay == Resolution - 1) boundaryFactor *= 4f;
+        if (bx == 0 || by == 0 || bx == Resolution - 1 || by == Resolution - 1) boundaryFactor *= 4f;
+
+        if (StreetMap[ax, ay] > 0  && StreetMap[bx, by] > 0) return boundaryFactor * StepCosts(ax, ay, bx, by);
+        if (StreetMap[ax, ay] > 0 || StreetMap[bx, by] > 0) return boundaryFactor * 2f * StepCosts(ax, ay, bx, by);
+        return 4f * boundaryFactor * StepCosts(ax, ay, bx, by);
     }
 
     /* Smooth terrain around road with the defined Kernels

@@ -131,7 +131,7 @@ public class TerrainChunk
         Vector2Int upperBound = new Vector2Int(Settings.HeightmapResolution - 1, Settings.HeightmapResolution - 1);
         PathTools.Bounded8Neighbours neighbours = new PathTools.Bounded8Neighbours(ref lowerBound, ref upperBound);
         PathTools.NormalYThresholdWalkable walkable_src = new PathTools.NormalYThresholdWalkable(
-            Mathf.Cos(Mathf.Deg2Rad * 30),
+            Mathf.Cos(Mathf.Deg2Rad * 35),
             Normals, 
             Settings.HeightmapResolution, ref lowerBound, ref upperBound);
         PathTools.CachedWalkable walkable = new PathTools.CachedWalkable(walkable_src.IsWalkable, lowerBound, upperBound, Settings.HeightmapResolution);

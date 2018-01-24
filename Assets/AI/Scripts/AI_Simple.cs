@@ -71,7 +71,7 @@ public class AI_Simple : MonoBehaviour
         forward = longestPath.forward;
         if (!forward)
         {
-            nextNode = path.WorldWaypoints.Length;
+            nextNode = path.WorldWaypoints.Length -1;
         } else
         {
             nextNode = 0;
