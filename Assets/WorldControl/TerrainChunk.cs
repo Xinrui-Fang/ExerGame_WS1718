@@ -210,6 +210,8 @@ public class TerrainChunk
         
         UnityEngine.Debug.Log(string.Format("Took {0} ms to create Vegetation and Splatmap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
         stopWatch.Stop();
+
+        paths.FinalizePaths(this);
     }
     
     public void CheckNeighbors()
@@ -508,7 +510,7 @@ public class TerrainChunk
         terrain.treeBillboardDistance = Settings.TreeBillBoardDistance;
         terrain.treeDistance = Settings.TreeRenderDistance;
         terrain.detailObjectDistance = Settings.DetailRenderDistance;
-        terrain.heightmapPixelError = 32;
+        terrain.heightmapPixelError = 12;
         
         terrain.castShadows = true;
         terrain.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.BlendProbesAndSkybox;

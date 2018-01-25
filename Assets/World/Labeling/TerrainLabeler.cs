@@ -50,31 +50,13 @@ public static class TerrainLabeler
                 {
                     splatWeights[3] = 1f;
                 }
-                else if (normal.y > .7 && height > VegetationMaxHeight) // snow
-                {
-                    float snowlevel = Mathf.InverseLerp(.7f, 1f, normal.y) * Mathf.InverseLerp(VegetationMaxHeight, 1f, height);
-                    splatWeights[1] = snowlevel;
-                    splatWeights[2] = (1f - snowlevel) * moist;
-                    splatWeights[2] = (1f - snowlevel) * (1f - moist);
-                }
+                
                 else if (terrain.Objects.Collides(streetCollider, QuadDataType.street)) // street
                 {
                     splatWeights[4] = 1f;
                     splatWeights[8] = .5f;
                 }
-                else if (terrain.Objects.Collides(treeCollider, QuadDataType.vegetation)) // tree soil
-                {
-                    if (normal.y > .9)
-                    {
-                        splatWeights[8] = .5f;
-                        splatWeights[7] = .5f;
-                        splatWeights[0] = .1f;
-                    } else
-                    {
-                        splatWeights[6] = 1f;
-                        splatWeights[2] = 1f;
-                    }
-                }
+                
                 else
                 {
                     
@@ -104,6 +86,23 @@ public static class TerrainLabeler
                     //splatWeights[3] = (1f - Mathf.InverseLerp(0f, .5f, normal.y)) * Mathf.Pow(Mathf.InverseLerp(.9f - WaterLevel, 1f, 1f - height), 2f) * (1f - moisture[y_hm, x_hm]);
                     //splatWeights[4] = splatWeights[0] * .7f + splatWeights[3] * .5f * (1f-moisture);
                     splatWeights[5] = slope * (1f - moist) * RockLikelihood;
+
+                    if (terrain.Objects.Collides(treeCollider, QuadDataType.vegetation)) // tree soil
+                    {
+                        splatWeights[8] += .25f * normal.y;
+                        splatWeights[7] += .25f * normal.y;
+                        splatWeights[0] += .21f * normal.y;
+                        splatWeights[6] += .5f * (1 - normal.y);
+                        splatWeights[2] += .5f * (1 - normal.y);
+                    }
+
+                    if (normal.y > .8f && height >= VegetationMaxHeight) // snow
+                    {
+                        float snowlevel = Mathf.Pow(Mathf.InverseLerp(.8f, .95f, normal.y) * Mathf.InverseLerp(VegetationMaxHeight, .9f, height), 2f);
+                        splatWeights[1] = snowlevel * splatWeights.GetLength(0) * 20f;
+                        //splatWeights[2] = (1f - snowlevel) * moist;
+                        //splatWeights[2] = (1f - snowlevel) * (1f - moist);
+                    }
                 }
 
                 //Debug.Log(String.Format("({0}, {1})", x_heightmap, y_heightmap));

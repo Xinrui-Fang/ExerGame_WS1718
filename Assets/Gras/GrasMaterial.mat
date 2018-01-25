@@ -69,7 +69,7 @@ Material:
     - _GlossyReflections: 1
     - _GrassHeight: 0.8
     - _GrassMaxHeight: 1
-    - _GrassMinHeight: 0.6
+    - _GrassMinHeight: 0.5
     - _GrassWidth: 0.8
     - _MaxCameraDistance: 250
     - _MaxDrawDistance: 150

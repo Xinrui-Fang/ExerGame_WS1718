@@ -69,7 +69,7 @@ public class GrasField
             if (moisture[z, x] < .3f) continue;
             float health = (Mathf.InverseLerp(.3f, 1f, moisture[z, x]) + Mathf.InverseLerp(0.85f, 1f, TerrainNormals[z, x].y)) / 2f;
             LargeCircle.Center = flatCoord;
-            if (Terrain.Objects.Collides(LargeCircle, QuadDataType.vegetation)) health *= .75f;
+            if (Terrain.Objects.Collides(LargeCircle, QuadDataType.vegetation)) health *= .8f;
             if (health < .3f) continue;
             Color healthColor = Color.Lerp(DryColor, HealtyColor, health * health);
             float xd = -spreadHalf + Spread * (float)prng.NextDouble();

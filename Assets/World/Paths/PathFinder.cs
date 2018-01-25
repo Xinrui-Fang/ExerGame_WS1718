@@ -157,10 +157,7 @@ public class PathFinder
         foreach (NavigationPath path in paths)
         {
             path.Finalize(Hub);
-            path.TranslateToWorldSpace(terrain);
-            Debug.Log(string.Format("Chunk {0}, got path from {1} to {2} of lenght {3}", terrain.GridCoords, path.Start.Pos, path.End.Pos, path.WorldWaypoints.Length));
-            path.Start.Mount(path);
-            path.End.Mount(path, false);
+            path.Mount();
             if (maxLength < path.Waypoints.Count)
             {
                 StartingPoint = path.Start;
@@ -180,8 +177,16 @@ public class PathFinder
             PathStraighter.Straighten(ref path.Waypoints);
             path.TranslateToWorldSpace(terrain);
         }
-        //paths.Clear();
+    }
 
+    public void FinalizePaths(TerrainChunk terrain)
+    {
+        foreach (NavigationPath path in paths)
+        {
+            path.Finalize(Hub);
+            path.TranslateToWorldSpace(terrain);
+        }
+        //paths.Clear();
     }
 
     private void ConnectPoints(List<Vector2Int> Points)
