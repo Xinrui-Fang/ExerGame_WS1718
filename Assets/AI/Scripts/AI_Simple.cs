@@ -18,6 +18,29 @@ public class AI_Simple : MonoBehaviour
     private NavigationPath path;
     private int nextNode;
 
+    public void PlaceBike()
+    {
+        Ray posRay = new Ray(transform.position + 10f * transform.up, -transform.up);
+        RaycastHit posHit;
+        if (Physics.Raycast(posRay, out posHit, 20f))
+        {
+            transform.position = posHit.point;
+        }
+
+        Vector3 pos1 = -transform.right * .25f + transform.position;
+        Vector3 pos2 = transform.right * .25f + transform.position;
+        Ray ray1 = new Ray(pos1 + 10f * transform.up, -transform.up);
+        Ray ray2 = new Ray(pos2 + 10f * transform.up, -transform.up);
+        RaycastHit hit1, hit2;
+        if (Physics.Raycast(ray1, out hit1, 20f))
+        {
+            if (Physics.Raycast(ray2, out hit2, 20f))
+            {
+                transform.rotation = Quaternion.LookRotation(hit1.point - hit2.point);
+                transform.rotation *= Quaternion.Euler(0, 90, 0);
+            }
+        }
+    }
 
     private int GetNextPath(WayVertex vertex, int node)
     {
@@ -93,9 +116,10 @@ public class AI_Simple : MonoBehaviour
         // move until it reach it
         Vector3 pos = Vector3.MoveTowards(transform.position, path.WorldWaypoints[nextNode], maxSpeed * Time.deltaTime);
 
-            Quaternion rotationQ = Quaternion.LookRotation(path.WorldWaypoints[nextNode] - transform.position);
-            transform.position = pos;
-            transform.rotation = rotationQ;
-            transform.rotation *= Quaternion.Euler(0, 90, 0);
+        Quaternion rotationQ = Quaternion.LookRotation(path.WorldWaypoints[nextNode] - transform.position);
+        transform.position = pos;
+        transform.rotation = rotationQ;
+        transform.rotation *= Quaternion.Euler(0, 90, 0);
+        PlaceBike();
     }
 }

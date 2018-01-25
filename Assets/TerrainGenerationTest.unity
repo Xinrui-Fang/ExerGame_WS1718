@@ -316,7 +316,8 @@ Prefab:
       propertyPath: m_AllowMSAA
       value: 1
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 65503665610058302, guid: 61717b4acaa16fd4eb1d517afb847259, type: 2}
   m_ParentPrefab: {fileID: 100100000, guid: 61717b4acaa16fd4eb1d517afb847259, type: 2}
   m_IsPrefabParent: 0
 --- !u!1 &876822337 stripped
@@ -638,8 +639,8 @@ MonoBehaviour:
     TreeCorrection: {x: 0, y: 0, z: 0}
     MaxVegetaionDensity: 5
     MaxGrasCount: 30000
-    HealthyGrasColor: {r: 0.21955016, g: 0.42647058, b: 0.13797578, a: 0.78431374}
-    DryGrasColor: {r: 0.52205884, g: 0.51171154, b: 0.17657875, a: 0.78431374}
+    HealthyGrasColor: {r: 0.071, g: 0.497, b: 0.078, a: 0.78431374}
+    DryGrasColor: {r: 0.703, g: 0.634, b: 0.284, a: 0.78431374}
     GrasMaterial: {fileID: 2100000, guid: c730df763a826a14e9c7ab714faca271, type: 2}
 --- !u!4 &1519617107
 Transform:
@@ -730,7 +731,8 @@ Prefab:
       propertyPath: m_LocalScale.z
       value: 2
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 65798311375293502, guid: d2898c3b9a4149d4184c9079430c6603, type: 2}
   m_ParentPrefab: {fileID: 100100000, guid: d2898c3b9a4149d4184c9079430c6603, type: 2}
   m_IsPrefabParent: 0
 --- !u!1 &1718068170

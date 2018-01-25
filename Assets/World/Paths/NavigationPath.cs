@@ -566,6 +566,7 @@ namespace Assets.World.Paths
          * parameter: 
          *  pathsTotal (int): Number of paths being drawn in total. Used for distincitve color mapping.
          */
+        [System.Diagnostics.Conditional("DEBUG")]
         public void DrawDebugLine(int pathsTotal, float duration = 250f, bool zTest=false, float delta=.1f)
         {
             Color MyColor = Colors.RainbowColor(Label, pathsTotal + 1);

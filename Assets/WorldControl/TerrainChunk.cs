@@ -440,31 +440,32 @@ public class TerrainChunk
         myterrain.Flush();
     }
 
+    [Conditional("DEBUG")]
+    public void ExportDebugImages()
+    {
+        Stopwatch stopWatch = new Stopwatch();
+        stopWatch.Start();
+        FloatImageExporter HimgExp = new FloatImageExporter(0f, 1f);
+        IntImageExporter CimgExp = new IntImageExporter(-1, Connectivity.NumLabels - 1);
+        IntImageExporter KMimgExp = new IntImageExporter(-1, (ClusterCount - 1));
+        IntImageExporter SimgExp = new IntImageExporter(-1, paths.paths.Count + 1);
+        HimgExp.Export(string.Format("HeightmapAt{0}-{1}", GridCoords.x, GridCoords.y), Heights);
+        HimgExp.Export(string.Format("MoistureAt{0}-{1}", GridCoords.x, GridCoords.y), Moisture);
+        CimgExp.Export(string.Format("ConnectivityMapAt{0}-{1}", GridCoords.x, GridCoords.y), Connectivity.Labels);
+        KMimgExp.Export(string.Format("ClusterMapAt{0}-{1}", GridCoords.x, GridCoords.y), ClusterMap);
+        SimgExp.Export(string.Format("StreetMapAt{0}-{1}", GridCoords.x, GridCoords.y), paths.StreetMap);
+
+        UnityEngine.Debug.Log(string.Format("Took {0} ms to export debug Images at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        stopWatch.Stop();
+        foreach (var path in paths.paths)
+        {
+            path.DrawDebugLine(paths.paths.Count);
+        }
+    }
+
     public void Flush(SurfaceManager SM)
     {
-        //
-        if (DEBUG_ON)
-        {
-
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
-            FloatImageExporter HimgExp = new FloatImageExporter(0f, 1f);
-            IntImageExporter CimgExp = new IntImageExporter(-1, Connectivity.NumLabels - 1);
-            IntImageExporter KMimgExp = new IntImageExporter(-1, (ClusterCount - 1));
-            IntImageExporter SimgExp = new IntImageExporter(-1, paths.paths.Count + 1);
-            HimgExp.Export(string.Format("HeightmapAt{0}-{1}", GridCoords.x, GridCoords.y), Heights);
-            HimgExp.Export(string.Format("MoistureAt{0}-{1}", GridCoords.x, GridCoords.y), Moisture);
-            CimgExp.Export(string.Format("ConnectivityMapAt{0}-{1}", GridCoords.x, GridCoords.y), Connectivity.Labels);
-            KMimgExp.Export(string.Format("ClusterMapAt{0}-{1}", GridCoords.x, GridCoords.y), ClusterMap);
-            SimgExp.Export(string.Format("StreetMapAt{0}-{1}", GridCoords.x, GridCoords.y), paths.StreetMap);
-           
-            UnityEngine.Debug.Log(string.Format("Took {0} ms to export debug Images at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
-            stopWatch.Stop();
-            foreach (var path in paths.paths)
-            {
-                path.DrawDebugLine(paths.paths.Count);
-            }
-        }
+        ExportDebugImages();
         if (UnityTerrain != null)
         {
            GameObject.Destroy(UnityTerrain.gameObject);
