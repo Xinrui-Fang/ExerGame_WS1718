@@ -82,7 +82,7 @@ public class VegetationGenerator
                 );
                 if (!success)
                 {
-                    Debug.Log(string.Format("Could not add Tree at {0} to QuadTree.", WorldCoordinates));
+                    Assets.Utils.Debug.Log(string.Format("Could not add Tree at {0} to QuadTree.", WorldCoordinates));
                 }
 
             }

@@ -56,11 +56,10 @@ public class PathFinder
 
     public void MakePath(Vector2Int start, Vector2Int end)
     {
-        //Debug.Log(string.Format("## Building Path from {0} to {1}. ##", start, end));
         // Check that start and end are on the same label
         if (Connectivity.Labels[start.y, start.x] != Connectivity.Labels[end.y, end.x])
         {
-            Debug.Log(string.Format("{0} ({2}) and {1} ({3}) are not connected!", start, end, Connectivity.Labels[start.y, start.x], Connectivity.Labels[end.y, end.x]));
+            Assets.Utils.Debug.Log(string.Format("{0} ({2}) and {1} ({3}) are not connected!", start, end, Connectivity.Labels[start.y, start.x], Connectivity.Labels[end.y, end.x]));
             return;
         }
         // Find the path using the search algorithm
@@ -69,11 +68,8 @@ public class PathFinder
         if (path.Count == 0)
         {
             return;
-            //Debug.Log("!FALLBACK Use line for path.");
-            //path = new List<Vector2Int>(MapTools.BresenhamOrthogonalLine(start, end));
         }
         // Remember Path
-        //AddToStreetMap(PathSmoother.Smoothen(path, StreetMap));
         AddToStreetMap(path);
     }
 
@@ -123,12 +119,12 @@ public class PathFinder
         int Offset = 0;
         foreach (TerrainChunkEdge edge in terrainEdges)
         {
-            //Debug.Log(string.Format("Inspecting edge to {0} from {1}", edge.ChunkPos2, edge.ChunkPos1));
+            //Assets.Utils.Debug.Log(string.Format("Inspecting edge to {0} from {1}", edge.ChunkPos2, edge.ChunkPos1));
             edge.GenerateRoadPoints();
             foreach (int roadPoint in edge.RoadPoints)
             {
                 Vector2Int p = MapTools.UnfoldToPerimeter(roadPoint + Offset, Resolution - 1);
-                //Debug.Log(string.Format("Got point {0} for {1} and Offset {2}", p, roadPoint, Offset));
+                //Assets.Utils.Debug.Log(string.Format("Got point {0} for {1} and Offset {2}", p, roadPoint, Offset));
                 int label = Connectivity.Labels[p.y, p.x];
                 if (label >= 0)
                 {
@@ -143,7 +139,7 @@ public class PathFinder
 
         for (int i=0; i < Connectivity.NumLabels; i++)
         {
-            //Debug.Log(string.Format("Looking at Connectivity group {0}", i));
+            //Assets.Utils.Debug.Log(string.Format("Looking at Connectivity group {0}", i));
             if (Points[i].Count == 1)
             {
                 DiscardedPoints.Add(Points[i][0]);
@@ -170,7 +166,7 @@ public class PathFinder
                 );
                 if (!success)
                 {
-                    Debug.Log(string.Format("Could not add Street at {0} to QuadTree with {1}.", node.Value, terrain.Objects.Boundary));
+                    Assets.Utils.Debug.Log(string.Format("Could not add Street at {0} to QuadTree with {1}.", node.Value, terrain.Objects.Boundary));
                 }
                 node = node.Next;
             }
@@ -193,12 +189,12 @@ public class PathFinder
     {
         if(Points.Count == 2)
         {
-            //Debug.Log("Making paths");
+            //Assets.Utils.Debug.Log("Making paths");
             MakePath(Points[0], Points[1]);
         }
         else
         {
-            //Debug.Log("Sorting points . . .");
+            //Assets.Utils.Debug.Log("Sorting points . . .");
             var comparer = new PointDistanceComparer(Points[0]);
             Points.Sort((a,b) => -1* comparer.Compare(a,b));
             for (int  i = 1; i < Points.Count; i++)

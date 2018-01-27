@@ -3,6 +3,7 @@ using PathInterfaces;
 using Priority_Queue;
 using System.Collections.Generic;
 using System;
+using Assets.Utils;
 
 public struct PathNode : IEquatable<PathNode>
 {
@@ -106,17 +107,16 @@ public class AStar: IPathSearch
             currentIDx = (uint) Nodes[currentIDx].CameFrom;
             path.Add(new Vector2Int(Nodes[currentIDx].x, Nodes[currentIDx].y));
         }
-        //Debug.Log(string.Format("## Found path of lenght {0} in {1} steps. ##", path.Count, Steps));
+        Assets.Utils.Debug.Log(string.Format("## Found path of lenght {0} in {1} steps. ##", path.Count, Steps), LOGLEVEL.VERBOSE);
         path.Reverse();
         return path;
     }
 
     private uint AddNode(int x, int y, float GScore = float.PositiveInfinity, int CameFrom = -1, bool Closed=false)
     {
-        //Debug.Log(string.Format("Node {0}/{1}", this.nextNodeIDx, Nodes.Length -1));
         if (nextNodeIDx >= this.Nodes.Length -1)
         {
-            Debug.Log("Doubled the AStar Node storage space.");
+            Assets.Utils.Debug.Log("Doubled the AStar Node storage space.", LOGLEVEL.VERBOSE);
             Array.Resize<PathNode>(ref this.Nodes, this.Nodes.Length * 2);
         }
         this.Nodes[nextNodeIDx].x = x;
@@ -129,7 +129,7 @@ public class AStar: IPathSearch
 
     public List<Vector2Int> Search(ref Vector2Int start, ref Vector2Int end)
     {
-        Debug.Log(string.Format("Searching for path from {0} to {1}", start, end));
+        Assets.Utils.Debug.Log(string.Format("Searching for path from {0} to {1}", start, end), LOGLEVEL.VERBOSE);
         SimplePriorityQueue<uint> Opened = new SimplePriorityQueue<uint>();
         Dictionary<Location2D, uint> NodeCache = new Dictionary<Location2D, uint>();
         Location2D[] NeighBors = NeighborSource.AllocateArray();
@@ -139,7 +139,6 @@ public class AStar: IPathSearch
         Location2D endL = Location2D.FromVector2Int(end);
         if (!Walkable(end.x, end.y))
         {
-            //Debug.Log("End node is not walkable");
             return new List<Vector2Int>();
         }
         uint current, next, endIdx;
@@ -150,13 +149,11 @@ public class AStar: IPathSearch
         NodeCache[startL] = current;
         NodeCache[endL] = endIdx;
         Opened.Enqueue(current, 0f); // FCost does not matter for first node.
-        //float dist = MapTools.OctileDistance(start, end);
         Steps = 0;
         while (Opened.Count > 0)
         {
             Steps++;
             current = Opened.Dequeue();
-            //Debug.Log(string.Format("Traversing ({0}, {1})", Nodes[current].x, Nodes[current].y));
             if (current == endIdx) 
                 return ReconstructPath(current);
 
@@ -169,21 +166,16 @@ public class AStar: IPathSearch
                 if (NodeCache.ContainsKey(nextV))
                 {
                     next = (uint) NodeCache[nextV];
-                    //Debug.Log(string.Format("{0} was in cache as {1}.", nextV, next));
                 }
                 else
                 {
-                    //Debug.Log(string.Format("{0} is not in cache.", nextV));
                     next = AddNode(nextV.x, nextV.y);
                     Nodes[next].Walkable = Walkable(nextV.x, nextV.y);
                     NodeCache.Add(nextV, next);
-                    //Debug.Log(string.Format("Added {0} to cache at {1}.", nextV, next));
                 }
                 if ((!Nodes[next].Closed) && Nodes[next].Walkable)
                 {
-                    //Debug.Log(string.Format("{0} Is Walkable and not Closed!", next));
                     float tentative_gscore = Nodes[current].GScore + RealCosts(Nodes[current].x, Nodes[current].y, Nodes[next].x, Nodes[next].y);
-                    //Debug.Log(string.Format("GScore({0}, {1}) = {2}, GScore({3}, {4}) = {5}, Tentative GScore({3}, {4}) = {6}", Nodes[current].x, Nodes[current].y, Nodes[current].GScore, Nodes[next].x, Nodes[next].y, Nodes[next].GScore, tentative_gscore));
                     if (tentative_gscore < Nodes[next].GScore)
                     {
                         Nodes[next].CameFrom = (int) current;
@@ -192,18 +184,15 @@ public class AStar: IPathSearch
                         if (Opened.Contains(next))
                         {
                             Opened.UpdatePriority(next, FScore);
-                            //Debug.Log(string.Format("Updated Priority to {1}, #Opened {0} ", Opened.Count, FScore));
-                        }
-                        else
+                        } else
                         {
                             Opened.Enqueue(next, FScore);
-                            //Debug.Log(string.Format("Enqueued Node with prio {1}, #Opened {0} ", Opened.Count, FScore));
                         }
                     }
                 }    
             }
         }
-        //Debug.Log(string.Format("## Found no path in {0} steps. ##", Steps));
+        Assets.Utils.Debug.Log(string.Format("## Found no path in {0} steps. ##", Steps), LOGLEVEL.VERBOSE);
         return new List<Vector2Int>();
     }
     

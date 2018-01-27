@@ -34,7 +34,7 @@ namespace Assets.World.Paths
                 if (Status == -2) break;
                 if (Status == -1) // Status -1 is an upredicted outcome
                 {
-                    Debug.Log(string.Format("Got Status -1 when branching path {0} -> {1}", path[0], path[path.Count - 1]));
+                    Assets.Utils.Debug.Log(string.Format("Got Status -1 when branching path {0} -> {1}", path[0], path[path.Count - 1]));
                     //recover to this point.
                     //rawPath.Start.Unmount(rawPath);
                     if (rawPath.Start != null && rawPath.End != null) rawPath.Unmount();
@@ -341,7 +341,7 @@ namespace Assets.World.Paths
                 Paths.Remove(dpath);
                 return true;
             }
-            Debug.Log(string.Format("Could not remove path {0} {1} because it is not in WayVertex", path.Start.Pos, path.End.Pos));
+            Assets.Utils.Debug.Log(string.Format("Could not remove path {0} {1} because it is not in WayVertex", path.Start.Pos, path.End.Pos));
             return false;
         }
 
@@ -390,7 +390,7 @@ namespace Assets.World.Paths
         {
             PathWithDirection longest = new PathWithDirection();
             int longestCount = 0;
-            Debug.Log(string.Format("Get Longest Path for WayVertex at {0} with {1} paths in total.", Pos, Paths.Count));
+            Assets.Utils.Debug.Log(string.Format("Get Longest Path for WayVertex at {0} with {1} paths in total.", Pos, Paths.Count));
             
             foreach (PathWithDirection dpath in Paths.AsEnumerable())
             {
@@ -408,7 +408,7 @@ namespace Assets.World.Paths
         {
             PathWithDirection longest = new PathWithDirection();
             int longestCount = 0;
-            Debug.Log(string.Format("Get Longest Path for WayVertex at {0} with {1} paths in total.", Pos, Paths.Count));
+            Assets.Utils.Debug.Log(string.Format("Get Longest Path for WayVertex at {0} with {1} paths in total.", Pos, Paths.Count));
             foreach (PathWithDirection dpath in Paths.AsEnumerable())
             {
                 if (Paths.Count == 1) return dpath;
@@ -488,7 +488,7 @@ namespace Assets.World.Paths
         {
             if (Start == null || End == null)
             {
-                Debug.Log(String.Format("Cannot mount path with missing start or end point."));
+                Assets.Utils.Debug.Log(String.Format("Cannot mount path with missing start or end point."));
                 return false;
             }
             bool success = true;
@@ -569,6 +569,7 @@ namespace Assets.World.Paths
         [System.Diagnostics.Conditional("DEBUG")]
         public void DrawDebugLine(int pathsTotal, float duration = 250f, bool zTest=false, float delta=.1f)
         {
+#if(DEBUG_SHOW_PATHS)
             Color MyColor = Colors.RainbowColor(Label, pathsTotal + 1);
             Vector3 Offset = new Vector3(
                 delta * ((float)(Label) / (float)(pathsTotal + 1)), 
@@ -577,7 +578,7 @@ namespace Assets.World.Paths
             );
             for (int i=1; i<WorldWaypoints.Length; i++)
             {
-                Debug.DrawLine(
+                UnityEngine.Debug.DrawLine(
                     WorldWaypoints[i - 1] + Offset, 
                     WorldWaypoints[i]     + Offset, 
                     MyColor, 
@@ -585,6 +586,7 @@ namespace Assets.World.Paths
                     zTest
                 );
             }
+#endif
         }
 
         public bool Equals(NavigationPath other)

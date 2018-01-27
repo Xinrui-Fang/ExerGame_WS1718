@@ -74,14 +74,14 @@ public static class KMeansClustering {
 			}
 		}
         if (indI_min >= indI_max || indJ_min >= indJ_max) {
-            Debug.Log(String.Format("Could not find lablel {0}", label));
+            Assets.Utils.Debug.Log(String.Format("Could not find lablel {0}", label));
             return new GraphNode();
         }
         /**
-		UnityEngine.Debug.Log(String.Format("Data size : {0};{1}", data.GetLength(0), data.GetLength(1)));
+		UnityEngine.Assets.Utils.Debug.Log(String.Format("Data size : {0};{1}", data.GetLength(0), data.GetLength(1)));
 
-		UnityEngine.Debug.Log(String.Format("IndI : {0} / {1}", indI_min, indI_max));
-		UnityEngine.Debug.Log(String.Format("IndJ : {0} / {1}", indJ_min, indJ_max));
+		UnityEngine.Assets.Utils.Debug.Log(String.Format("IndI : {0} / {1}", indI_min, indI_max));
+		UnityEngine.Assets.Utils.Debug.Log(String.Format("IndJ : {0} / {1}", indJ_min, indJ_max));
         **/ 
 		//float[,] Rectangle = new float[indI_max - indI_min +1 , indJ_max - indJ_min+1];
 		
@@ -199,8 +199,8 @@ public static class KMeansClustering {
 		while (Error > seuil && iteration < 20){
 			// Pour chaque centre Ck
             /**
-			UnityEngine.Debug.Log(String.Format("Number of cluster : {0}", Ck.X_Ck.Length));
-			UnityEngine.Debug.Log(String.Format("S : {0}", S));
+			UnityEngine.Assets.Utils.Debug.Log(String.Format("Number of cluster : {0}", Ck.X_Ck.Length));
+			UnityEngine.Assets.Utils.Debug.Log(String.Format("S : {0}", S));
 			**/
 			for (int k = 0 ; k <  Ck.X_Ck.Length ; k++){
 				// Pour chaque point dans la région 2Sx2S
@@ -231,12 +231,12 @@ public static class KMeansClustering {
 				}
 			}
             Error = ClusterReplacement(Ck, data, clusterMap, indI_min, indJ_min);
-			//UnityEngine.Debug.Log(String.Format("Error {0}", Error));
+			//UnityEngine.Assets.Utils.Debug.Log(String.Format("Error {0}", Error));
 
 			iteration ++;
 
 		}
-		UnityEngine.Debug.Log(String.Format("Iteration n° {0}", iteration));
+		Assets.Utils.Debug.Log(String.Format("Iteration n° {0}", iteration));
 
 		for (int i = indI_min ; i < indI_max ; i++){
 			for (int j = indJ_min ; j < indJ_max ; j++){
