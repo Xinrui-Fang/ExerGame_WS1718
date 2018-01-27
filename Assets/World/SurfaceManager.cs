@@ -9,8 +9,8 @@ public class SurfaceManager : MonoBehaviour {
 	// Contains tiles that need to be finalized on the main thread!
 	ConcurrentQueue<TerrainChunk> FinalizationQueue = new ConcurrentQueue<TerrainChunk>(17);
 	QuadTree<TerrainChunk> Chunks = new QuadTree<TerrainChunk>(new RectangleBound(new Vector2(0, 0), 5));
-	
-	int ChunkCount = 0;
+
+    int ChunkCount = 0;
 	void Build(TerrainChunk tile, Vector2Int offset)
 	{
 		tile.Build(offset);
@@ -28,7 +28,7 @@ public class SurfaceManager : MonoBehaviour {
 			Chunks = Chunks.PutAndGrow(ref success, tile.GridCoords, 0, tile);
             // TODO: Error checking
 			ChunkCount++;
-			Debug.Log(string.Format("We now have {0} chunks loaded.", ChunkCount));
+			Assets.Utils.Debug.Log(string.Format("We now have {0} chunks loaded.", ChunkCount));
 
 			if (tile.GridCoords.x == 2 && tile.GridCoords.y == 2)
 			{
@@ -92,12 +92,15 @@ public class SurfaceManager : MonoBehaviour {
 	}
 	void OnEnable() // TODO Maybe even when player moves?
 	{
-		GameObject DummyTerrainObj = GameObject.Find("Dummy Terrain");
-		Terrain DummyTerrain = DummyTerrainObj.GetComponent<Terrain>();
-		GameSettings.DetailPrototypes = DummyTerrain.terrainData.detailPrototypes;
+        GameObject DummyTerrainObj = GameObject.Find("Dummy Terrain");
+        Terrain DummyTerrain = DummyTerrainObj.GetComponent<Terrain>();
+        DummyTerrain.terrainData.SetDetailResolution(0, 0);
+        DummyTerrain.terrainData.size = new Vector3(0, 0, 0);
+        DummyTerrain.terrainData.heightmapResolution = 0;
+        GameSettings.DetailPrototypes = DummyTerrain.terrainData.detailPrototypes;
 		GameSettings.SpatProtoTypes = DummyTerrain.terrainData.splatPrototypes;
 		GameSettings.TreeProtoTypes = DummyTerrain.terrainData.treePrototypes;
-		Settings.Prepare();
+        Settings.Prepare();
 
 		Vector2Int playerPos = new Vector2Int(2, 2);
 		Settings.MainObject.transform.position.Set(2.5f * Settings.Size, Settings.Depth + 10f, 2.5f * Settings.Size);

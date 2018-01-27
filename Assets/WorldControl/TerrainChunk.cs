@@ -28,8 +28,6 @@ public class TerrainChunk
     public PathTools.ConnectivityLabel Connectivity;
     public GameObject UnityTerrain;
 
-    public bool DEBUG_ON = true;
-
     public List<TreeInstance> Trees { get; private set; }
     public List<int[,]> DetailMapList { get; internal set; }
 
@@ -114,15 +112,27 @@ public class TerrainChunk
             new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(-1,0), WorldSeed, Settings.HeightmapResolution) // W
         };
 
-        UnityEngine.Debug.Log(string.Format("Took {0} ms to prepare arrays and edges at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        Assets.Utils.Debug.Log(string.Format("Took {0} ms to prepare arrays and edges at {1}", stopWatch.ElapsedMilliseconds, GridCoords), LOGLEVEL.META);
         stopWatch.Reset();
         stopWatch.Start();
 
         Settings.GetHeightMapGenerator(GridCoords * Settings.HeightmapResolution).ManipulateHeight(ref Heights, Settings.HeightmapResolution, Settings.Size);
+
+        Assets.Utils.Debug.Log(string.Format("Took {0} ms to create Heightmap at {1}", stopWatch.ElapsedMilliseconds, GridCoords), LOGLEVEL.META);
+
+        stopWatch.Reset();
+        stopWatch.Start();
+
         Settings.Moisture.GetHeightSource(GridCoords * Settings.HeightmapResolution).ManipulateHeight(ref Moisture, Settings.HeightmapResolution, Settings.Size);
+
+        Assets.Utils.Debug.Log(string.Format("Took {0} ms to create  Moisture at {1}", stopWatch.ElapsedMilliseconds, GridCoords), LOGLEVEL.META);
+
+        stopWatch.Reset();
+        stopWatch.Start();
+
         NormalsFromHeightMap.GenerateNormals(Heights, Normals, Settings.Depth, (float)Settings.Size / (float)Settings.HeightmapResolution);
 
-        UnityEngine.Debug.Log(string.Format("Took {0} ms to create Heightmap, Normals and Moisture at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        Assets.Utils.Debug.Log(string.Format("Took {0} ms to create Normals at {1}", stopWatch.ElapsedMilliseconds, GridCoords), LOGLEVEL.META);
         
         stopWatch.Reset();
         stopWatch.Start();
@@ -137,7 +147,7 @@ public class TerrainChunk
         PathTools.CachedWalkable walkable = new PathTools.CachedWalkable(walkable_src.IsWalkable, lowerBound, upperBound, Settings.HeightmapResolution);
         PathTools.Octile8GridSlopeStepCost AStarStepCost = new PathTools.Octile8GridSlopeStepCost(5000, 10, Heights);
 
-        UnityEngine.Debug.Log(string.Format("Took {0} ms to prepare pathfinding at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        Assets.Utils.Debug.Log(string.Format("Took {0} ms to prepare pathfinding at {1}", stopWatch.ElapsedMilliseconds, GridCoords), LOGLEVEL.META);
         stopWatch.Reset();
         stopWatch.Start();
         Connectivity = new PathTools.ConnectivityLabel(Settings.HeightmapResolution, neighbours, walkable.IsWalkable);
@@ -157,7 +167,7 @@ public class TerrainChunk
         for (int i = 0; i < Connectivity.NumLabels; i++)
         {
             clusters = Mathf.CeilToInt((float)Connectivity.LabelSizes[i] / ClusterSize);
-            UnityEngine.Debug.Log(string.Format("Run Kmeans with {0} clusters for Label of size {1}", clusters, Connectivity.LabelSizes[i]));
+            Assets.Utils.Debug.Log(string.Format("Run Kmeans with {0} clusters for Label of size {1}", clusters, Connectivity.LabelSizes[i]));
             KMeansClustering.Cluster(Heights, Connectivity.Labels, ClusterMap, i, ref clusters, offset, Settings.Depth);
             offset += clusters;
         }
@@ -188,7 +198,7 @@ public class TerrainChunk
             clusterMoisture[c] /= clusterSize[c];
         }
 
-        UnityEngine.Debug.Log(string.Format("Took {0} ms to create ConnectivityMap K-Means and ClusterMap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        Assets.Utils.Debug.Log(string.Format("Took {0} ms to create ConnectivityMap K-Means and ClusterMap at {1}", stopWatch.ElapsedMilliseconds, GridCoords), LOGLEVEL.META);
         
         stopWatch.Reset();
         stopWatch.Start();
@@ -199,7 +209,7 @@ public class TerrainChunk
         paths.CreateNetwork(this, TerrainEdges);
         search.CleanUp();
 
-        UnityEngine.Debug.Log(string.Format("Took {0} ms to create route network at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        Assets.Utils.Debug.Log(string.Format("Took {0} ms to create route network at {1}", stopWatch.ElapsedMilliseconds, GridCoords), LOGLEVEL.META);
         stopWatch.Reset();
         stopWatch.Start();
 
@@ -208,7 +218,7 @@ public class TerrainChunk
         NormalsFromHeightMap.GenerateNormals(Heights, Normals, Settings.Depth, (float)Settings.Size / Settings.HeightmapResolution);
         TerrainLabeler.MapTerrain(this, Moisture, Heights, Normals, SplatmapData, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, gridCoords * Settings.HeightmapResolution);
         
-        UnityEngine.Debug.Log(string.Format("Took {0} ms to create Vegetation and Splatmap at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        Assets.Utils.Debug.Log(string.Format("Took {0} ms to create Vegetation and Splatmap at {1}", stopWatch.ElapsedMilliseconds, GridCoords), LOGLEVEL.META);
         stopWatch.Stop();
 
         paths.FinalizePaths(this);
@@ -226,7 +236,7 @@ public class TerrainChunk
     
     public void PushTop(TerrainChunk tile)
     {
-        //tile.WriteToHeightMap.WaitOne();
+        
         tile.S = this;
         var terrain = tile.UnityTerrain.GetComponent<Terrain>();
         var myterrain = UnityTerrain.GetComponent<Terrain> ();
@@ -244,10 +254,10 @@ public class TerrainChunk
             {
                 alien = MapTools.UnfoldToPerimeter(roadpoint, Settings.HeightmapResolution - 1);
 
-                UnityEngine.Debug.Log(string.Format("Point on this side: {0}; Point on other side: {1}", familiar, alien));
+                Assets.Utils.Debug.Log(string.Format("Point on this side: {0}; Point on other side: {1}", familiar, alien));
                 if (tile.paths.Hub.Contains(alien))
                 {
-                    UnityEngine.Debug.Log("Found both points.");
+                    Assets.Utils.Debug.Log("Found both points.");
                     WayVertex fVertex = paths.Hub.Get(familiar);
                     WayVertex aVertex = tile.paths.Hub.Get(alien);
                     List<PathWithDirection> fpaths = fVertex.GetPaths();
@@ -264,19 +274,19 @@ public class TerrainChunk
                 }
             }
         }
-        //tile.WriteToHeightMap.Release();
+        
     }
 
     public void PushRight(TerrainChunk tile)
     {
-        //tile.WriteToHeightMap.WaitOne();
+        
         tile.W = this;
         tile.CheckNeighbors();
         var terrain = tile.UnityTerrain.GetComponent<Terrain>();
         var myterrain = UnityTerrain.GetComponent<Terrain>();
         terrain.terrainData.SetHeights(0, 0, myterrain.terrainData.GetHeights(Settings.HeightmapResolution - 1, 0, 1, Settings.HeightmapResolution - 1));
         terrain.Flush();
-        //tile.WriteToHeightMap.Release();
+        
         // mount paths
         Vector2Int familiar, alien;
         foreach (int roadpoint in TerrainEdges[1].RoadPoints)
@@ -286,10 +296,10 @@ public class TerrainChunk
             {
                 alien = MapTools.UnfoldToPerimeter(roadpoint + 3 * (Settings.HeightmapResolution -1),  Settings.HeightmapResolution - 1);
                 
-                UnityEngine.Debug.Log(string.Format("Point on this side: {0}; Point on other side: {1}", familiar, alien));
+                Assets.Utils.Debug.Log(string.Format("Point on this side: {0}; Point on other side: {1}", familiar, alien));
                 if (tile.paths.Hub.Contains(alien))
                 {
-                    UnityEngine.Debug.Log("Found both points.");
+                    Assets.Utils.Debug.Log("Found both points.");
                     WayVertex fVertex = paths.Hub.Get(familiar);
                     WayVertex aVertex = tile.paths.Hub.Get(alien);
                     List<PathWithDirection> fpaths = fVertex.GetPaths();
@@ -310,13 +320,13 @@ public class TerrainChunk
 
     public void PullBotton(TerrainChunk tile)
     {
-        //tile.WriteToHeightMap.WaitOne();
+        
         tile.N = this;
         tile.CheckNeighbors();
         var terrain = tile.UnityTerrain.GetComponent<Terrain>();
         var myterrain = UnityTerrain.GetComponent<Terrain>();
         myterrain.terrainData.SetHeights(0, 0, terrain.terrainData.GetHeights(0, Settings.HeightmapResolution - 1, Settings.HeightmapResolution - 1, 1));
-        //tile.WriteToHeightMap.Release();
+        
 
         // mount paths
         Vector2Int familiar, alien;
@@ -327,10 +337,10 @@ public class TerrainChunk
             {
                 alien = MapTools.UnfoldToPerimeter(roadpoint + 2 * (Settings.HeightmapResolution -1), Settings.HeightmapResolution - 1);
 
-                UnityEngine.Debug.Log(string.Format("Point on this side: {0}; Point on other side: {1}", familiar, alien));
+                Assets.Utils.Debug.Log(string.Format("Point on this side: {0}; Point on other side: {1}", familiar, alien));
                 if (tile.paths.Hub.Contains(alien))
                 {
-                    UnityEngine.Debug.Log("Found both points.");
+                    Assets.Utils.Debug.Log("Found both points.");
                     WayVertex fVertex = paths.Hub.Get(familiar);
                     WayVertex aVertex = tile.paths.Hub.Get(alien);
                     List<PathWithDirection> fpaths = fVertex.GetPaths();
@@ -351,15 +361,13 @@ public class TerrainChunk
 
     public void PUllLeft(TerrainChunk tile)
     {
-        //tile.WriteToHeightMap.WaitOne();
+        
         tile.E = this;
         tile.CheckNeighbors();
         var terrain = tile.UnityTerrain.GetComponent<Terrain>();
         var myterrain = UnityTerrain.GetComponent<Terrain>();
         myterrain.terrainData.SetHeights(0, 0, terrain.terrainData.GetHeights(Settings.HeightmapResolution - 1, 0, 1, Settings.HeightmapResolution - 1));
         
-        //tile.WriteToHeightMap.Release();
-
         // mount paths
         Vector2Int familiar, alien;
         foreach (int roadpoint in TerrainEdges[3].RoadPoints)
@@ -368,10 +376,10 @@ public class TerrainChunk
             if (paths.Hub.Contains(familiar))
             {
                 alien = MapTools.UnfoldToPerimeter(roadpoint + (Settings.HeightmapResolution -1), Settings.HeightmapResolution - 1);
-                UnityEngine.Debug.Log(string.Format("Point on this side: {0}; Point on other side: {1}", familiar, alien));
+                Assets.Utils.Debug.Log(string.Format("Point on this side: {0}; Point on other side: {1}", familiar, alien));
                 if (tile.paths.Hub.Contains(alien))
                 {
-                    UnityEngine.Debug.Log("Found both points.");
+                    Assets.Utils.Debug.Log("Found both points.");
                     WayVertex fVertex = paths.Hub.Get(familiar);
                     WayVertex aVertex = tile.paths.Hub.Get(alien);
                     List<PathWithDirection> fpaths = fVertex.GetPaths();
@@ -455,7 +463,7 @@ public class TerrainChunk
         KMimgExp.Export(string.Format("ClusterMapAt{0}-{1}", GridCoords.x, GridCoords.y), ClusterMap);
         SimgExp.Export(string.Format("StreetMapAt{0}-{1}", GridCoords.x, GridCoords.y), paths.StreetMap);
 
-        UnityEngine.Debug.Log(string.Format("Took {0} ms to export debug Images at {1}", stopWatch.ElapsedMilliseconds, GridCoords));
+        Assets.Utils.Debug.Log(string.Format("Took {0} ms to export debug Images at {1}", stopWatch.ElapsedMilliseconds, GridCoords), LOGLEVEL.META);
         stopWatch.Stop();
         foreach (var path in paths.paths)
         {
@@ -487,15 +495,9 @@ public class TerrainChunk
 
         ChunkTerrainData.SetHeights(0, 0, Heights);
         ChunkTerrainData.SetAlphamaps(0, 0, SplatmapData);
-        /*
-         for (int i=0; i < DetailMapList.Count; i++)
-        {
-            ChunkTerrainData.SetDetailLayer(0, 0, i, DetailMapList[i]);
-        }
-        */
         
         Trees.Clear();
-        
+
         UnityTerrain = Terrain.CreateTerrainGameObject(ChunkTerrainData);
         UnityTerrain.name = string.Format("TerrainChunk at {0}", GridCoords);
 
@@ -503,6 +505,7 @@ public class TerrainChunk
         if (SurfaceManagerObject != null)
             UnityTerrain.transform.SetParent(SurfaceManagerObject.transform);
 
+        
         Terrain terrain =  UnityTerrain.GetComponent<Terrain>();
         terrain.castShadows = true;
         terrain.heightmapPixelError = 6;
@@ -512,14 +515,15 @@ public class TerrainChunk
         terrain.treeDistance = Settings.TreeRenderDistance;
         terrain.detailObjectDistance = Settings.DetailRenderDistance;
         terrain.heightmapPixelError = 12;
-        
         terrain.castShadows = true;
         terrain.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.BlendProbesAndSkybox;
-        UnityTerrain.SetActive(true);
+
         UnityTerrain.transform.position = new Vector3(GridCoords.x, 0, GridCoords.y) * (float) Settings.Size;
         isFinished = true;
         Synchronize(SM);
         GrasField MyGras = new GrasField(this, this.GetHashCode());
+
+        UnityTerrain.SetActive(true);
 
         // Cleanup
         Heights = new float[0, 0];

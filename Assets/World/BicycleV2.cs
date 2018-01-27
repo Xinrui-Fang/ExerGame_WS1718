@@ -11,21 +11,23 @@ public class BicycleV2 : MonoBehaviour
 
     public void PlaceBike()
     {
-        Ray posRay = new Ray(transform.position + 10f * transform.up, -transform.up);
+        float rayOffset = .1f;
+        float rayMaxDist = .2f;
+        Ray posRay = new Ray(transform.position + rayOffset * transform.up, -transform.up);
         RaycastHit posHit;
-        if (Physics.Raycast(posRay, out posHit, 20f))
+        if (Physics.Raycast(posRay, out posHit, rayMaxDist))
         {
             transform.position = posHit.point;
         }
 
         Vector3 pos1 = -transform.right * .25f + transform.position;
         Vector3 pos2 = transform.right * .25f + transform.position;
-        Ray ray1 = new Ray(pos1 + 10f * transform.up, -transform.up);
-        Ray ray2 = new Ray(pos2 + 10f * transform.up, -transform.up);
+        Ray ray1 = new Ray(pos1 + rayOffset * transform.up, -transform.up);
+        Ray ray2 = new Ray(pos2 + rayOffset * transform.up, -transform.up);
         RaycastHit hit1, hit2;
-        if (Physics.Raycast(ray1, out hit1, 20f))
+        if (Physics.Raycast(ray1, out hit1, rayMaxDist))
         {
-            if (Physics.Raycast(ray2, out hit2, 20f))
+            if (Physics.Raycast(ray2, out hit2, rayMaxDist))
             {
                 transform.rotation = Quaternion.LookRotation(hit1.point - hit2.point);
                 transform.rotation *= Quaternion.Euler(0, 90, 0);
