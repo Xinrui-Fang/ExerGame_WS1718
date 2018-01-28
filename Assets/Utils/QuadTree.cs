@@ -88,6 +88,82 @@ namespace Assets.Utils
         }
     }
 
+    public struct RayBound : IBoundary
+    {
+        public readonly Vector2 Origin;
+        public readonly Vector2 Dir;
+        public Vector2 Dest;
+        public float MaxDist;
+        public readonly float Error;
+
+        public RayBound(Vector2 origin, Vector2 dir, float maxDist, float error=1f)
+        {
+            Origin = origin;
+            Dir = dir;
+            Dir.Normalize();
+            MaxDist = maxDist;
+            Dest = Origin + MaxDist * Dir;
+            Error = error;
+        }
+
+        public void ResetDist(float dist)
+        {
+            MaxDist = dist;
+            Dest = Origin + MaxDist * Dir;
+        }
+
+        /**
+         * Function to calculate whether Ray intersetcs a given line.
+         * Based on this stackoverflow post: https://stackoverflow.com/a/1968345
+         */
+        private bool IntersectsLine(Vector2 start, Vector2 end)
+        {
+            
+            float s1_x, s1_y, s2_x, s2_y;
+            s1_x = Dest.x - Origin.x;
+            s1_y = Dest.y - Origin.y;
+            s2_x = end.x - start.x;
+            s2_y = end.y - start.y;
+
+            float s, t;
+            float det = -s2_x * s1_y + s1_x * s2_y;
+            if (Mathf.Abs(det) < 1e-20) return false;
+            s = (-s1_y * (Origin.x - start.x) + s1_x * (Origin.y - start.y)) / det;
+            t = (s2_x * (Origin.y - start.y) - s2_y * (Origin.x - start.x)) / det;
+
+            return (s >= 0 && s <= 1 && t >= 0 && t <= 1);
+        }
+
+        public bool ContainsPoint(Vector2 point)
+        {
+            bool approx_intersects = Mathf.Abs((point.x - Origin.x) % Dir.x) <= Error
+                    && Mathf.Abs((point.y - Origin.y) % Dir.y) <= Error;
+            if (approx_intersects)
+            {
+                return (point - Origin).magnitude <= MaxDist;
+            }
+            return false;
+        }
+
+        public bool Intersects(ref RectangleBound other)
+        {
+            if (other.ContainsPoint(Origin) || other.ContainsPoint(Dest)) {
+                return true;
+            } else
+            {
+                Vector2 SW = new Vector2(other.Center.x - other.HalfSize, other.Center.y - other.HalfSize);
+                Vector2 SE = new Vector2(other.Center.x + other.HalfSize, other.Center.y - other.HalfSize);
+                if (IntersectsLine(SE, SW)) return true;
+                Vector2 NW = new Vector2(other.Center.x - other.HalfSize, other.Center.y + other.HalfSize);
+                if (IntersectsLine(SW, NW)) return true;
+                Vector2 NE = new Vector2(other.Center.x + other.HalfSize, other.Center.y + other.HalfSize);
+                if (IntersectsLine(NE, NW)) return true;
+                if (IntersectsLine(NE, SE)) return true;
+            }
+            return false;
+        }
+    }
+
     public class QuadTree<T>
     {
         public const int NodeCapacity = 4;
@@ -214,11 +290,96 @@ namespace Assets.Utils
             }
             return null;
         }
-        
-         public QuadTreeData<T> Get(Vector2Int position)
-         {
-            return Get(new Vector2(position.x, position.y));
-         }
+
+        public QuadTreeData<T> Raycast(Vector2 Origin, Vector2 Dir, float MaxDist, float delta=.1f)
+        {
+            return Raycast(new RayBound(Origin, Dir, MaxDist, delta));
+        }
+
+        public QuadTreeData<T> Raycast(RayBound ray)
+        {
+            if (!ray.Intersects(ref Boundary)) return null;
+            QuadTreeData<T> bestMatch = null;
+            float bestDist = ray.MaxDist;
+            foreach (QuadTreeData<T> dataPoint in Data)
+            {
+                if(ray.ContainsPoint(dataPoint.location))
+                {
+                    float dist = (ray.Origin - dataPoint.location).magnitude;
+                    if (dist <= bestDist)
+                    {
+                        bestDist = dist;
+                        bestMatch = dataPoint;
+                    }
+                }
+            }
+            ray.ResetDist(bestDist);
+            QuadTreeData<T> finding = null;
+            List<QuadTree<T>> Intersections = new List<QuadTree<T>>(4);
+            if (NW != null && ray.Intersects(ref NW.Boundary)) Intersections.Add(NW);
+            if (NE != null && ray.Intersects(ref NE.Boundary)) Intersections.Add(NE);
+            if (SW != null && ray.Intersects(ref SW.Boundary)) Intersections.Add(SW);
+            if (SE != null && ray.Intersects(ref SE.Boundary)) Intersections.Add(SE);
+            Intersections.Sort((a, b) => (ray.Origin - a.Boundary.Center).magnitude.CompareTo((ray.Origin - b.Boundary.Center).magnitude));
+            foreach(QuadTree<T> qt in Intersections)
+            {
+                finding = qt.Raycast(ray);
+                if (finding != null) {
+                    return finding; // since we sorted the quad children we know that this finding must be better then later ones.
+                };
+            }
+            return bestMatch;
+        }
+
+
+        public QuadTreeData<T> Raycast(Vector2 Origin, Vector2 Dir, float MaxDist, QuadDataType type, float delta = .1f)
+        {
+            return Raycast(new RayBound(Origin, Dir, MaxDist, delta), type);
+        }
+
+        public QuadTreeData<T> Raycast(RayBound ray, QuadDataType type)
+        {
+            if (!ray.Intersects(ref Boundary)) return null;
+            QuadTreeData<T> bestMatch = null;
+            float bestDist = ray.MaxDist;
+            foreach (QuadTreeData<T> dataPoint in Data)
+            {
+                if (dataPoint.type == type && ray.ContainsPoint(dataPoint.location))
+                {
+                    float dist = (ray.Origin - dataPoint.location).magnitude;
+                    if (dist <= bestDist)
+                    {
+                        bestDist = dist;
+                        bestMatch = dataPoint;
+                    }
+                }
+            }
+            ray.ResetDist(bestDist);
+            QuadTreeData<T> finding = null;
+            List<QuadTree<T>> Intersections = new List<QuadTree<T>>(4);
+            if (NW != null && ray.Intersects(ref NW.Boundary)) Intersections.Add(NW);
+            if (NE != null && ray.Intersects(ref NE.Boundary)) Intersections.Add(NE);
+            if (SW != null && ray.Intersects(ref SW.Boundary)) Intersections.Add(SW);
+            if (SE != null && ray.Intersects(ref SE.Boundary)) Intersections.Add(SE);
+
+            // sort the Intersections based on their center distance to the ray origin.
+            Intersections.Sort((a, b) => (ray.Origin - a.Boundary.Center).magnitude.CompareTo((ray.Origin - b.Boundary.Center).magnitude));
+
+            foreach (QuadTree<T> qt in Intersections)
+            {
+                finding = qt.Raycast(ray, type);
+                if (finding != null)
+                {
+                    return finding; // since we sorted the quad-children we know that this finding must be better then later ones.
+                };
+            }
+            return bestMatch;
+        }
+
+        public QuadTreeData<T> Get(Vector2Int position)
+        {
+        return Get(new Vector2(position.x, position.y));
+        }
         
         private void Subdivide()
         {

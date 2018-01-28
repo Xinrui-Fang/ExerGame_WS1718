@@ -8,6 +8,26 @@ this class manage the Player's bicycle : gameplay like a train on rails
 
 public class BicycleV2 : MonoBehaviour
 {
+    public SurfaceManager surfaceManager;
+    public float speedMultiplier = 1;
+    public float maxSpeed = 5;
+    public float maxRotation = 5;
+    private TerrainChunk ActiveTerrain;
+
+    private bool forward;
+    private NavigationPath path;
+    private int nextNode;
+
+    public int ChangingViewOffset = 10;
+    // Used for QTE
+    // ChoiceEnd : Choices of possibles roads at the end of our road
+    // ChoiceStart : Choices of possibles roads at the beginning of our road (if we're going backward)
+    public List<PathWithDirection> ChoicesEnd, ChoicesStart;
+    public int QTEChoice = 0;
+    public bool QTENeedsChoice;
+    public bool QTEAtStart;
+
+    public float error = 1f;
 
     public void PlaceBike()
     {
@@ -34,27 +54,6 @@ public class BicycleV2 : MonoBehaviour
             }
         }
     }
-
-    public SurfaceManager surfaceManager;
-    public float speedMultiplier = 1;
-    public float maxSpeed = 5;
-    public float maxRotation = 5;
-    private TerrainChunk ActiveTerrain;
-
-    private bool forward;
-    private NavigationPath path;
-    private int nextNode;
-
-    public int ChangingViewOffset = 10;
-    // Used for QTE
-    // ChoiceEnd : Choices of possibles roads at the end of our road
-    // ChoiceStart : Choices of possibles roads at the beginning of our road (if we're going backward)
-    public List<PathWithDirection> ChoicesEnd, ChoicesStart;
-    public int QTEChoice = 0;
-    public bool QTENeedsChoice;
-    public bool QTEAtStart;
-
-    public float error = 1f;
 
     /** Function 
         Name  : GetNextPath
@@ -141,13 +140,13 @@ public class BicycleV2 : MonoBehaviour
         // Return of the number of the first node of the new path
         if (forward)
         {
-            value = 0;
+            value = 1;
         }
         else
         {
-            value = path.WorldWaypoints.Length - 1;
+            value = path.WorldWaypoints.Length - 2;
         }
-
+        
         return value;
 
     }
@@ -178,27 +177,8 @@ public class BicycleV2 : MonoBehaviour
             Debug.Log(string.Format("Point d'arrivée de ce chemin : {0}", choices[i].path.WorldWaypoints[choices[i].path.WorldWaypoints.Length - 1])); */
 
 
-            if ( //If the first point in choices[i] ist the last point of our path
-                 // X
-                (choices[i].path.WorldWaypoints[0].x <= pointOfComparison.x + error &&
-                choices[i].path.WorldWaypoints[0].x >= pointOfComparison.x - error &&
-                // Y 
-                choices[i].path.WorldWaypoints[0].y <= pointOfComparison.y + error &&
-                choices[i].path.WorldWaypoints[0].y >= pointOfComparison.y - error &&
-                // Z 
-                choices[i].path.WorldWaypoints[0].z <= pointOfComparison.z + error &&
-                choices[i].path.WorldWaypoints[0].z >= pointOfComparison.z - error) ||
-
-                //Or if the last point in choices[i] ist the last point of our path 
-                // X
-                (choices[i].path.WorldWaypoints[choices[i].path.WorldWaypoints.Length - 1].x <= pointOfComparison.x + error &&
-                choices[i].path.WorldWaypoints[choices[i].path.WorldWaypoints.Length - 1].x >= pointOfComparison.x - error &&
-                // Y 
-                choices[i].path.WorldWaypoints[choices[i].path.WorldWaypoints.Length - 1].y <= pointOfComparison.y + error &&
-                choices[i].path.WorldWaypoints[choices[i].path.WorldWaypoints.Length - 1].y >= pointOfComparison.y - error &&
-                // Z 
-                choices[i].path.WorldWaypoints[choices[i].path.WorldWaypoints.Length - 1].z <= pointOfComparison.z + error &&
-                choices[i].path.WorldWaypoints[choices[i].path.WorldWaypoints.Length - 1].z >= pointOfComparison.z - error))
+            if (MapTools.Aprox(pointOfComparison, choices[i].path.WorldWaypoints[0])
+                || MapTools.Aprox(pointOfComparison, choices[i].path.WorldWaypoints[choices[i].path.WorldWaypoints.Length - 1]))
             {
         
                 // the choice is added to our new choices
@@ -233,7 +213,7 @@ public class BicycleV2 : MonoBehaviour
         if (forward ^ reverse)
         {
             // if we are at the end of the path
-            if (node >= path.WorldWaypoints.Length - 2)
+            if (node >= path.WorldWaypoints.Length - 1)
             {
                 Debug.Log("End of the road, normal");
                 // we find another path 
@@ -249,7 +229,7 @@ public class BicycleV2 : MonoBehaviour
             // !forward & !reverse -> pathPoints[end] -> pathPoints[0] + UP = pathPoints[end] -> pathPoints[0]
 
             // If we are at the beginning of the path 
-            if (node <= 1)
+            if (node <= 0)
             {
                 Debug.Log("End of the road, reverse");
                 // we find another path from the beginning of the path

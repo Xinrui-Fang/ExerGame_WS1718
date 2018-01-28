@@ -109,6 +109,8 @@ public class AI_Simple : MonoBehaviour
     void Update()
     {
         int count = 0;
+        // If the distance between the player and the next waypoint is less than the distance that can be reached in a unit of time
+        // we advance the waypoint
         while ((transform.position - path.WorldWaypoints[nextNode]).sqrMagnitude < 2f * maxSpeed * Time.deltaTime && count < 5)
         {
             nextNode = RetrieveNext(nextNode);
@@ -117,11 +119,15 @@ public class AI_Simple : MonoBehaviour
         // if the position of the player is not at the path point
         // move until it reach it
         Vector3 pos = Vector3.MoveTowards(transform.position, path.WorldWaypoints[nextNode], maxSpeed * Time.deltaTime);
+        Transform copy = transform;
+        copy.rotation *= Quaternion.Euler(0, -90, 0);
+        Vector3 newDir = Vector3.RotateTowards(copy.forward, path.WorldWaypoints[nextNode] - transform.position, maxRotation * Time.deltaTime, 0.0f);
+        Quaternion rotationQ = Quaternion.LookRotation(newDir);
 
-        Quaternion rotationQ = Quaternion.LookRotation(path.WorldWaypoints[nextNode] - transform.position);
         transform.position = pos;
         transform.rotation = rotationQ;
         transform.rotation *= Quaternion.Euler(0, 90, 0);
+
         PlaceBike();
     }
 }

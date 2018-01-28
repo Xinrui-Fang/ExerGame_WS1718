@@ -5,7 +5,15 @@ using PathInterfaces;
 
 public class MapTools
 {
-    
+    public static bool Aprox(Vector3 a, Vector3 b, float error = 1f)
+    {
+
+       return (Mathf.Abs(a.x - b.x) <= error
+               && Mathf.Abs(a.y - b.y) <= error
+               && Mathf.Abs(a.z - b.z) <= error);
+            
+    }
+
     // Draw a line on a grid from a to b
     public static IEnumerable<Vector2Int> BresenhamLine(Vector2Int a, Vector2Int b)
     {
