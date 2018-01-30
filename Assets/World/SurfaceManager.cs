@@ -10,7 +10,7 @@ public class SurfaceManager : MonoBehaviour {
 	ConcurrentQueue<TerrainChunk> FinalizationQueue = new ConcurrentQueue<TerrainChunk>(17);
 	QuadTree<TerrainChunk> Chunks = new QuadTree<TerrainChunk>(new RectangleBound(new Vector2(0, 0), 5));
 
-    int ChunkCount = 0;
+	int ChunkCount = 0;
 	void Build(TerrainChunk tile, Vector2Int offset)
 	{
 		tile.Build(offset);
@@ -26,13 +26,13 @@ public class SurfaceManager : MonoBehaviour {
 			
 			bool success = false;
 			Chunks = Chunks.PutAndGrow(ref success, tile.GridCoords, 0, tile);
-            // TODO: Error checking
+			// TODO: Error checking
 			ChunkCount++;
 			Assets.Utils.Debug.Log(string.Format("We now have {0} chunks loaded.", ChunkCount));
 
 			if (tile.GridCoords.x == 2 && tile.GridCoords.y == 2)
 			{
-                if (!success) Assets.Utils.Debug.Log("WTF!!!", LOGLEVEL.ERROR); 
+				if (!success) Assets.Utils.Debug.Log("WTF!!!", LOGLEVEL.ERROR); 
 				GameObject.Find("Camera").SetActive(false);
 
 				Settings.MainObject.GetComponent<BicycleV2>().Init();
@@ -93,15 +93,15 @@ public class SurfaceManager : MonoBehaviour {
 	}
 	void OnEnable() // TODO Maybe even when player moves?
 	{
-        GameObject DummyTerrainObj = GameObject.Find("Dummy Terrain");
-        Terrain DummyTerrain = DummyTerrainObj.GetComponent<Terrain>();
-        DummyTerrain.terrainData.SetDetailResolution(64, 64);
-        DummyTerrain.terrainData.size = new Vector3(.01f, .01f, .01f);
-        DummyTerrain.terrainData.heightmapResolution = 0;
-        GameSettings.DetailPrototypes = DummyTerrain.terrainData.detailPrototypes;
+		GameObject DummyTerrainObj = GameObject.Find("Dummy Terrain");
+		Terrain DummyTerrain = DummyTerrainObj.GetComponent<Terrain>();
+		DummyTerrain.terrainData.SetDetailResolution(64, 64);
+		DummyTerrain.terrainData.size = new Vector3(.01f, .01f, .01f);
+		DummyTerrain.terrainData.heightmapResolution = 0;
+		GameSettings.DetailPrototypes = DummyTerrain.terrainData.detailPrototypes;
 		GameSettings.SpatProtoTypes = DummyTerrain.terrainData.splatPrototypes;
 		GameSettings.TreeProtoTypes = DummyTerrain.terrainData.treePrototypes;
-        Settings.Prepare();
+		Settings.Prepare();
 
 		Vector2Int playerPos = new Vector2Int(2, 2);
 		Settings.MainObject.transform.position.Set(2.5f * Settings.Size, Settings.Depth + 10f, 2.5f * Settings.Size);
@@ -112,7 +112,17 @@ public class SurfaceManager : MonoBehaviour {
 	public TerrainChunk GetTile(Vector2Int pos)
 	{
 		var data = Chunks.Get(new Vector2(pos.x, pos.y));
-        return (data == null ? null : data.label);
+		return (data == null ? null : data.label);
+	}
+	
+	public TerrainChunk GetTile(Vector3 pos)
+	{
+		return GetTile(new Vector2Int((int) Mathf.Floor(pos.x / Settings.Size), (int) Mathf.Floor(pos.z / Settings.Size)));
+	}
+	
+	public TerrainChunk GetTile(Vector2 pos)
+	{
+		return GetTile(new Vector2Int((int) Mathf.Floor(pos.x / Settings.Size), (int) Mathf.Floor(pos.y / Settings.Size)));
 	}
 }
  
