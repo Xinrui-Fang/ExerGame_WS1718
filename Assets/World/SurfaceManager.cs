@@ -32,6 +32,7 @@ public class SurfaceManager : MonoBehaviour {
 
 			if (tile.GridCoords.x == 2 && tile.GridCoords.y == 2)
 			{
+                if (!success) Assets.Utils.Debug.Log("WTF!!!", LOGLEVEL.ERROR); 
 				GameObject.Find("Camera").SetActive(false);
 
 				Settings.MainObject.GetComponent<BicycleV2>().Init();
@@ -94,8 +95,8 @@ public class SurfaceManager : MonoBehaviour {
 	{
         GameObject DummyTerrainObj = GameObject.Find("Dummy Terrain");
         Terrain DummyTerrain = DummyTerrainObj.GetComponent<Terrain>();
-        DummyTerrain.terrainData.SetDetailResolution(0, 0);
-        DummyTerrain.terrainData.size = new Vector3(0, 0, 0);
+        DummyTerrain.terrainData.SetDetailResolution(64, 64);
+        DummyTerrain.terrainData.size = new Vector3(.01f, .01f, .01f);
         DummyTerrain.terrainData.heightmapResolution = 0;
         GameSettings.DetailPrototypes = DummyTerrain.terrainData.detailPrototypes;
 		GameSettings.SpatProtoTypes = DummyTerrain.terrainData.splatPrototypes;

@@ -18,25 +18,30 @@ public class AI_Simple : MonoBehaviour
     private NavigationPath path;
     private int nextNode;
 
+    public float FrontTireOffset = .5f;
+    public float BackTireOffset = .6f;
+    public float RayOffset = .3f;
+    public float RayMaxDist = .4f;
+
     public void PlaceBike()
     {
-        float rayOffset = .1f;
-        float rayMaxDist = .2f;
-        Ray posRay = new Ray(transform.position + rayOffset * transform.up, -transform.up);
+        Ray posRay = new Ray(transform.position + RayOffset * transform.up, -transform.up);
         RaycastHit posHit;
-        if (Physics.Raycast(posRay, out posHit, rayMaxDist))
+        if (Physics.Raycast(posRay, out posHit, RayMaxDist))
         {
             transform.position = posHit.point;
         }
 
-        Vector3 pos1 = -transform.right * .25f + transform.position;
-        Vector3 pos2 = transform.right * .25f + transform.position;
-        Ray ray1 = new Ray(pos1 + rayOffset * transform.up, -transform.up);
-        Ray ray2 = new Ray(pos2 + rayOffset * transform.up, -transform.up);
+        Vector3 pos1 = -transform.right * BackTireOffset + transform.position;
+        Vector3 pos2 = transform.right * FrontTireOffset + transform.position;
+        Ray ray1 = new Ray(pos1 + RayOffset * transform.up, -transform.up);
+        Ray ray2 = new Ray(pos2 + RayOffset * transform.up, -transform.up);
+        Debug.DrawRay(pos1 + RayOffset * transform.up, -transform.up);
+        Debug.DrawRay(pos2 + RayOffset * transform.up, -transform.up);
         RaycastHit hit1, hit2;
-        if (Physics.Raycast(ray1, out hit1, rayMaxDist))
+        if (Physics.Raycast(ray1, out hit1, RayMaxDist))
         {
-            if (Physics.Raycast(ray2, out hit2, rayMaxDist))
+            if (Physics.Raycast(ray2, out hit2, RayMaxDist))
             {
                 transform.rotation = Quaternion.LookRotation(hit1.point - hit2.point);
                 transform.rotation *= Quaternion.Euler(0, 90, 0);
