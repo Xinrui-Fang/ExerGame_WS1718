@@ -74,6 +74,13 @@ public class TerrainChunk
         return new Vector2(GridCoords.x + x, GridCoords.y + y) * (float)Settings.Size;
     }
 
+    public Vector2Int ToLocalCoordinate(float x, float z)
+    {
+        float dx = x - GridCoords.x * Settings.Size;
+        float dz = z - GridCoords.y * Settings.Size;
+        return new Vector2Int(Mathf.RoundToInt(dx / Settings.Size), Mathf.RoundToInt(dz / Settings.Size));
+    }
+
     public void ToWorldCoordinate(int x, int y, ref Vector2 Out)
     {
         Out.x = GridCoords.x + ((float)x + .5f) / (float)Settings.HeightmapResolution;
@@ -212,7 +219,6 @@ public class TerrainChunk
         Assets.Utils.Debug.Log(string.Format("Took {0} ms to create route network at {1}", stopWatch.ElapsedMilliseconds, GridCoords), LOGLEVEL.META);
         stopWatch.Reset();
         stopWatch.Start();
-
         
         Trees = vGen.PaintGras(this, ChunkSeed, paths.StreetMap, Settings.WaterLevel, Settings.VegetationLevel, Settings.MaxTreeCount, Normals);
         NormalsFromHeightMap.GenerateNormals(Heights, Normals, Settings.Depth, (float)Settings.Size / Settings.HeightmapResolution);
@@ -490,6 +496,8 @@ public class TerrainChunk
             treeInstances = Trees.ToArray(),
             thickness = 10f
         };
+
+        // JumpPointFinder.FindJumps(ref paths.paths, ref Objects, 5, 5f, 10f, Heights, this);
         ChunkTerrainData.SetDetailResolution(Settings.DetailResolution, Settings.DetailResolutionPerPatch);
         ChunkTerrainData.RefreshPrototypes();
 

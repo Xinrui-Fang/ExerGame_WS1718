@@ -47,8 +47,6 @@ public class BicycleV2 : MonoBehaviour
         Vector3 pos2 = transform.right * FrontTireOffset + transform.position;
         Ray ray1 = new Ray(pos1 + RayOffset * transform.up, -transform.up);
         Ray ray2 = new Ray(pos2 + RayOffset * transform.up, -transform.up);
-        Debug.DrawRay(pos1 + RayOffset * transform.up, -transform.up);
-        Debug.DrawRay(pos2 + RayOffset * transform.up, -transform.up);
         RaycastHit hit1, hit2;
         if (Physics.Raycast(ray1, out hit1, RayMaxDist))
         {
