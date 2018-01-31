@@ -2,7 +2,8 @@ using UnityEngine;
 using System.Threading;
 using Assets.Utils;
 
-public class SurfaceManager : MonoBehaviour {
+public class SurfaceManager : MonoBehaviour
+{
 
 	public GameSettings Settings;
 
@@ -20,10 +21,10 @@ public class SurfaceManager : MonoBehaviour {
 	public void Update()
 	{
 		var tile = FinalizationQueue.TryPop();
-		if(tile != null)
+		if (tile != null)
 		{
 			tile.Flush(this);
-			
+
 			bool success = false;
 			Chunks = Chunks.PutAndGrow(ref success, tile.GridCoords, 0, tile);
 			// TODO: Error checking
@@ -32,7 +33,7 @@ public class SurfaceManager : MonoBehaviour {
 
 			if (tile.GridCoords.x == 2 && tile.GridCoords.y == 2)
 			{
-				if (!success) Assets.Utils.Debug.Log("WTF!!!", LOGLEVEL.ERROR); 
+				if (!success) Assets.Utils.Debug.Log("WTF!!!", LOGLEVEL.ERROR);
 				GameObject.Find("Camera").SetActive(false);
 
 				Settings.MainObject.GetComponent<BicycleV2>().Init();
@@ -49,7 +50,7 @@ public class SurfaceManager : MonoBehaviour {
 			}
 		}
 	}
-	
+
 	// ATTENTION: NOT THREAD SAFE!
 	public void ExtendAt(Vector2Int offset)
 	{
@@ -65,21 +66,21 @@ public class SurfaceManager : MonoBehaviour {
 			new Vector2Int(1, 1),
 			new Vector2Int(-1, 1),
 			new Vector2Int(1, -1),
-            
+
 			new Vector2Int(2, 0),
 			new Vector2Int(-2, 0),
 			new Vector2Int(0, 2),
 			new Vector2Int(0, -2),
 			//**/
 			};
-		
-		for(int i = 0; i < directions.Length; i++)
+
+		for (int i = 0; i < directions.Length; i++)
 		{
 			Vector2Int absolutePos = offset + directions[i];
 			//Vector2Int windowPos = absolutePos + WindowOffset;
-			
+
 			// Generate tile, if it does not exist yet
-			if(Chunks.Get(absolutePos) == null)
+			if (Chunks.Get(absolutePos) == null)
 			{
 				// swap the commented with the uncommented if some exception is not propagating to the maini thread.
 				/*
@@ -87,7 +88,7 @@ public class SurfaceManager : MonoBehaviour {
 				terrain.Build(absolutePos);
 				terrain.Flush(this);
 				*/
-				ThreadPool.QueueUserWorkItem((object item) => Build((TerrainChunk) item, absolutePos), new TerrainChunk(Settings));
+				ThreadPool.QueueUserWorkItem((object item) => Build((TerrainChunk)item, absolutePos), new TerrainChunk(Settings));
 			}
 		}
 	}
@@ -105,24 +106,24 @@ public class SurfaceManager : MonoBehaviour {
 
 		Vector2Int playerPos = new Vector2Int(2, 2);
 		Settings.MainObject.transform.position.Set(2.5f * Settings.Size, Settings.Depth + 10f, 2.5f * Settings.Size);
-		
+
 		ExtendAt(playerPos);
 	}
-	
+
 	public TerrainChunk GetTile(Vector2Int pos)
 	{
 		var data = Chunks.Get(new Vector2(pos.x, pos.y));
-		return (data == null ? null : data.label);
+		return (data == null ? null : data.contents);
 	}
-	
+
 	public TerrainChunk GetTile(Vector3 pos)
 	{
-		return GetTile(new Vector2Int((int) Mathf.Floor(pos.x / Settings.Size), (int) Mathf.Floor(pos.z / Settings.Size)));
+		return GetTile(new Vector2Int((int)Mathf.Floor(pos.x / Settings.Size), (int)Mathf.Floor(pos.z / Settings.Size)));
 	}
-	
+
 	public TerrainChunk GetTile(Vector2 pos)
 	{
-		return GetTile(new Vector2Int((int) Mathf.Floor(pos.x / Settings.Size), (int) Mathf.Floor(pos.y / Settings.Size)));
+		return GetTile(new Vector2Int((int)Mathf.Floor(pos.x / Settings.Size), (int)Mathf.Floor(pos.y / Settings.Size)));
 	}
 }
- 
+

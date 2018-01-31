@@ -4,13 +4,15 @@ using System;
 using System.IO.Ports;
 using System.Threading;
 
-public class BikeController : MonoBehaviour {
+public class BikeController : MonoBehaviour
+{
 	static SerialPort port = null;
 	static string portName = "COM3";
 	static byte address = 0;
 	static int rpm = 0;
-	
-	static void RequestAddress() {
+
+	static void RequestAddress()
+	{
 		byte[] buffer = { 0x11 };
 		port.Write(buffer, 0, buffer.Length);
 		Console.WriteLine("Sent data.");
@@ -18,44 +20,54 @@ public class BikeController : MonoBehaviour {
 	}
 
 
-	static void RequestRPM() {
+	static void RequestRPM()
+	{
 		byte[] buffer = { 0x40, address };
 		port.Write(buffer, 0, buffer.Length);
 		Console.WriteLine("Sent data.");
 		//Thread.Sleep(100);
 	}
 
-	static byte ReadAddress() {
+	static byte ReadAddress()
+	{
 		byte address = 0;
 		Console.WriteLine("Reading data.");
-		for (int i = 0; i < 100; ++i) {
-			try {
+		for (int i = 0; i < 100; ++i)
+		{
+			try
+			{
 				int b = port.ReadByte();
 				if (i == 1) address = (byte)b;
 			}
-			catch (TimeoutException) {
+			catch (TimeoutException)
+			{
 				break;
 			}
 		}
 		return address;
 	}
 
-	static int ReadRPM() {
+	static int ReadRPM()
+	{
 		int rpm = 0;
 		Console.WriteLine("Reading data.");
-		for (int i = 0; i < 100; ++i) {
-			try {
+		for (int i = 0; i < 100; ++i)
+		{
+			try
+			{
 				int b = port.ReadByte();
 				if (i == 6) rpm = b;
 			}
-			catch (TimeoutException) {
+			catch (TimeoutException)
+			{
 				break;
 			}
 		}
 		return rpm;
 	}
 
-	static void Run() {
+	static void Run()
+	{
 		port = new SerialPort("COM3");
 		port.BaudRate = 9600;
 		port.Parity = Parity.None;
@@ -68,18 +80,21 @@ public class BikeController : MonoBehaviour {
 
 		RequestAddress();
 		address = ReadAddress();
-		for (;;) {
+		for (; ; )
+		{
 			RequestRPM();
 			rpm = ReadRPM();
 			//Console.WriteLine("RPM: " + rpm);
 		}
 	}
 
-	public static int getRPM() {
+	public static int getRPM()
+	{
 		return rpm;
 	}
 
-	public static void Initialize(string comPort = "COM3") {
+	public static void Initialize(string comPort = "COM3")
+	{
 		portName = comPort;
 		Thread thread = new Thread(Run);
 		thread.Start();
