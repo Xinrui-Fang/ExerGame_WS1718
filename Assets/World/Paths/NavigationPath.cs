@@ -327,6 +327,40 @@ namespace Assets.World.Paths
 		{
 			return path.GetHashCode();
 		}
+
+        public void reverse(){
+            forward = true ;
+            NavigationPath newPath = new NavigationPath();
+            newPath.WorldWaypoints = new Vector3[this.path.WorldWaypoints.Length];
+            newPath.Waypoints = new Utils.LinkedList<Vector2Int>();
+            newPath.End = this.path.Start;
+            newPath.Start = this.path.End;
+            Utils.LinkedListNode<Vector2Int> node = this.path.Waypoints.First;
+            for( int i = path.WorldWaypoints.Length-1 ; i >=0 ; i--){
+                newPath.WorldWaypoints[path.WorldWaypoints.Length-1 - i] = this.path.WorldWaypoints[i];
+                newPath.Waypoints.AddLast(node.Value);
+                node = node.Next;
+            } 
+            this.path = newPath;
+
+        }
+
+        public PathWithDirection reversed(){
+            NavigationPath newPath = new NavigationPath();
+            newPath.WorldWaypoints = new Vector3[path.WorldWaypoints.Length];
+            newPath.Waypoints = new Utils.LinkedList<Vector2Int>();
+            newPath.End = path.Start;
+            newPath.Start = path.End;
+            Utils.LinkedListNode<Vector2Int> node = path.Waypoints.First;
+            for( int i = path.WorldWaypoints.Length-1 ; i >=0 ; i--){
+                newPath.WorldWaypoints[path.WorldWaypoints.Length-1 - i] = path.WorldWaypoints[i];
+                newPath.Waypoints.AddLast(node.Value);
+                node = node.Next;
+            } 
+            return new PathWithDirection(newPath, true);
+
+        }
+        
 	}
 
 	public class WayVertex : IEquatable<WayVertex>
