@@ -498,7 +498,7 @@ public class TerrainChunk
 			thickness = 10f
 		};
 
-		JumpPointFinder.FindJumps(ref paths.paths, ref Objects, 1, 10f, 40f, this);
+		JumpPointFinder.FindJumps(ref paths.paths, ref Objects, 1, 5f, 80f, this);
 		ChunkTerrainData.SetDetailResolution(Settings.DetailResolution, Settings.DetailResolutionPerPatch);
 		ChunkTerrainData.RefreshPrototypes();
 
@@ -508,6 +508,7 @@ public class TerrainChunk
 		Trees.Clear();
 
 		UnityTerrain = Terrain.CreateTerrainGameObject(ChunkTerrainData);
+		UnityTerrain.layer = 8;
 		UnityTerrain.name = string.Format("TerrainChunk at {0}", GridCoords);
 
 		GameObject SurfaceManagerObject = GameObject.Find("Surface Manager");

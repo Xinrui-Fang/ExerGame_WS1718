@@ -149,6 +149,8 @@ public class GameSettings
 
 	public Material GrasMaterial;
 
+	public float Gravity, MinJumpSpeed, MaxJumpSpeed;
+
 	public void Prepare()
 	{
 		GetSplat();

@@ -60,15 +60,14 @@ public class VegetationGenerator
 
 				// Make a weighted cointoss to decide whether we create a tree.
 				if (prng.NextDouble() > p) continue;
-
+				int protoindex = prng.Next(0, GameSettings.TreeProtoTypes.Length);
 				// Create tree
 				float heightScale = (float)prng.Next(256, 512) / 512.0f;
-
 				Level.Apply(y, x);
 				TerrainSmoother.Apply(y, x);
 				trees.Add(new TreeInstance
 				{
-					prototypeIndex = prng.Next(0, GameSettings.TreeProtoTypes.Length - 1),
+					prototypeIndex = protoindex,
 					position = new Vector3((x + .5f) / x_res,
 							0f,
 							(y + .5f) / y_res),

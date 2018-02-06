@@ -83,7 +83,7 @@ Material:
     - _SrcBlend: 1
     - _UVSec: 0
     - _WindSpeed: 52.06
-    - _WindStength: 0.025
+    - _WindStength: 0.05
     - _ZWrite: 1
     m_Colors:
     - _BackgroundColor: {r: 1, g: 0, b: 0, a: 1}

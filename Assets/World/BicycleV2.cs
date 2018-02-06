@@ -34,6 +34,22 @@ public class BicycleV2 : MonoBehaviour
 	public float RayOffset = .3f;
 	public float RayMaxDist = .4f;
 
+	public int SmoothCount;
+	public float SkipDist, LeaningThreshold, LeaningSpeed, MaxLeaningAngle;
+	private float Leaning;
+	private Vector3 HandleDir;
+	private Transform Model;
+	private Animation BikeAnimation;
+
+	[SerializeField]
+	private float Speed;
+	[Range(0f, 1f)]
+	public float Inertia;
+
+	/// <summary>
+	/// Corrects the location and orientation of the bike by casting rays from the top of the tires to the ground
+	/// and adjusting so the bike does not intersect the terrain.
+	/// </summary>
 	public void PlaceBike()
 	{
 		Ray posRay = new Ray(transform.position + RayOffset * transform.up, -transform.up);
@@ -43,8 +59,8 @@ public class BicycleV2 : MonoBehaviour
 			transform.position = posHit.point;
 		}
 
-		Vector3 pos1 = -transform.right * BackTireOffset + transform.position;
-		Vector3 pos2 = transform.right * FrontTireOffset + transform.position;
+		Vector3 pos1 = transform.forward * BackTireOffset + transform.position;
+		Vector3 pos2 = -transform.forward * FrontTireOffset + transform.position;
 		Ray ray1 = new Ray(pos1 + RayOffset * transform.up, -transform.up);
 		Ray ray2 = new Ray(pos2 + RayOffset * transform.up, -transform.up);
 		RaycastHit hit1, hit2;
@@ -53,7 +69,6 @@ public class BicycleV2 : MonoBehaviour
 			if (Physics.Raycast(ray2, out hit2, RayMaxDist))
 			{
 				transform.rotation = Quaternion.LookRotation(hit1.point - hit2.point);
-				transform.rotation *= Quaternion.Euler(0, 90, 0);
 			}
 		}
 	}
@@ -251,7 +266,9 @@ public class BicycleV2 : MonoBehaviour
 	{
 
 		ActiveTerrain = surfaceManager.GetTile(new Vector2Int(2, 2)); // cluster in the middle 
-																	  // Initial Position
+		Model = transform.Find("Model");
+		BikeAnimation = Model.GetComponent<Animation>();
+		// Initial Position
 		WayVertex StartingPoint = ActiveTerrain.GetPathFinder().StartingPoint;
 
 		// initially we take the longest path 
@@ -277,9 +294,11 @@ public class BicycleV2 : MonoBehaviour
 
 		transform.position = path.WorldWaypoints[nextNode];
 
+		HandleDir = path.WorldWaypoints[RetrieveNext(nextNode)] - path.WorldWaypoints[nextNode];
+		HandleDir.Normalize();
+
 		// Bike orientation always to the front
 		transform.rotation = Quaternion.LookRotation(path.WorldWaypoints[RetrieveNext(nextNode)] - path.WorldWaypoints[nextNode]);
-		transform.rotation *= Quaternion.Euler(0, 90, 0);
 	}
 
 	// Update is called once per frame
@@ -292,25 +311,45 @@ public class BicycleV2 : MonoBehaviour
 			int count = 0;
 			// If the distance between the player and the next waypoint is less than the distance that can be reached in a unit of time
 			// we advance the waypoint
-			while ((transform.position - path.WorldWaypoints[nextNode]).sqrMagnitude < 2f * maxSpeed * Time.deltaTime && count < 5)
+			while ((transform.position - path.WorldWaypoints[nextNode]).magnitude < SkipDist && count < SmoothCount)
 			{
 				nextNode = RetrieveNext(nextNode, reverse);
 				count++;
 			}
 
+			Vector3 TargetDir = (path.WorldWaypoints[nextNode] - transform.position).normalized;
+
+			transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(TargetDir.normalized, transform.up), maxRotation * Time.deltaTime);
+			HandleDir = TargetDir - transform.forward;
 			// if the position of the player is not at the path point
 			// move until it reach it
-			Vector3 pos = Vector3.MoveTowards(transform.position, path.WorldWaypoints[nextNode], maxSpeed * Time.deltaTime);
-			Transform copy = transform;
-			copy.rotation *= Quaternion.Euler(0, -90, 0);
-			Vector3 newDir = Vector3.RotateTowards(copy.forward, path.WorldWaypoints[nextNode] - transform.position, maxRotation * Time.deltaTime, 0.0f);
-			Quaternion rotationQ = Quaternion.LookRotation(newDir);
+			float dirAngle = Vector3.SignedAngle(transform.forward, TargetDir, transform.up);
+			float dist = (path.WorldWaypoints[nextNode] - transform.position).magnitude;
+			float oldSpeed = Speed;
+			Speed = maxSpeed * .5f * (1f - transform.forward.y) * Mathf.Cos(Mathf.Abs(dirAngle * Mathf.Deg2Rad));
 
-			transform.position = pos;
-			transform.rotation = rotationQ;
-			transform.rotation *= Quaternion.Euler(0, 90, 0);
+			// calculate inertia independant of fps
+			float TimedReverseInertia = (1f - Inertia) * Time.deltaTime;
+			TimedReverseInertia = TimedReverseInertia <= 0 ? .01f : TimedReverseInertia;
+			Speed = (1f - TimedReverseInertia) * oldSpeed + TimedReverseInertia * Speed;
+
+			// do not overshoot the target node.
+			dist = Mathf.Min(dist, Speed * Time.deltaTime);
+			transform.position = transform.position + transform.forward * dist;
 
 			PlaceBike();
+			
+			if (Mathf.Abs(dirAngle) < LeaningThreshold) dirAngle = 0;
+			float oldLeaning = Leaning;
+			Leaning = Mathf.MoveTowardsAngle(oldLeaning, (float) System.Math.Round(dirAngle/90f,1) * MaxLeaningAngle, LeaningSpeed * Time.deltaTime);
+			Leaning = (Leaning + oldLeaning) / 2f;
+			Model.rotation *= Quaternion.Euler(-oldLeaning, 0, 0);
+			Model.rotation *= Quaternion.Euler(Leaning, 0, 0);
 		}
+		else {
+			Speed = 0;
+		}
+		// Adjust the bike animation speed to the speed of the bike.
+		BikeAnimation["Take 001"].speed = Speed * .25f;
 	}
 }
