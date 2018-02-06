@@ -13,21 +13,19 @@ public class BicycleV2 : MonoBehaviour
 	public float maxSpeed = 5;
 	public float maxRotation = 5;
 	private TerrainChunk ActiveTerrain;
-
-	private bool forward;
-	private NavigationPath path;
+    private PathWithDirection CurrentPath;
 	private int nextNode;
 
 	public int ChangingViewOffset = 10;
 	// Used for QTE
 	// ChoiceEnd : Choices of possibles roads at the end of our road
 	// ChoiceStart : Choices of possibles roads at the beginning of our road (if we're going backward)
-	public List<PathWithDirection> ChoicesEnd, ChoicesStart;
+	public List<PathWithDirection> ChoicesEnd;
 	public int QTEChoice = 0;
-	public bool QTENeedsChoice;
+	public bool QTENeedsChoice = true;
 	public bool QTEAtStart;
 
-	public float error = 1f;
+    public QTESys QTE_Sys;
 
 	public float FrontTireOffset = .5f;
 	public float BackTireOffset = .6f;
@@ -91,41 +89,27 @@ public class BicycleV2 : MonoBehaviour
         Debug.Log(string.Format("Arrival point of this path : {0}", path.WorldWaypoints[path.WorldWaypoints.Length - 1]));   
         */
 
-		// if we are at the end of the path
-		if (node >= path.WorldWaypoints.Length - 2)
-		{
-			pointOfComparison = path.WorldWaypoints[path.WorldWaypoints.Length - 1];
+		// we are at the end of the path
+	
+        pointOfComparison = CurrentPath.path.WorldWaypoints[CurrentPath.path.WorldWaypoints.Length - 1];
 
-			/* Debug.Log("CHOICE_END BEFORE FILTERING");
-            Debug.Log(string.Format("{0} choices found", ChoicesEnd.Count)); */
+         Debug.Log("CHOICE_END BEFORE FILTERING");
+        Debug.Log(string.Format("{0} choices found", ChoicesEnd.Count)); 
+        Debug.Log("CHOICE_END AFTER FILTERING"); 
 
-
-			// Filtering of the choices to keep only relevant choices
-			ChoicesEnd = ChoicesFiltering(ChoicesEnd, pointOfComparison);
-
-
-			/* Debug.Log("CHOICE_END AFTER FILTERING");
-            Debug.Log(string.Format("{0} choices found", ChoicesEnd.Count)); */
-
-			dpath = ChoicesEnd[QTEChoice];
-		}
-		else
-		// else -> we are at the begining of the path
-		{
-			pointOfComparison = path.WorldWaypoints[0];
-
-			/* Debug.Log("CHOICE_START BEFORE FILTERING");
-            Debug.Log(string.Format("{0} choices found", ChoicesStart.Count)); */
-
-			// Filtering of the choices to keep only relevant choices
-			ChoicesStart = ChoicesFiltering(ChoicesStart, pointOfComparison);
-
-			/* Debug.Log("CHOICE_START AFTER FILTERING");
-            Debug.Log(string.Format("{0} choices found", ChoicesStart.Count)); */
-
-			dpath = ChoicesStart[QTEChoice];
-		}
-
+        // Filtering of the choices to keep only relevant choices
+        ChoicesEnd = ChoicesFiltering(ChoicesEnd, pointOfComparison);
+        if (ChoicesEnd.Count == 1)
+        {
+            dpath = ChoicesEnd[0];
+        }
+        else
+        {
+            Debug.Log(string.Format("QTE CHOICE : {0}", QTE_Sys.getReturn()));
+            dpath = ChoicesEnd[QTE_Sys.getReturn()];
+            QTE_Sys.stop();
+        }
+		
 		Debug.Log(string.Format("Found Path of lenght {0}", dpath.path.WorldWaypoints.Length));
 
 		/*Debug.Log(string.Format("Position du joueur : {0}", transform.position));
@@ -143,29 +127,19 @@ public class BicycleV2 : MonoBehaviour
 
 
 		// Registration/Replacement of the new path 
-		path = dpath.path;
-		Debug.Log(string.Format("Start : {0}", path.Start.Pos)); // /!\ Start.Pos and End.Pos are in cluster's coordinate
-		Debug.Log(string.Format("End : {0}", path.End.Pos));
+		CurrentPath = dpath;
+        Debug.Log(string.Format("Start : {0}", CurrentPath.path.Start.Pos)); // /!\ Start.Pos and End.Pos are in cluster's coordinate
+        Debug.Log(string.Format("End : {0}", CurrentPath.path.End.Pos));
 
-		// Creation of the new set of possibles choices at the beginning and the end of the new path
-		ChoicesEnd = path.End.GetPaths(new PathWithDirection(path, forward));
-		ChoicesStart = path.Start.GetPaths(new PathWithDirection(path, forward));
+        // Creation of the new set of possibles choices at the beginning and the end of the new path
+        
+        if (!CurrentPath.forward)
+        {
+            CurrentPath.reverse();
+        }
+        ChoicesEnd = CurrentPath.path.End.GetPaths(CurrentPath);
 
-		// Registration of the new sens of the path
-		forward = dpath.forward;
-
-		int value;
-		// Return of the number of the first node of the new path
-		if (forward)
-		{
-			value = 1;
-		}
-		else
-		{
-			value = path.WorldWaypoints.Length - 2;
-		}
-
-		return value;
+        return  1;
 
 	}
 
@@ -181,84 +155,84 @@ public class BicycleV2 : MonoBehaviour
 	private List<PathWithDirection> ChoicesFiltering(List<PathWithDirection> choices, Vector3 pointOfComparison)
 	{
 		/* TRAITEMENT Of ChoiceEnd & ChoicesStart */
-		// Suppression of paths that doesn't begin or end at the pointOfComparison (with an error margin)
+        // Suppression of paths that doesn't begin or end at the pointOfComparison (with an error margin)
 
-		/* Debug.Log(string.Format("Point de comparaison : {0}", pointOfComparison)); */
+        /* Debug.Log(string.Format("Point de comparaison : {0}", pointOfComparison)); */
 
-		List<PathWithDirection> newChoices = new List<PathWithDirection>(); // List of our new choices
-		PathWithDirection previousPath = new PathWithDirection(); // Storage of the current path if it's contained in choices
+        List<PathWithDirection> newChoices = new List<PathWithDirection>(); // List of our new choices
+        int currentPathIndex = -1;
 
-		for (int i = 0; i < choices.Count; i++)
-		{
-			/* Debug.Log(string.Format("Chemin n°{0}", i));
+        for (int i = 0; i < choices.Count; i++)
+        {
+            /* Debug.Log(string.Format("Chemin n°{0}", i));
             Debug.Log(string.Format("Point de départ de ce chemin : {0}", choices[i].path.WorldWaypoints[0]));
             Debug.Log(string.Format("Point d'arrivée de ce chemin : {0}", choices[i].path.WorldWaypoints[choices[i].path.WorldWaypoints.Length - 1])); */
 
 
-			if (MapTools.Aprox(pointOfComparison, choices[i].path.WorldWaypoints[0])
-				|| MapTools.Aprox(pointOfComparison, choices[i].path.WorldWaypoints[choices[i].path.WorldWaypoints.Length - 1]))
-			{
+            if (MapTools.Aprox(pointOfComparison, choices[i].path.WorldWaypoints[0])
+                || MapTools.Aprox(pointOfComparison, choices[i].path.WorldWaypoints[choices[i].path.WorldWaypoints.Length - 1]))
+            {
 
-				// the choice is added to our new choices
-				newChoices.Add(choices[i]);
+                // the choice is added to our new choices
+                newChoices.Add(choices[i]);
+                if(choices[i].path.Equals(CurrentPath.path)){
+                    Debug.Log("CURRENT PATH FOUND");
+                    currentPathIndex = i;
+                }
+            }
+        }
+        // If there's only one solution we keep the previous path (turn around), else we remove it
+        if (newChoices.Count != 1 && currentPathIndex != -1)
+        {
+            newChoices.RemoveAt(currentPathIndex);
+        }
 
-				// Storage of the previous path to remove it after if needed
-				if (choices[i].path == path)
-				{
-					previousPath = choices[i];
-				}
-			}
-		}
-		// If there's only one solution we keep the previous path (turn around), else we remove it
-		if (newChoices.Count != 1)
-		{
-			newChoices.Remove(previousPath);
-		}
-		return newChoices;
-	}
+        Debug.Log(string.Format("{0} choices found", newChoices.Count));
+        return newChoices;
+    }
 
 	/** Function 
         Name : RetrieveNext
         Semantics : Compute the next node number to know where to move the player
         Parameters : int : current number of node in our path
-                     bool : true if Up is pressed, false if down
         Return type : int : the next node number to which the player is heading
      */
 	private int RetrieveNext(int node, bool reverse = false)
 	{
 
-		// If we go from pathPoints[0] to pathPoints[end] 
-		// forward & !reverse -> pathPoints[0] -> pathPoints[end] + UP = pathPoints[0] -> pathPoints[end]
-		// !forward & reverse -> pathPoints[end] -> pathPoints[0] + DOWN = pathPoints[0] -> pathPoints[end]
-		if (forward ^ reverse)
-		{
-			// if we are at the end of the path
-			if (node >= path.WorldWaypoints.Length - 1)
-			{
-				Debug.Log("End of the road, normal");
-				// we find another path 
-				// & we return the number of the next node
-				return GetNextPath(node);
-			}
-			// else we just return the next node number
-			return node + 1;
-		}
-		else
-		{
-			// forward & reverse -> pathPoints[0] -> pathPoints[end] + DOWN = pathPoints[end] -> pathPoints[0]
-			// !forward & !reverse -> pathPoints[end] -> pathPoints[0] + UP = pathPoints[end] -> pathPoints[0]
+		// We'll always go from pathPoints[0] to pathPoints[end]
+        // The path will be reversed when the player change the forward direction (pressing "space")
+        // !reverse -> pathPoints[0] -> pathPoints[end] + UP = pathPoints[0] -> pathPoints[end]
 
-			// If we are at the beginning of the path 
-			if (node <= 0)
-			{
-				Debug.Log("End of the road, reverse");
-				// we find another path from the beginning of the path
-				// & we return the number of the next node
-				return GetNextPath(node);
-			}
-			// else we just return the previous node number
-			return node - 1;
-		}
+        Debug.Log(string.Format("NODE : {0}", node));
+        Debug.Log(string.Format("isFinished : {0}", QTE_Sys.isFinished()));
+        // if we are almost at the end of the path --> QTE
+        if (node >= CurrentPath.path.WorldWaypoints.Length - 22 && QTE_Sys.isFinished() && QTENeedsChoice)
+        {
+            Debug.Log("node >= path.WorldWaypoints.Length - 22 && QTE_Sys.isFinished()");
+            Debug.Log(string.Format("isFinished : {0}", QTE_Sys.isFinished()));
+            Vector3 pointOfComparison = CurrentPath.path.WorldWaypoints[CurrentPath.path.WorldWaypoints.Length - 1];
+            // Filtering of the choices to keep only relevant choices
+            ChoicesEnd = ChoicesFiltering(ChoicesEnd, pointOfComparison);
+            if (ChoicesEnd.Count != 1)
+            {
+                QTE_Sys.QTE_Initialisation(ChoicesEnd.Count - 1, ChoicesEnd, CurrentPath, pointOfComparison);
+            }
+            QTENeedsChoice = false;
+
+        }
+        // if we are at the end of the path
+        if (node >= CurrentPath.path.WorldWaypoints.Length - 1)
+        {
+
+            Debug.Log("End of the road, normal");
+            // we find another path 
+            // & we return the number of the next node
+            QTENeedsChoice = true;
+            return GetNextPath(node);
+        }
+        // else we just return the next node number
+        return node + 1;
 	}
 
 	// Use this for initialization
@@ -273,58 +247,58 @@ public class BicycleV2 : MonoBehaviour
 
 		// initially we take the longest path 
 		var longestPath = StartingPoint.GetLongest();
-		path = longestPath.path;
+		if (!longestPath.forward)
+        { // if !forward we reverse the path to make it simplier
+            longestPath.reverse();
+            CurrentPath = longestPath;
+        }
 
-		// path direction --> true if the player go pathPoints[0] -> pathPoints[end], else false
-		forward = longestPath.forward;
+		ChoicesEnd = CurrentPath.path.End.GetPaths(CurrentPath); // storage of all possibles choices from the end of the path
+		
+		// the player always begin the game at pathPoints[0] -> pathPoints[end]
 
-		ChoicesEnd = path.End.GetPaths(longestPath); // storage of all possibles choices from the end of the path
-		ChoicesStart = path.Start.GetPaths(); // storage of all possibles choices from the beginning of the path
+        nextNode = 0;
 
-		// if the player go pathPoints[0] -> pathPoints[end]
-		if (forward)
-		{
-			nextNode = 0;
-		}
-		else
-		// else pathPoints[end] -> pathPoints[0]
-		{
-			nextNode = path.WorldWaypoints.Length - 1;
-		}
+		transform.position = CurrentPath.path.WorldWaypoints[nextNode];
 
-		transform.position = path.WorldWaypoints[nextNode];
-
-		HandleDir = path.WorldWaypoints[RetrieveNext(nextNode)] - path.WorldWaypoints[nextNode];
+		HandleDir = CurrentPath.path.WorldWaypoints[RetrieveNext(nextNode)] - CurrentPath.path.WorldWaypoints[nextNode];
 		HandleDir.Normalize();
 
 		// Bike orientation always to the front
-		transform.rotation = Quaternion.LookRotation(path.WorldWaypoints[RetrieveNext(nextNode)] - path.WorldWaypoints[nextNode]);
+		transform.rotation = Quaternion.LookRotation(CurrentPath.path.WorldWaypoints[RetrieveNext(nextNode)] - CurrentPath.path.WorldWaypoints[nextNode]);
 	}
 
 	// Update is called once per frame
 	void Update()
 	{
+         if (Input.GetKey("space"))
+        {
 
-		if (Input.GetKey("up") || Input.GetKey("down"))
+            CurrentPath.reverse();
+            nextNode = CurrentPath.path.WorldWaypoints.Length - nextNode;
+            ChoicesEnd = CurrentPath.path.End.GetPaths(CurrentPath);
+        }
+
+
+		if (Input.GetKey("up"))
 		{
-			bool reverse = Input.GetKey("down");
 			int count = 0;
 			// If the distance between the player and the next waypoint is less than the distance that can be reached in a unit of time
 			// we advance the waypoint
-			while ((transform.position - path.WorldWaypoints[nextNode]).magnitude < SkipDist && count < SmoothCount)
+			while ((transform.position - CurrentPath.path.WorldWaypoints[nextNode]).magnitude < SkipDist && count < SmoothCount)
 			{
-				nextNode = RetrieveNext(nextNode, reverse);
+				nextNode = RetrieveNext(nextNode);
 				count++;
 			}
 
-			Vector3 TargetDir = (path.WorldWaypoints[nextNode] - transform.position).normalized;
+			Vector3 TargetDir = (CurrentPath.path.WorldWaypoints[nextNode] - transform.position).normalized;
 
 			transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(TargetDir.normalized, transform.up), maxRotation * Time.deltaTime);
 			HandleDir = TargetDir - transform.forward;
 			// if the position of the player is not at the path point
 			// move until it reach it
 			float dirAngle = Vector3.SignedAngle(transform.forward, TargetDir, transform.up);
-			float dist = (path.WorldWaypoints[nextNode] - transform.position).magnitude;
+			float dist = (CurrentPath.path.WorldWaypoints[nextNode] - transform.position).magnitude;
 			float oldSpeed = Speed;
 			Speed = maxSpeed * .5f * (1f - transform.forward.y) * Mathf.Cos(Mathf.Abs(dirAngle * Mathf.Deg2Rad));
 
