@@ -330,6 +330,10 @@ Prefab:
       propertyPath: m_BakeLightProbesForTrees
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1845193563754304, guid: 6c7216329722d4440b101e5b3cb34c07, type: 2}
+      propertyPath: m_Name
+      value: Terrain Template
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 6c7216329722d4440b101e5b3cb34c07, type: 2}
   m_IsPrefabParent: 0
@@ -404,6 +408,56 @@ Prefab:
 Transform:
   m_PrefabParentObject: {fileID: 400000, guid: 58f278e10efda6442834a67c3a5d88eb, type: 3}
   m_PrefabInternal: {fileID: 406474023}
+--- !u!1001 &550467609
+Prefab:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 1519617107}
+    m_Modifications:
+    - target: {fileID: 400030, guid: e368183fb2cfacb4e8e07a15eea95b2e, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400030, guid: e368183fb2cfacb4e8e07a15eea95b2e, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400030, guid: e368183fb2cfacb4e8e07a15eea95b2e, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400030, guid: e368183fb2cfacb4e8e07a15eea95b2e, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400030, guid: e368183fb2cfacb4e8e07a15eea95b2e, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400030, guid: e368183fb2cfacb4e8e07a15eea95b2e, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400030, guid: e368183fb2cfacb4e8e07a15eea95b2e, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 400030, guid: e368183fb2cfacb4e8e07a15eea95b2e, type: 3}
+      propertyPath: m_RootOrder
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 100030, guid: e368183fb2cfacb4e8e07a15eea95b2e, type: 3}
+      propertyPath: m_Name
+      value: Platform Template
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: e368183fb2cfacb4e8e07a15eea95b2e, type: 3}
+  m_IsPrefabParent: 0
+--- !u!4 &550467610 stripped
+Transform:
+  m_PrefabParentObject: {fileID: 400030, guid: e368183fb2cfacb4e8e07a15eea95b2e, type: 3}
+  m_PrefabInternal: {fileID: 550467609}
 --- !u!1 &787555966
 GameObject:
   m_ObjectHideFlags: 0
@@ -1007,6 +1061,7 @@ Transform:
   m_Children:
   - {fileID: 397585193}
   - {fileID: 1718068171}
+  - {fileID: 550467610}
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1020,7 +1075,7 @@ GameObject:
   - component: {fileID: 1718068171}
   - component: {fileID: 1718068172}
   m_Layer: 0
-  m_Name: Dummy Gras Filter
+  m_Name: Gras Filter Template
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

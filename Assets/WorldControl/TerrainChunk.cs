@@ -1,6 +1,7 @@
 ﻿using Assets.Utils;
 using Assets.World;
 using Assets.World.Heightmap;
+using Assets.World.Jumps;
 using Assets.World.Paths;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -31,6 +32,8 @@ public class TerrainChunk
 
 	public List<TreeInstance> Trees { get; private set; }
 	public List<int[,]> DetailMapList { get; internal set; }
+	internal List<JumpData> JumpList { get; private set; }
+	public bool HasJumps { get; private set; }
 
 	public bool isFinished = false;
 
@@ -228,6 +231,7 @@ public class TerrainChunk
 		Assets.Utils.Debug.Log(string.Format("Took {0} ms to create Vegetation and Splatmap at {1}", stopWatch.ElapsedMilliseconds, GridCoords), LOGLEVEL.META);
 		stopWatch.Stop();
 
+		JumpList = JumpPointFinder.FindJumps(ref paths.paths, ref Objects, 1, 5f, 80f, this);
 		paths.FinalizePaths(this);
 	}
 
@@ -478,6 +482,47 @@ public class TerrainChunk
 		}
 	}
 
+	private void FlushJumps(SurfaceManager SM)
+	{
+		if (HasJumps) return;
+		GameObject ramp = SM.gameObject.transform.Find("Platform Template").gameObject;
+		for (int i = 0; i < JumpList.Count; i++)
+		{
+			var jump = JumpList[i];
+			GameObject LittleRamp = GameObject.Instantiate(ramp);
+			LittleRamp.transform.rotation = Quaternion.LookRotation(-(jump.LandingPos - jump.Pos));
+			LittleRamp.transform.position = jump.Pos + 1f*(jump.LandingPos - jump.Pos).normalized;
+			RaycastHit HitInfo;
+			if (Physics.Raycast(
+					LittleRamp.transform.position + LittleRamp.transform.up * 10f,
+					-LittleRamp.transform.up,
+					out HitInfo,
+					15f,
+					1 << 8)
+				) 
+				{
+				LittleRamp.transform.position = HitInfo.point;
+				}
+			LittleRamp.transform.position += LittleRamp.transform.right * -.5f;
+			LittleRamp.transform.parent = this.UnityTerrain.transform;
+			LittleRamp.transform.name = string.Format("Jump {0}", i);
+			jump.Ramp = LittleRamp;
+			UnityEngine.Debug.DrawLine(jump.Pos, jump.RayTarget, Color.red, 1000f, false);
+			UnityEngine.Debug.DrawLine(jump.RayTarget, jump.LandingPos, Color.red, 1000f, false);
+		}
+		HasJumps = true;
+	}
+
+	private void DestroyJumps() {
+		if (!HasJumps) return;
+		for (int i = 0; i < JumpList.Count; i++) {
+			if ( JumpList[i].Ramp != null) {
+				GameObject.Destroy(JumpList[i].Ramp.gameObject);
+			}
+		}
+		HasJumps = false;
+	}
+
 	public void Flush(SurfaceManager SM)
 	{
 		ExportDebugImages();
@@ -498,7 +543,6 @@ public class TerrainChunk
 			thickness = 10f
 		};
 
-		JumpPointFinder.FindJumps(ref paths.paths, ref Objects, 1, 5f, 80f, this);
 		ChunkTerrainData.SetDetailResolution(Settings.DetailResolution, Settings.DetailResolutionPerPatch);
 		ChunkTerrainData.RefreshPrototypes();
 
@@ -535,13 +579,15 @@ public class TerrainChunk
 
 		UnityTerrain.SetActive(true);
 
+		if (GridCoords.x == 2 && GridCoords.y == 2)
+			FlushJumps(SM);
 		// Cleanup
 		Heights = new float[0, 0];
 		Moisture = new float[0, 0];
 		Normals = new Vector3[0, 0];
 		SplatmapData = new float[0, 0, 0];
 	}
-
+	
 	public void DestroyTerrain()
 	{
 		GameObject.Destroy(UnityTerrain);

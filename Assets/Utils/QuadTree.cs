@@ -13,7 +13,8 @@ namespace Assets.Utils
 	{
 		street,
 		vegetation,
-		building
+		building,
+		jump
 	}
 
 	public class QuadTreeData<T>

@@ -4,6 +4,7 @@ using Assets.Utils;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using Assets.World.Jumps;
 
 namespace Assets.World.Paths
 {
@@ -27,16 +28,17 @@ namespace Assets.World.Paths
 			return points;
 		}
 
-		public static bool getPerfectSpeed(Vector3 start, Vector3 end, float gravity, ref float v)
+		public static bool getPerfectSpeed(Vector3 start, Vector3 end, float gravity, ref float v, ref float t)
 		{
 			Vector3 dir = new Vector3(end.x - start.x, 0, end.z - start.z);
-			float ty = end.y - start.y;
-			float tx = dir.magnitude;
+			float tar_y = end.y - start.y;
+			float tar_x = dir.magnitude;
 
-			float a = -gravity * tx * tx / (2f * (ty - tx));
+			float a = -gravity * tar_x * tar_x / (2f * (tar_y - tar_x));
 			if (a > 0)
 			{
 				v = (float)Math.Sqrt(a);
+				t = tar_x / v;
 				return true;
 			}
 			return false;
@@ -85,12 +87,14 @@ namespace Assets.World.Paths
 		/// <param name="minDist"></param>
 		/// <param name="maxDist"></param>
 		/// <param name="chunk"></param>
-		public static void FindJumps(ref List<NavigationPath> paths, ref QuadTree<ObjectData> objects, int stepSize, float minDist, float maxDist, TerrainChunk chunk)
+		public static List<JumpData> FindJumps(ref List<NavigationPath> paths, ref QuadTree<ObjectData> objects, int stepSize, float minDist, float maxDist, TerrainChunk chunk)
 		{
 			float gravity = chunk.Settings.Gravity;
 			float minSpeed = chunk.Settings.MinJumpSpeed;
 			float maxSpeed = chunk.Settings.MaxJumpSpeed;
 			int pathCountBefore = paths.Count;
+
+			List<JumpData> JumpList = new List<JumpData>();
 			for (int i = 0; i < pathCountBefore; i++)
 			{
 				if (paths[i].Waypoints.Count < stepSize * 2 + 2) continue;
@@ -138,7 +142,8 @@ namespace Assets.World.Paths
 
 						if (colPos.y > node.y)
 						{
-							QuadTreeData<ObjectData> immidiatecollision2 = objects.Raycast(colPos, -dir, 2f, .1f);
+							dir = -dir;
+							QuadTreeData<ObjectData> immidiatecollision2 = objects.Raycast(colPos, dir, 2f, .1f);
 							if (immidiatecollision2 != null) continue;
 							node = colPos;
 							colPos = paths[i].WorldWaypoints[j];
@@ -152,34 +157,39 @@ namespace Assets.World.Paths
 						int r2 = CheckPhysics(node, colPos, maxSpeed, ref rayMaxTarget, ref MaxLandingPoint, gravity);
 						if (Math.Abs(r1 + r2) <= 1)
 						{
-							UnityEngine.Debug.DrawLine(node, colPos, Color.black, 1000f, false);
-							UnityEngine.Debug.DrawLine(node, node + minDist * (colPos - node).normalized, Color.grey, 1000f, false);
-							UnityEngine.Debug.DrawLine(node, node + .5f * (colPos - node), Color.red, 1000f, false);
-
 							float v = 0;
-							if (getPerfectSpeed(node, colPos, gravity, ref v))
+							float t = 0;
+							if (getPerfectSpeed(node, colPos, gravity, ref v, ref t))
 							{
+								float vx = v;
 								v /= (float)Math.Cos(Math.PI * .25f);
 
 								Vector3 rayExactTarget = new Vector3();
 								Vector3 ExactLandingPoint = new Vector3();
 								int rd = CheckPhysics(node, colPos, v, ref rayExactTarget, ref ExactLandingPoint, gravity);
-								UnityEngine.Debug.DrawLine(node, rayExactTarget, Color.green, 1000f, false);
-								UnityEngine.Debug.DrawLine(rayExactTarget, ExactLandingPoint, Color.green, 1000f, false);
+								JumpList.Add(
+									new JumpData()
+									{
+										PerfectSpeed = v,
+										PerfectTime = t,
+										LandingPos = ExactLandingPoint,
+										RayTarget = rayExactTarget,
+										Pos = node,
+										Dir = dir,
+									}
+								);
+								chunk.Objects.Put(new QuadTreeData<ObjectData>(
+									origin + dir, QuadDataType.jump,
+									new ObjectData() { label = JumpList.Count - 1 }
+									)
+								);
 							}
-
-							UnityEngine.Debug.DrawLine(node, rayMinTarget, Color.magenta, 1000f, false);
-							UnityEngine.Debug.DrawLine(rayMinTarget, MinLandingPoint, Color.magenta, 1000f, false);
-
-							UnityEngine.Debug.DrawLine(node, rayMaxTarget, Color.cyan, 1000f, false);
-							UnityEngine.Debug.DrawLine(rayMaxTarget, MaxLandingPoint, Color.cyan, 1000f, false);
 						}
 
 					}
-					// Test wheter jummp to tangential direction would be possible.
 				}
-				// TODO: for all found jump points on this path split the path at that point and add a new jump path to the created wayvertex.
 			}
+			return JumpList;
 		}
 	}
 }

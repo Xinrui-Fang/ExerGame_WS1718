@@ -94,7 +94,7 @@ public class SurfaceManager : MonoBehaviour
 	}
 	void OnEnable() // TODO Maybe even when player moves?
 	{
-		GameObject DummyTerrainObj = GameObject.Find("Dummy Terrain");
+		GameObject DummyTerrainObj = GameObject.Find("Terrain Template");
 		Terrain DummyTerrain = DummyTerrainObj.GetComponent<Terrain>();
 		DummyTerrain.terrainData.SetDetailResolution(64, 64);
 		DummyTerrain.terrainData.size = new Vector3(.01f, .01f, .01f);
