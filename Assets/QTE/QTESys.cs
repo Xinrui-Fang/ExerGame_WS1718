@@ -17,12 +17,12 @@ public class QTESys : MonoBehaviour
     private int CountingDown;
     private bool displayLetter = false;
     private bool displayMessage = false;
-    private bool passMessage = false;
+    private bool passMessage;
 
     private bool runningQTE = false;
 
     private List<int> listOfQTE;
-    private int ReturnQTE = -1;
+    private int ReturnQTE;
     public void QTE_Initialisation(int number, List<PathWithDirection> Choices, PathWithDirection current, Vector3 point)
     {
         this.IntersectionPoint = point;
@@ -30,20 +30,25 @@ public class QTESys : MonoBehaviour
         this.CurrentPath = current;
         int QTEGen;
         Debug.Log("INITIALISATION");
-        runningQTE = true;
+        this.runningQTE = true;
         this.numberOfChoices = number;
         listOfQTE = new List<int>();
         for (int i = 0; i < numberOfChoices; i++)
         {
-            QTEGen = UnityEngine.Random.Range(1, numberOfChoices);
+            QTEGen = UnityEngine.Random.Range(1, 5);
+            while (listOfQTE.Contains(QTEGen) && this.numberOfChoices <= 4)
+            {
+                QTEGen = UnityEngine.Random.Range(1, 5);
+            }
             listOfQTE.Add(QTEGen);
-            Debug.Log(listOfQTE);
+            Debug.Log(listOfQTE.ToString());
         }
-        displayLetter = true;
+        this.displayLetter = true;
+        this.ReturnQTE = 0;
         CountingDown = 1;
-        StartCoroutine(CountDown());
+        //StartCoroutine(CountDown());
 
-       
+
     }
 
     public void showLetter()
@@ -56,9 +61,11 @@ public class QTESys : MonoBehaviour
         displayLetter = false;
     }
 
-    public void showMessage()
+    public void showMessage(bool pass)
     {
+        Debug.Log("SHOW MESSAGE");
         displayMessage = true;
+        this.passMessage = pass;
     }
 
     public void hideMessage()
@@ -94,64 +101,45 @@ public class QTESys : MonoBehaviour
         {
             if (isInterestingKeysDown())
             {
-                if (listOfQTE.Contains(1))
+                if (Input.GetKey(KeyCode.A) && listOfQTE.Contains(1))
                 {
-                    if (Input.GetKeyDown(KeyCode.A))
-                    {
-                        CorrectKey = 1;
-                        StartCoroutine(KeyPressing());
-                        ReturnQTE = listOfQTE.IndexOf(1);
-                    }
-                    else
-                    {
-                        CorrectKey = 2;
-                        StartCoroutine(KeyPressing());
-                    }
+                    Debug.Log("A pressed");
+                    CorrectKey = 1;
+                    StartCoroutine(KeyPressing());
+                    //StopCoroutine(CountDown());
+                    ReturnQTE = listOfQTE.IndexOf(1);
+
                 }
-                if (listOfQTE.Contains(2))
+                else if (listOfQTE.Contains(2) && Input.GetKey(KeyCode.Z))
                 {
-                    if (Input.GetKeyDown(KeyCode.Z))
-                    {
-                        CorrectKey = 1;
-                        StartCoroutine(KeyPressing());
-                        ReturnQTE = listOfQTE.IndexOf(2);
-                    }
-                    else
-                    {
-                        CorrectKey = 2;
-                        StartCoroutine(KeyPressing());
-                    }
+                    Debug.Log("Z pressed");
+                    CorrectKey = 1;
+                    StartCoroutine(KeyPressing());
+                    //StopCoroutine(CountDown());
+                    ReturnQTE = listOfQTE.IndexOf(2);
                 }
-                if (listOfQTE.Contains(3))
+                else if (listOfQTE.Contains(3) && Input.GetKey(KeyCode.E))
                 {
-                    if (Input.GetKeyDown(KeyCode.E))
-                    {
-                        CorrectKey = 1;
-                        StartCoroutine(KeyPressing());
-                        ReturnQTE = listOfQTE.IndexOf(3);
-                    }
-                    else
-                    {
-                        CorrectKey = 2;
-                        StartCoroutine(KeyPressing());
-                    }
+                    Debug.Log("E pressed");
+                    CorrectKey = 1;
+                    StartCoroutine(KeyPressing());
+                    //StopCoroutine(CountDown());
+                    ReturnQTE = listOfQTE.IndexOf(3);
+
                 }
-                if (listOfQTE.Contains(4))
+                else if (listOfQTE.Contains(4) && Input.GetKey(KeyCode.R))
                 {
-                    if (Input.GetKeyDown(KeyCode.R))
-                    {
-                        CorrectKey = 1;
-                        StartCoroutine(KeyPressing());
-                        ReturnQTE = listOfQTE.IndexOf(4);
-                    }
-                    else
-                    {
-                        CorrectKey = 2;
-                        StartCoroutine(KeyPressing());
-                    }
+                    Debug.Log("R pressed");
+                    CorrectKey = 1;
+                    StartCoroutine(KeyPressing());
+                    //StopCoroutine(CountDown());
+                    ReturnQTE = listOfQTE.IndexOf(4);
                 }
-                StartCoroutine(KeyPressing());
-                runningQTE = false;
+                else {
+                    CorrectKey = 2;
+                    StartCoroutine(KeyPressing());
+                }
+
             }
 
         }
@@ -160,47 +148,40 @@ public class QTESys : MonoBehaviour
     {
         if (CorrectKey == 1)
         {
+            Debug.Log("CORRECT_KEY");
             CountingDown = 2;
-            passMessage = true;
-            showMessage();
+            showMessage(true);
             yield return new WaitForSeconds(1.5f);
-            CorrectKey = 0;
             hideMessage();
             hideLetter();
             yield return new WaitForSeconds(1.5f);
-            CountingDown = 1;
 
         }
         if (CorrectKey == 2)
         {
+            Debug.Log("WRONG_KEY");
             CountingDown = 2;
-            passMessage = false;
-            showMessage();
+            showMessage(false);
             yield return new WaitForSeconds(1.5f);
-            CorrectKey = 0;
             hideMessage();
             hideLetter();
             yield return new WaitForSeconds(1.5f);
-            CountingDown = 1;
-            ReturnQTE = 0;
-
         }
+        runningQTE = false;
     }
 
     IEnumerator CountDown()
     {
-        yield return new WaitForSeconds(3.5f);
+        yield return new WaitForSeconds(5f);
         if (CountingDown == 1)
         {
-            CountingDown = 2;
-            passMessage = false;
-            showMessage();
+            showMessage(false);
             yield return new WaitForSeconds(1.5f);
-            CorrectKey = 0;
             hideMessage();
             hideLetter();
             yield return new WaitForSeconds(1.5f);
-            CountingDown = 1;
+            CountingDown = 0;
+            runningQTE = false;
         }
 
     }
@@ -209,17 +190,17 @@ public class QTESys : MonoBehaviour
         int QTEGen;
         if (displayLetter)
         {
-            Debug.Log(string.Format("NumberOfChoices : {0}", numberOfChoices));
-            Debug.Log(string.Format("Screen size : {0};{1}", Screen.width, Screen.height));
+            //Debug.Log(string.Format("NumberOfChoices : {0}", numberOfChoices));
+            //Debug.Log(string.Format("Screen size : {0};{1}", Screen.width, Screen.height));
             for (int i = 0; i < numberOfChoices; i++)
             {
                 QTEGen = listOfQTE[i];
-                float angle = computeAngle(i+1); // Degrees
-                Debug.Log(string.Format("Angle {0} in Degree : {1}", i, angle));
-                angle = angle * Mathf.PI/180;
-                Debug.Log(string.Format("Angle {0} in Radian : {1}", i, angle));
-                Debug.Log(string.Format("Cos / Sin -> {0} / {1}", Mathf.Cos(angle), Mathf.Sin(angle)));
-                Debug.Log(string.Format("Position -> {0} / {1}", Screen.width/2 + Screen.width/3*Mathf.Cos(angle), Screen.height / 2 + Screen.height/3*Mathf.Sin(angle)));
+                float angle = computeAngle(i + 1); // Degrees
+                                                   // Debug.Log(string.Format("Angle {0} in Degree : {1}", i, angle));
+                angle = angle * Mathf.PI / 180;
+                /* Debug.Log(string.Format("Angle {0} in Radian : {1}", i, angle));
+                 Debug.Log(string.Format("Cos / Sin -> {0} / {1}", Mathf.Cos(angle), Mathf.Sin(angle)));
+                 Debug.Log(string.Format("Position -> {0} / {1}", Screen.width/2 + Screen.width/3*Mathf.Cos(angle), Screen.height / 2 + Screen.height/3*Mathf.Sin(angle)));*/
                 // 1 -> l/2 -40                         | - |
                 // 2 -> l/4 -40 / 3l/4 -4               | - | - |
                 // 3 -> l/4 -40 / l/2 -40 / 3l/4 -40    | - - - | 
@@ -227,19 +208,19 @@ public class QTESys : MonoBehaviour
 
                 if (QTEGen == 1)
                 {
-                    GUI.Button(new Rect(Screen.width/2 + Screen.width/3*Mathf.Cos(angle), Screen.height / 2 + Screen.height/3*Mathf.Sin(angle), 80, 40), "[A]");
+                    GUI.Button(new Rect(Screen.width / 2 - Screen.width / 3 * Mathf.Cos(angle), Screen.height / 2 - Screen.height / 3 * Mathf.Sin(angle), 80, 40), "[A]");
                 }
                 if (QTEGen == 2)
                 {
-                    GUI.Button(new Rect(Screen.width/2 + Screen.width/3*Mathf.Cos(angle), Screen.height / 2 + Screen.height/3*Mathf.Sin(angle), 80, 40), "[Z]");
+                    GUI.Button(new Rect(Screen.width / 2 - Screen.width / 3 * Mathf.Cos(angle), Screen.height / 2 - Screen.height / 3 * Mathf.Sin(angle), 80, 40), "[Z]");
                 }
                 if (QTEGen == 3)
                 {
-                    GUI.Button(new Rect(Screen.width/2 + Screen.width/3*Mathf.Cos(angle), Screen.height / 2 + Screen.height/3*Mathf.Sin(angle), 80, 40), "[E]");
+                    GUI.Button(new Rect(Screen.width / 2 - Screen.width / 3 * Mathf.Cos(angle), Screen.height / 2 - Screen.height / 3 * Mathf.Sin(angle), 80, 40), "[E]");
                 }
                 if (QTEGen == 4)
                 {
-                    GUI.Button(new Rect(Screen.width/2 + Screen.width/3*Mathf.Cos(angle), Screen.height / 2 + Screen.height/3*Mathf.Sin(angle), 80, 40), "[R]");
+                    GUI.Button(new Rect(Screen.width / 2 - Screen.width / 3 * Mathf.Cos(angle), Screen.height / 2 - Screen.height / 3 * Mathf.Sin(angle), 80, 40), "[R]");
                 }
 
             }
@@ -247,6 +228,7 @@ public class QTESys : MonoBehaviour
         }
         if (displayMessage)
         {
+            //Debug.Log(string.Format("PassMessage ? {0}", passMessage));
             if (passMessage)
             {
                 GUI.Button(new Rect(Screen.width / 2 - 60, Screen.height / 2 - 50, 120, 100), "PASS !");
@@ -266,19 +248,23 @@ public class QTESys : MonoBehaviour
     }
 
 
-    private float computeAngle(int i){
-        Vector3 v_player = CurrentPath.path.WorldWaypoints[Mathf.Max(CurrentPath.path.WorldWaypoints.Length-11, 0)]  - IntersectionPoint;
+    private float computeAngle(int i)
+    {
+        Vector3 v_player = CurrentPath.path.WorldWaypoints[Mathf.Max(CurrentPath.path.WorldWaypoints.Length - 11, 0)] - IntersectionPoint;
 
         Vector3 v_path = new Vector3();
 
-        if (MapTools.Aprox(IntersectionPoint, PathChoices[i].path.WorldWaypoints[0])){
-            v_path = PathChoices[i].path.WorldWaypoints[Mathf.Min(PathChoices[i].path.WorldWaypoints.Length-1, 9)] - IntersectionPoint;
-        }else{
-            v_path = PathChoices[i].path.WorldWaypoints[Mathf.Min(PathChoices[i].path.WorldWaypoints.Length-1, 9)] - IntersectionPoint;   
+        if (MapTools.Aprox(IntersectionPoint, PathChoices[i].path.WorldWaypoints[0]))
+        {
+            v_path = PathChoices[i].path.WorldWaypoints[Mathf.Min(PathChoices[i].path.WorldWaypoints.Length - 1, 9)] - IntersectionPoint;
+        }
+        else
+        {
+            v_path = PathChoices[i].path.WorldWaypoints[Mathf.Min(PathChoices[i].path.WorldWaypoints.Length - 1, 9)] - IntersectionPoint;
         }
 
         return Vector3.SignedAngle(v_player, v_path, Vector3.up);
-       
+
     }
 
 
