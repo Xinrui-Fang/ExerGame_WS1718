@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Assets.Utils
@@ -492,5 +493,31 @@ namespace Assets.Utils
 			return foundSomething;
 		}
 
+		public IEnumerator<T> GetEnumerator() {
+			foreach (QuadTreeData<T> dataPoint in Data)
+			{
+				if (dataPoint == null) continue;
+				if (dataPoint.contents == null) continue;
+				yield return dataPoint.contents;
+			}
+			if (NW != null)
+			{
+				foreach (T contents in NW) {
+					yield return contents;
+				}
+				foreach (T contents in NE)
+				{
+					yield return contents;
+				}
+				foreach (T contents in SE)
+				{
+					yield return contents;
+				}
+				foreach (T contents in SW)
+				{
+					yield return contents;
+				}
+			}
+		}
 	}
 }
