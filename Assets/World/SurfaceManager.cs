@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Threading;
 using Assets.Utils;
+using System.Collections;
 
 public class SurfaceManager : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class SurfaceManager : MonoBehaviour
 	QuadTree<TerrainChunk> Chunks = new QuadTree<TerrainChunk>(new RectangleBound(new Vector2(0, 0), 5));
 
 	int ChunkCount = 0;
+	public int JumpsPerFrame = 5;
+
 	void Build(TerrainChunk tile, Vector2Int offset)
 	{
 		tile.Build(offset);
@@ -26,7 +29,10 @@ public class SurfaceManager : MonoBehaviour
 			tile.Flush(this);
 
 			bool success = false;
+
+			StopCoroutine("FlushJumps");
 			Chunks = Chunks.PutAndGrow(ref success, tile.GridCoords, 0, tile);
+
 			// TODO: Error checking
 			ChunkCount++;
 			Assets.Utils.Debug.Log(string.Format("We now have {0} chunks loaded.", ChunkCount));
@@ -48,6 +54,8 @@ public class SurfaceManager : MonoBehaviour
 					AI.SetActive(true);
 				}
 			}
+
+			StartCoroutine("FlushJumps");
 		}
 	}
 
@@ -108,7 +116,48 @@ public class SurfaceManager : MonoBehaviour
 		Settings.MainObject.transform.position.Set(2.5f * Settings.Size, Settings.Depth + 10f, 2.5f * Settings.Size);
 
 		ExtendAt(playerPos);
+		StartCoroutine("FlushJumps");
 	}
+
+	IEnumerator FlushJumps() {
+		GameObject ramp = transform.Find("Platform Template").gameObject;
+		while(true) {
+			int counter = 0;
+			foreach (TerrainChunk chunk in Chunks) {
+				var JumpList = chunk.JumpList;
+				for (int i = chunk.FlushedJumps; i < JumpList.Count; i++)
+				{
+					var jump = JumpList[i];
+					GameObject LittleRamp = GameObject.Instantiate(ramp);
+					LittleRamp.transform.rotation = Quaternion.LookRotation(-(jump.LandingPos - jump.Pos));
+					LittleRamp.transform.position = jump.Pos + 1f * (jump.LandingPos - jump.Pos).normalized;
+					RaycastHit HitInfo;
+					if (Physics.Raycast(
+							LittleRamp.transform.position + LittleRamp.transform.up * 10f,
+							-LittleRamp.transform.up,
+							out HitInfo,
+							15f,
+							1 << 8)
+						)
+					{
+						LittleRamp.transform.position = HitInfo.point;
+					}
+					LittleRamp.transform.position += LittleRamp.transform.right * -.5f;
+					LittleRamp.transform.parent = chunk.UnityTerrain.transform;
+					LittleRamp.transform.name = string.Format("Jump {0}", i);
+					jump.Ramp = LittleRamp;
+					chunk.FlushedJumps++;
+					counter++;
+					if (counter == JumpsPerFrame)
+					{
+						counter = 0;
+						yield return new WaitForEndOfFrame();
+					}
+				}
+			}
+			yield return new WaitForEndOfFrame();
+		}
+	} 
 
 	public TerrainChunk GetTile(Vector2Int pos)
 	{

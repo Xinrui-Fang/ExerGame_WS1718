@@ -1,86 +1,47 @@
 fileFormatVersion: 2
-guid: e368183fb2cfacb4e8e07a15eea95b2e
-timeCreated: 1517879165
+guid: 2c3c2c140690ae8479e77e3ff5747eb0
+timeCreated: 1517920663
 licenseType: Free
 ModelImporter:
   serializedVersion: 22
   fileIDToRecycleName:
-    100000: 002
-    100002: 002_MeshPart0
-    100004: 002_MeshPart1
-    100006: 003
-    100008: 003_MeshPart0
-    100010: 003_MeshPart1
-    100012: 004
-    100014: 004_MeshPart0
-    100016: 004_MeshPart1
-    100018: 1
-    100020: 1_MeshPart0
-    100022: 1_MeshPart1
-    100024: Box001
-    100026: Grass
-    100028: grass
-    100030: //RootNode
-    400000: 002
-    400002: 002_MeshPart0
-    400004: 002_MeshPart1
-    400006: 003
-    400008: 003_MeshPart0
-    400010: 003_MeshPart1
-    400012: 004
-    400014: 004_MeshPart0
-    400016: 004_MeshPart1
-    400018: 1
-    400020: 1_MeshPart0
-    400022: 1_MeshPart1
-    400024: Box001
-    400026: Grass
-    400028: grass
-    400030: //RootNode
-    2300000: 002_MeshPart0
-    2300002: 002_MeshPart1
-    2300004: 003_MeshPart0
-    2300006: 003_MeshPart1
-    2300008: 004_MeshPart0
-    2300010: 004_MeshPart1
-    2300012: 1_MeshPart0
-    2300014: 1_MeshPart1
-    2300016: Box001
-    3300000: 002_MeshPart0
-    3300002: 002_MeshPart1
-    3300004: 003_MeshPart0
-    3300006: 003_MeshPart1
-    3300008: 004_MeshPart0
-    3300010: 004_MeshPart1
-    3300012: 1_MeshPart0
-    3300014: 1_MeshPart1
-    3300016: Box001
-    4300000: Box001
-    4300002: 1_MeshPart0
-    4300004: 1_MeshPart1
-    4300006: 002_MeshPart0
-    4300008: 002_MeshPart1
-    4300010: 003_MeshPart0
-    4300012: 003_MeshPart1
-    4300014: 004_MeshPart0
-    4300016: 004_MeshPart1
-    6400000: 002_MeshPart0
-    6400002: 002_MeshPart1
-    6400004: 003_MeshPart0
-    6400006: 003_MeshPart1
-    6400008: 004_MeshPart0
-    6400010: 004_MeshPart1
-    6400012: 1_MeshPart0
-    6400014: 1_MeshPart1
-    6400016: Box001
+    100000: Box _LOD0
+    100002: Box _LOD1
+    100004: Box _LOD2
+    100006: Grass
+    100008: grass
+    100010: Grass001
+    100012: grass001
+    100014: //RootNode
+    400000: Box _LOD0
+    400002: Box _LOD1
+    400004: Box _LOD2
+    400006: Grass
+    400008: grass
+    400010: Grass001
+    400012: grass001
+    400014: //RootNode
+    2300000: Box _LOD0
+    2300002: Box _LOD1
+    2300004: Box _LOD2
+    3300000: Box _LOD0
+    3300002: Box _LOD1
+    3300004: Box _LOD2
+    4300000: Box _LOD0
+    4300002: Box _LOD1
+    4300004: Box _LOD2
+    6400000: Box _LOD0
+    6400002: Box _LOD1
+    6400004: Box _LOD2
     7400000: Take 001
     9500000: //RootNode
+    20500000: //RootNode
   externalObjects:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: 02 - Default
-    second: {fileID: 2100000, guid: d6bd994ceaf94104180dcca5de2625c3, type: 2}
+    second: {fileID: 2100000, guid: a420c08bf0cd0c44c8fb707635b9536b, type: 2}
   materials:
     importMaterials: 1
     materialName: 0
@@ -109,7 +70,10 @@ ModelImporter:
     clipAnimations: []
     isReadable: 1
   meshes:
-    lODScreenPercentages: []
+    lODScreenPercentages:
+    - 0.25
+    - 0.125
+    - 0.01
     globalScale: 1
     meshCompression: 3
     addColliders: 1
@@ -149,10 +113,10 @@ ModelImporter:
     rootMotionBoneName: 
     rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
     hasTranslationDoF: 0
-    hasExtraRoot: 1
+    hasExtraRoot: 0
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  animationType: 0
+  animationType: 2
   humanoidOversampling: 1
   additionalBone: 0
   userData: 
