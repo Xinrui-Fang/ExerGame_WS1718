@@ -146,6 +146,8 @@ public class SurfaceManager : MonoBehaviour
 					LittleRamp.transform.parent = chunk.UnityTerrain.transform;
 					LittleRamp.transform.name = string.Format("Jump {0}", i);
 					jump.Ramp = LittleRamp;
+					UnityEngine.Debug.DrawLine(jump.Pos, jump.RayTarget, Color.magenta, 1000f, false);
+					UnityEngine.Debug.DrawLine(jump.RayTarget, jump.LandingPos, Color.magenta, 1000f, false);
 					chunk.FlushedJumps++;
 					counter++;
 					if (counter == JumpsPerFrame)

@@ -117,11 +117,16 @@ namespace Assets.World.Paths
 
 					// skip points that have no free space in front of them.
 					// TODO: this may be done later after deciding which side is the jump start.
-					QuadTreeData<ObjectData> immidiatecollision = objects.Raycast(origin, dir, 2f, .2f);
+					QuadTreeData<ObjectData> immidiatecollision = objects.Raycast(origin, dir, 3f, .25f);
 					if (immidiatecollision != null) continue;
+					 
 
 					// start a raycast with minDist distance.
-					origin = origin + minDist * dir;
+					origin = origin + minDist * .5f * dir;
+					Vector3 WorldDir = (NextNode - node).normalized;
+					Vector3 WorldOrigin = node + minDist * .5f * WorldDir;
+
+					if (objects.Collides(new CircleBound(origin, 2f))) continue;
 
 					QuadTreeData<ObjectData> collision = objects.Raycast(origin, dir, maxDist - minDist, QuadDataType.street, .5f);
 					if (collision != null)
@@ -145,28 +150,29 @@ namespace Assets.World.Paths
 							dir = -dir;
 							QuadTreeData<ObjectData> immidiatecollision2 = objects.Raycast(colPos, dir, 2f, .1f);
 							if (immidiatecollision2 != null) continue;
-							node = colPos;
-							colPos = paths[i].WorldWaypoints[j];
+							Vector3 Copy = colPos;
+							colPos = WorldOrigin;
+							WorldOrigin = Copy;
 						}
 
 						Vector3 rayMinTarget = new Vector3();
 						Vector3 rayMaxTarget = new Vector3();
 						Vector3 MinLandingPoint = new Vector3();
 						Vector3 MaxLandingPoint = new Vector3();
-						int r1 = CheckPhysics(node, colPos, minSpeed, ref rayMinTarget, ref MinLandingPoint, gravity);
-						int r2 = CheckPhysics(node, colPos, maxSpeed, ref rayMaxTarget, ref MaxLandingPoint, gravity);
+						int r1 = CheckPhysics(WorldOrigin, colPos, minSpeed, ref rayMinTarget, ref MinLandingPoint, gravity);
+						int r2 = CheckPhysics(WorldOrigin, colPos, maxSpeed, ref rayMaxTarget, ref MaxLandingPoint, gravity);
 						if (Math.Abs(r1 + r2) <= 1)
 						{
 							float v = 0;
 							float t = 0;
-							if (getPerfectSpeed(node, colPos, gravity, ref v, ref t))
+							if (getPerfectSpeed(WorldOrigin, colPos, gravity, ref v, ref t))
 							{
 								float vx = v;
 								v /= (float)Math.Cos(Math.PI * .25f);
 
 								Vector3 rayExactTarget = new Vector3();
 								Vector3 ExactLandingPoint = new Vector3();
-								int rd = CheckPhysics(node, colPos, v, ref rayExactTarget, ref ExactLandingPoint, gravity);
+								int rd = CheckPhysics(WorldOrigin, colPos, v, ref rayExactTarget, ref ExactLandingPoint, gravity);
 								JumpList.Add(
 									new JumpData()
 									{
@@ -174,7 +180,7 @@ namespace Assets.World.Paths
 										PerfectTime = t,
 										LandingPos = ExactLandingPoint,
 										RayTarget = rayExactTarget,
-										Pos = node,
+										Pos = WorldOrigin,
 										Dir = dir,
 									}
 								);

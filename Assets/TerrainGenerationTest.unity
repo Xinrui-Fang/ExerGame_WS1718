@@ -259,7 +259,7 @@ MonoBehaviour:
   QTEChoice: 0
   QTENeedsChoice: 0
   QTEAtStart: 0
-  error: 1
+  QTE_Sys: {fileID: 1129090989}
   FrontTireOffset: 0.5
   BackTireOffset: 0.6
   RayOffset: 0.6
@@ -589,6 +589,26 @@ Prefab:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 20500000, guid: 2c3c2c140690ae8479e77e3ff5747eb0, type: 3}
+      propertyPath: m_FadeMode
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 20500000, guid: 2c3c2c140690ae8479e77e3ff5747eb0, type: 3}
+      propertyPath: m_AnimateCrossFading
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 20500000, guid: 2c3c2c140690ae8479e77e3ff5747eb0, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0.6144388
+      objectReference: {fileID: 0}
+    - target: {fileID: 20500000, guid: 2c3c2c140690ae8479e77e3ff5747eb0, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0.28722084
+      objectReference: {fileID: 0}
+    - target: {fileID: 20500000, guid: 2c3c2c140690ae8479e77e3ff5747eb0, type: 3}
+      propertyPath: m_LODs.Array.data[2].screenRelativeHeight
+      value: 0.026047504
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 2c3c2c140690ae8479e77e3ff5747eb0, type: 3}
   m_IsPrefabParent: 0
@@ -676,6 +696,46 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
+--- !u!1 &1129090987
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1129090988}
+  - component: {fileID: 1129090989}
+  m_Layer: 0
+  m_Name: QTESys
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1129090988
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1129090987}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 267.9743, y: 124.77773, z: 179.64342}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 7
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1129090989
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1129090987}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4bfbbcaac2b14be8a39d9d5a877e6e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1194882776
 GameObject:
   m_ObjectHideFlags: 0
@@ -969,8 +1029,8 @@ MonoBehaviour:
     WaterLevel: 0.1
     VegetationLevel: 0.6
     HeightmapResolution: 129
-    DetailResolution: 129
-    DetailResolutionPerPatch: 32
+    DetailResolution: 128
+    DetailResolutionPerPatch: 64
     Size: 128
     Trees:
     - {fileID: 100000, guid: c91c1eb85782d5748ace27eb4d7415bb, type: 3}
@@ -1080,8 +1140,8 @@ MonoBehaviour:
       RenderMode: 0
     WorldSeed: 21312
     TerrainMaterial: {fileID: 2100000, guid: aa92db0d7bc9ac44691bd4558ab97e8d, type: 2}
-    TreeBillBoardDistance: 24
-    TreeRenderDistance: 64
+    TreeBillBoardDistance: 64
+    TreeRenderDistance: 128
     DetailRenderDistance: 32
     TreePlantOffset: 200
     TileCorrection: {x: 0, y: 0, z: 0}

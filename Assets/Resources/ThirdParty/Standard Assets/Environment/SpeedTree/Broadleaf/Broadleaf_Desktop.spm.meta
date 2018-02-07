@@ -1,15 +1,17 @@
 fileFormatVersion: 2
 guid: c91c1eb85782d5748ace27eb4d7415bb
+timeCreated: 1517980716
+licenseType: Free
 SpeedTreeImporter:
   externalObjects: {}
   serializedVersion: 4
   mainColor: {r: 1, g: 1, b: 1, a: 1}
   hueVariation: {r: 1, g: 0.5, b: 0, a: 0.1}
-  alphaTestRef: 0.5
+  alphaTestRef: 0.33
   bestWindQuality: 4
   hasBillboard: 1
   lODSettings:
-  - height: 0.5651825
+  - height: 0.5
     castShadows: 1
     receiveShadows: 1
     useLightProbes: 1
@@ -17,7 +19,7 @@ SpeedTreeImporter:
     enableBump: 1
     enableHue: 1
     windQuality: 4
-  - height: 0.33927777
+  - height: 0.25
     castShadows: 1
     receiveShadows: 1
     useLightProbes: 1
@@ -25,7 +27,7 @@ SpeedTreeImporter:
     enableBump: 1
     enableHue: 1
     windQuality: 4
-  - height: 0.18933544
+  - height: 0.10204849
     castShadows: 1
     receiveShadows: 1
     useLightProbes: 1
@@ -34,8 +36,8 @@ SpeedTreeImporter:
     enableHue: 1
     windQuality: 4
   - height: 0.01
-    castShadows: 0
-    receiveShadows: 0
+    castShadows: 1
+    receiveShadows: 1
     useLightProbes: 0
     reflectionProbeUsage: 0
     enableBump: 1
