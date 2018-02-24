@@ -31,22 +31,22 @@ MonoBehaviour:
   antialiasing:
     m_Enabled: 1
     m_Settings:
-      method: 1
+      method: 0
       fxaaSettings:
-        preset: 3
+        preset: 0
       taaSettings:
-        jitterSpread: 0.232
+        jitterSpread: 1
         sharpen: 0
-        stationaryBlending: 0.339
-        motionBlending: 0.821
+        stationaryBlending: 0.99
+        motionBlending: 0.424
   ambientOcclusion:
     m_Enabled: 0
     m_Settings:
-      intensity: 0.66
-      radius: 0.05
-      sampleCount: 3
+      intensity: 0.45
+      radius: 0.5
+      sampleCount: 16
       downsampling: 1
-      forceForwardCompatibility: 0
+      forceForwardCompatibility: 1
       ambientOnly: 0
       highPrecision: 1
   screenSpaceReflection:
@@ -71,16 +71,16 @@ MonoBehaviour:
   depthOfField:
     m_Enabled: 0
     m_Settings:
-      focusDistance: 2.45
-      aperture: 2.5
-      focalLength: 43
+      focusDistance: 0.1
+      aperture: 762.43274
+      focalLength: 42
       useCameraFov: 0
       kernelSize: 0
   motionBlur:
     m_Enabled: 1
     m_Settings:
-      shutterAngle: 9
-      sampleCount: 10
+      shutterAngle: 20
+      sampleCount: 20
       frameBlending: 0
   eyeAdaptation:
     m_Enabled: 0
