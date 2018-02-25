@@ -232,6 +232,9 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 341534116}
+  - component: {fileID: 341534119}
+  - component: {fileID: 341534118}
+  - component: {fileID: 341534117}
   - component: {fileID: 341534115}
   m_Layer: 0
   m_Name: Player_Simple_Animated
@@ -246,31 +249,15 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 341534114}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a3ed88a23228314ca08d1dba3b530e0, type: 3}
+  m_Script: {fileID: 11500000, guid: 38d0d200df71ece42aa4045d20a3795a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  surfaceManager: {fileID: 1519617106}
-  speedMultiplier: 1
-  maxSpeed: 10
-  maxRotation: 3
-  ChangingViewOffset: 10
-  QTEChoice: 0
-  QTENeedsChoice: 0
-  QTEAtStart: 0
-  QTE_Sys: {fileID: 1129090989}
-  FrontTireOffset: 0.5
+  FrontTireOffset: 0.6
   BackTireOffset: 0.6
   RayOffset: 0.6
   RayMaxDist: 1.2
-  SmoothCount: 10
-  SkipDist: 4
-  LeaningThreshold: 5
-  LeaningSpeed: 4
-  MaxLeaningAngle: 15
-  Speed: 0
-  Inertia: 0.6
 --- !u!4 &341534116
 Transform:
   m_ObjectHideFlags: 0
@@ -286,6 +273,58 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &341534117
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 341534114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ffa83eb81f6b91b45a939fd76176af7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  LeaningThreshold: 5
+  LeaningSpeed: 10
+  MaxLeaningAngle: 20
+  Speed2PedalingFactor: 0.25
+--- !u!114 &341534118
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 341534114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 328b59b6e6380ae459467c069e841b12, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SurfaceManager: {fileID: 1519617106}
+  TargetSourceSetting: 1
+  InputSourceSettings: 1
+  QTE_Sys: {fileID: 1129090989}
+  SmoothCount: 10
+  SkipDist: 4
+  MaxSpeed: 10
+  MaxRotation: 3
+  Inertia: 0.8
+--- !u!114 &341534119
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 341534114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae3616d72877c234d93c5123d50a61ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Inflight: 0
+  forward: 1
+  Speed: 0
+  Leaning: 0
+  handleDirection: {x: 0, y: 0, z: 0}
+  TargetPos: {x: 0, y: 0, z: 0}
 --- !u!1001 &397585192
 Prefab:
   m_ObjectHideFlags: 0
@@ -876,7 +915,6 @@ GameObject:
   - component: {fileID: 1330100700}
   - component: {fileID: 1330100699}
   - component: {fileID: 1330100698}
-  - component: {fileID: 1330100703}
   m_Layer: 0
   m_Name: Camera
   m_TagString: Untagged
@@ -958,25 +996,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
---- !u!114 &1330100703
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1330100697}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 072f75de31fed3340afc9d0f56991d15, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Target: {fileID: 0}
-  RelativeOffset: {x: 0, y: 0, z: 0}
-  StaticFocus: 0
-  RateOfChange: 0
-  minDist: 0
-  maxDist: 0
-  MagicValue_c: 0
-  MagicValue_d: 0
 --- !u!1 &1519617105
 GameObject:
   m_ObjectHideFlags: 0
@@ -1169,7 +1188,10 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 1996260722}
+  - component: {fileID: 1996260725}
+  - component: {fileID: 1996260724}
   - component: {fileID: 1996260723}
+  - component: {fileID: 1996260726}
   m_Layer: 0
   m_Name: AI_Simple_Animated
   m_TagString: Untagged
@@ -1200,21 +1222,62 @@ MonoBehaviour:
   m_GameObject: {fileID: 1996260721}
   m_Enabled: 0
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 60061f568b9abc54fa566fa4a62537d9, type: 3}
+  m_Script: {fileID: 11500000, guid: ffa83eb81f6b91b45a939fd76176af7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  surfaceManager: {fileID: 1519617106}
-  speedMultiplier: 1
-  maxSpeed: 10
-  maxRotation: 1.5
-  FrontTireOffset: 0.5
+  LeaningThreshold: 5
+  LeaningSpeed: 10
+  MaxLeaningAngle: 20
+  Speed2PedalingFactor: 0.25
+--- !u!114 &1996260724
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1996260721}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38d0d200df71ece42aa4045d20a3795a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  FrontTireOffset: 0.6
   BackTireOffset: 0.6
   RayOffset: 0.6
   RayMaxDist: 1.2
+--- !u!114 &1996260725
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1996260721}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 328b59b6e6380ae459467c069e841b12, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SurfaceManager: {fileID: 1519617106}
+  TargetSourceSetting: 0
+  InputSourceSettings: 0
+  QTE_Sys: {fileID: 0}
   SmoothCount: 10
   SkipDist: 4
-  LeaningThreshold: 5
-  LeaningSpeed: 4
-  MaxLeaningAngle: 15
-  Speed: 0
+  MaxSpeed: 10
+  MaxRotation: 3
   Inertia: 0.6
+--- !u!114 &1996260726
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1996260721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae3616d72877c234d93c5123d50a61ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Inflight: 0
+  forward: 1
+  Speed: 0
+  Leaning: 0
+  handleDirection: {x: 0, y: 0, z: 0}
+  TargetPos: {x: 0, y: 0, z: 0}

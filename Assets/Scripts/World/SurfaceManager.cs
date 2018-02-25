@@ -42,19 +42,21 @@ public class SurfaceManager : MonoBehaviour
 				if (!success) Assets.Utils.Debug.Log("WTF!!!", LOGLEVEL.ERROR);
 				GameObject.Find("Camera").SetActive(false);
 
-				Settings.MainObject.GetComponent<BicycleV2>().Init();
-
-				Settings.MainObject.GetComponent<BicycleV2>().enabled = true;
+				Settings.MainObject.GetComponent<BikeBase>().Init();
+				Settings.MainObject.GetComponent<BikeBase>().enabled = true;
+				Settings.MainObject.GetComponent<PlacementCorrection>().enabled = true;
+				Settings.MainObject.GetComponent<BikeAnimation>().enabled = true;
 				Settings.MainObject.SetActive(true);
 
 				foreach (GameObject AI in Settings.AIs)
 				{
-					AI.GetComponent<AI_Simple>().Init();
-					AI.GetComponent<AI_Simple>().enabled = true;
+					AI.GetComponent<BikeBase>().Init();
+					AI.GetComponent<BikeBase>().enabled = true;
+					AI.GetComponent<PlacementCorrection>().enabled = true;
+					AI.GetComponent<BikeAnimation>().enabled = true;
 					AI.SetActive(true);
 				}
 			}
-
 			StartCoroutine("FlushJumps");
 		}
 	}
