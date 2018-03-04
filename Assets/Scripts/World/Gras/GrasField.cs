@@ -6,24 +6,13 @@ public class GrasField
 {
 	private GameObject GrasFieldObject;
 	private TerrainChunk Terrain;
-	public float Spread = 1f;
-	float probeDelta = .5f;
+	private List<Vector3> positions;
+	public List<Vector2> DetailLayer;
+	private List<Color> colors;
 
 	public GrasField(TerrainChunk Terrain, int seed)
 	{
-		float spreadHalf = Spread / 2f;
-
-		Terrain UnityTerrain = Terrain.UnityTerrain.GetComponent<Terrain>();
-		TerrainData UnityTerrainData = UnityTerrain.terrainData;
-
-		GrasFieldObject = new GameObject(
-			"GrasField"
-		);
-		GrasFieldObject.transform.SetParent(Terrain.UnityTerrain.transform);
-		GrasFieldObject.AddComponent<MeshFilter>();
-		GrasFieldObject.AddComponent<MeshRenderer>();
-
-		MeshFilter Filter = GrasFieldObject.GetComponent<MeshFilter>();
+		this.Terrain = Terrain;
 
 		float[,] heights = Terrain.Heights;
 		float[,] moisture = Terrain.Moisture;
@@ -31,11 +20,10 @@ public class GrasField
 
 		int Resolution = Terrain.Heights.GetLength(0);
 		int grasCount = Terrain.Settings.MaxGrasCount;
-		List<Vector3> positions = new List<Vector3>(grasCount);
-		List<Vector3> normals = new List<Vector3>(grasCount);
-		List<Vector2> DetailLayer = new List<Vector2>(grasCount);
-		List<Color> colors = new List<Color>(grasCount);
-		int[] indices = new int[grasCount];
+
+		positions = new List<Vector3>(grasCount);
+		DetailLayer = new List<Vector2>(grasCount);
+		colors = new List<Color>(grasCount);
 
 		Color HealtyColor = Terrain.Settings.HealthyGrasColor;
 		Color DryColor = Terrain.Settings.DryGrasColor;
@@ -44,8 +32,10 @@ public class GrasField
 
 		System.Random prng = new System.Random(seed);
 
-		CircleBound SmallCircle = new CircleBound(new Vector2(), 1.5f);
-		CircleBound BigCircle = new CircleBound(new Vector2(), 2f);
+		CircleBound SmallCircle = new CircleBound(
+			new Vector2(), 
+			Terrain.Settings.CenterStreetNeighborOffset - Terrain.Settings.gridElementWidth * .75f
+		);
 		CircleBound LargeCircle = new CircleBound(new Vector2(), 3f);
 		Vector2 flatCoord = new Vector2();
 		int i = 0;
@@ -58,10 +48,11 @@ public class GrasField
 			float fy = (float)prng.NextDouble();
 			int x = Mathf.RoundToInt(fx * (Resolution - 1));
 			int z = Mathf.RoundToInt(fy * (Resolution - 1));
+			x = x < 0 ? 0 : (x > (Resolution - 1) ? (Resolution - 1) : x);
+			z = z < 0 ? 0 : (z > (Resolution - 1) ? (Resolution - 1) : z);
+
 			Terrain.ToWorldCoordinate(fx, fy, ref flatCoord);
 			SmallCircle.Center = flatCoord;
-			BigCircle.Center = flatCoord;
-			//if (Terrain.Objects.Collides(BigCircle, QuadDataType.street)) continue;
 			if (Terrain.Objects.Collides(SmallCircle)) continue;
 			float height = heights[z, x];
 			if (height < WaterLevel || height > MaxVegLevel) continue;
@@ -72,34 +63,48 @@ public class GrasField
 			if (Terrain.Objects.Collides(LargeCircle, QuadDataType.vegetation)) health *= .8f;
 			if (health < .3f) continue;
 			Color healthColor = Color.Lerp(DryColor, HealtyColor, health * health);
-			float xd = -spreadHalf + Spread * (float)prng.NextDouble();
-			float yd = -spreadHalf + Spread * (float)prng.NextDouble();
-			float MinHeight = UnityTerrainData.GetInterpolatedHeight(fx + xd * ToTerrainOffset, fy + yd * ToTerrainOffset);
-			if (TerrainNormals[z, x].y < .9f) // on steep terrain seek grass correction
-			{
-				float HeightProbe = UnityTerrainData.GetInterpolatedHeight(fx + (xd + probeDelta) * ToTerrainOffset, fy + (yd + probeDelta) * ToTerrainOffset);
-				MinHeight = MinHeight > HeightProbe ? HeightProbe : MinHeight;
-				HeightProbe = UnityTerrainData.GetInterpolatedHeight(fx + (xd - probeDelta) * ToTerrainOffset, fy + (yd - probeDelta) * ToTerrainOffset);
-				MinHeight = MinHeight > HeightProbe ? HeightProbe : MinHeight;
-				HeightProbe = UnityTerrainData.GetInterpolatedHeight(fx + (xd - probeDelta) * ToTerrainOffset, fy + (yd + probeDelta) * ToTerrainOffset);
-				MinHeight = MinHeight > HeightProbe ? HeightProbe : MinHeight;
-				HeightProbe = UnityTerrainData.GetInterpolatedHeight(fx + (xd + probeDelta) * ToTerrainOffset, fy + (yd - probeDelta) * ToTerrainOffset);
-				MinHeight = MinHeight > HeightProbe ? HeightProbe : MinHeight;
-			}
-
 			positions.Add(new Vector3(
-				flatCoord.x + xd,
-				MinHeight,
-				flatCoord.y + yd)
+				flatCoord.x,
+				height * Terrain.Settings.Depth +1,
+				flatCoord.y)
 			);
 			DetailLayer.Add(new Vector2(Mathf.Round((float)prng.NextDouble()), .5f * (health + (float)prng.NextDouble())));
 			colors.Add(healthColor);
-			indices[i] = i;
 			Vector3 GrasNormal = new Vector3(0, 1f, 0);
-			GrasNormal += UnityTerrainData.GetInterpolatedNormal(x + xd * ToTerrainOffset, fy + yd * ToTerrainOffset);
-			GrasNormal.Normalize();
-			normals.Add(GrasNormal);//UnityTerrainData.GetInterpolatedNormal(x + xd * ToTerrainOffset, fy + yd * ToTerrainOffset));
 			i++;
+		}
+
+	}
+
+	public void Flush()
+	{
+		Terrain UnityTerrain = Terrain.UnityTerrain.GetComponent<Terrain>();
+		TerrainData UnityTerrainData = UnityTerrain.terrainData;
+		GrasFieldObject = new GameObject(
+				"GrasField"
+			);
+		GrasFieldObject.transform.SetParent(Terrain.UnityTerrain.transform);
+		GrasFieldObject.AddComponent<MeshFilter>();
+		GrasFieldObject.AddComponent<MeshRenderer>();
+		MeshFilter Filter = GrasFieldObject.GetComponent<MeshFilter>();
+		int[] indices = new int[positions.Count];
+		List<Vector3> normals = new List<Vector3>(positions.Count);
+
+		RaycastHit hit;
+		for (int i = 0; i < positions.Count; i++)
+		{
+			indices[i] = i;
+			Vector3 raystart = positions[i];
+			raystart.y = Terrain.Settings.Depth + 1;
+			if (Physics.Raycast(raystart, -Vector3.up, out hit, Terrain.Settings.Depth + 1f, 1 << 8))
+			{
+				positions[i] = hit.point;
+				normals.Add((hit.normal + Vector3.up).normalized);
+			}
+			else
+			{
+				normals.Add(Vector3.up);
+			}
 		}
 
 		Mesh mesh = new Mesh();

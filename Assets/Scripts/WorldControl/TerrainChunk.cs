@@ -10,6 +10,10 @@ using UnityEngine;
 public class TerrainChunk
 {
 	public Vector2Int GridCoords;
+
+	public Vector3 TerrainPos;
+	public Vector2 TerrainOffset;
+
 	public int ChunkSeed;
 
 	public int FlushedJumps;
@@ -38,6 +42,8 @@ public class TerrainChunk
 	internal List<JumpData> JumpList { get; private set; }
 	public bool HasJumps { get; private set; }
 	public bool isFinished = false;
+	public int GrassProgress = 0;
+	public GrasField grasField;
 
 	public TerrainChunk N, E, S, W;
 	public override int GetHashCode()
@@ -105,6 +111,8 @@ public class TerrainChunk
 	public void Build(Vector2Int gridCoords)
 	{
 		GridCoords = gridCoords;
+		TerrainPos = new Vector3(GridCoords.x, 0, GridCoords.y) * (float)Settings.Size;
+		TerrainOffset = new Vector3(GridCoords.x, GridCoords.y) * (float)Settings.Size;
 		ChunkSeed = GetHashCode();
 
 		Objects = new QuadTree<ObjectData>(GetBoundary());
@@ -136,7 +144,7 @@ public class TerrainChunk
 		stopWatch.Reset();
 		stopWatch.Start();
 
-		Settings.Moisture.GetHeightSource(GridCoords * Settings.HeightmapResolution).ManipulateHeight(ref Moisture, Settings.HeightmapResolution, Settings.Size);
+		Settings.Moisture.GetHeightSource(GridCoords * Settings.HeightmapResolution, WorldSeed, 99).ManipulateHeight(ref Moisture, Settings.HeightmapResolution, Settings.Size);
 
 		Assets.Utils.Debug.Log(string.Format("Took {0} ms to create  Moisture at {1}", stopWatch.ElapsedMilliseconds, GridCoords), LOGLEVEL.META);
 
@@ -233,8 +241,10 @@ public class TerrainChunk
 		Assets.Utils.Debug.Log(string.Format("Took {0} ms to create Vegetation and Splatmap at {1}", stopWatch.ElapsedMilliseconds, GridCoords), LOGLEVEL.META);
 		stopWatch.Stop();
 
-		JumpList = JumpPointFinder.FindJumps(ref paths.paths, 1, 2f, 5f, 80f, this);
+		JumpList = JumpPointFinder.FindJumps(ref paths.paths, 1, Settings.MinJumpDist, Settings.MaxJumpDist, this);
 		paths.FinalizePaths(this);
+
+		grasField = new GrasField(this, this.GetHashCode());
 	}
 
 	public void CheckNeighbors()
@@ -506,10 +516,10 @@ public class TerrainChunk
 		{
 			heightmapResolution = Settings.HeightmapResolution,
 			size = new Vector3(Settings.Size, Settings.Depth, Settings.Size),
-			splatPrototypes = Settings.GetSplat(),
+			splatPrototypes = GameSettings.SpatProtoTypes,
 			alphamapResolution = Settings.HeightmapResolution,
-			detailPrototypes = Settings.GetDetail(),
-			treePrototypes = Settings.GetTreePrototypes(),
+			detailPrototypes = GameSettings.DetailPrototypes,
+			treePrototypes = GameSettings.TreeProtoTypes,
 			treeInstances = Trees.ToArray(),
 			thickness = 10f
 		};
@@ -543,19 +553,20 @@ public class TerrainChunk
 		terrain.castShadows = true;
 		terrain.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.BlendProbesAndSkybox;
 
-		UnityTerrain.transform.position = new Vector3(GridCoords.x, 0, GridCoords.y) * (float)Settings.Size;
+		UnityTerrain.transform.position = TerrainPos;
 		isFinished = true;
 		Synchronize(SM);
-		GrasField MyGras = new GrasField(this, this.GetHashCode());
 
 		UnityTerrain.SetActive(true);
 
 		FlushedJumps = 0;
 		// Cleanup
 		Heights = new float[0, 0];
-		Moisture = new float[0, 0];
+		//Moisture = new float[0, 0];
 		Normals = new Vector3[0, 0];
 		SplatmapData = new float[0, 0, 0];
+
+		grasField.Flush();
 	}
 	
 	public void DestroyTerrain()

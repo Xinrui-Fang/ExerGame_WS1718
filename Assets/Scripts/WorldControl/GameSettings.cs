@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using HeightMapInterfaces;
 using HeightPostProcessors;
+using System;
+using System.Text;
 
 [System.Serializable]
 public class HeightMapPostProcessor
@@ -34,12 +36,22 @@ public class HeightmapSetting
 	public Fractal2DNoise.NoiseBase NoiseType;
 	public Fractal2DNoise.FractalNoiseType FractalType = Fractal2DNoise.FractalNoiseType.Normal;
 	public IHeightPostProcessor PostProcessor;
-	public long Seed;
+	private long Seed;
 	public HeightMapPostProcessor[] postprocessors;
 	public HeightMapFromNoise.HeightMapType HeightmapType = HeightMapFromNoise.HeightMapType.smooth;
 
-	public IScannableHeightSource GetHeightSource(Vector2Int Offset)
+	public IScannableHeightSource GetHeightSource(Vector2Int Offset, long WorldSeed, int index)
 	{
+		int hash = index;
+		unchecked
+		{
+			hash = hash + 3277 * (int)WorldSeed;
+		}
+		System.Random prng = new System.Random(hash);
+		byte[] buf = new byte[8];
+		prng.NextBytes(buf);
+		Seed = BitConverter.ToInt64(buf, 0);
+
 		IScannableHeightSource source = new HeightMapFromNoise(
 			new Fractal2DNoise(Persistance, Lacunarity, Octaves, Seed, NoiseType, FractalType),
 			FeatureFrequency,
@@ -66,50 +78,24 @@ public class HeightmapSetting
 }
 
 [System.Serializable]
-public class SplatTexture
+public class MixedHeightMap
 {
-	public Texture2D NormalMap, Texture;
-	public Vector2 TileSize;
-	public float Metallic, Smoothness;
+	public HeightmapSetting BaseMap;
+	public float BaseWeight;
+	public HeightmapSetting Mixer;
+	public HeightmapSetting Component1;
+	public HeightmapSetting Component2;
 
-	public SplatPrototype ToSplatPrototype()
+	public IHeightSource GetHeightMapGenerator(Vector2Int Offset, long WorldSeed)
 	{
-		return new SplatPrototype()
-		{
-			texture = Texture,
-			normalMap = NormalMap,
-			metallic = Metallic,
-			smoothness = Smoothness,
-			tileSize = TileSize
-		};
-	}
-}
-
-[System.Serializable]
-public class DetailObject
-{
-	public float BendFactor, NoiseSpread, MaxHeight, MaxWidth, MinHeight, MinWidth;
-	public Color DryColor, HealthyColor;
-	public GameObject Prototype;
-	public Texture2D PrototypeTexture;
-	public DetailRenderMode RenderMode;
-
-	public DetailPrototype ToDetailProtoType()
-	{
-		return new DetailPrototype()
-		{
-			bendFactor = BendFactor,
-			noiseSpread = NoiseSpread,
-			maxHeight = MaxHeight,
-			maxWidth = MaxWidth,
-			minHeight = MinHeight,
-			minWidth = MinWidth,
-			dryColor = DryColor,
-			healthyColor = HealthyColor,
-			prototype = Prototype,
-			prototypeTexture = PrototypeTexture,
-			renderMode = RenderMode
-		};
+		return new DynamicallyComposedHeightMap(
+			Offset,
+			BaseMap.GetHeightSource(Offset, WorldSeed, 0),
+			Mixer.GetHeightSource(Offset, WorldSeed, 1),
+			Component1.GetHeightSource(Offset, WorldSeed, 2),
+			Component2.GetHeightSource(Offset, WorldSeed, 3),
+			BaseWeight
+		);
 	}
 }
 
@@ -122,11 +108,9 @@ public class GameSettings
 	public int MaxTreeCount = 64;
 	public float Depth, WaterLevel, VegetationLevel;
 	public int HeightmapResolution, DetailResolution, DetailResolutionPerPatch, Size;
-	public GameObject[] Trees;
 	public HeightmapSetting[] HeightmapLayers;
+	public MixedHeightMap Heightmap;
 	public HeightmapSetting Moisture;
-	public SplatTexture[] SplatMaps;
-	public DetailObject[] TerrainDetails;
 	public long WorldSeed;
 	public Material TerrainMaterial;
 
@@ -150,73 +134,104 @@ public class GameSettings
 	public Material GrasMaterial;
 
 	public float Gravity, MinJumpSpeed, MaxJumpSpeed;
+	public float JumpOffsetY, JumpOffsetX, MinJumpDist, MaxJumpDist;
+	public float MinGrasDist = .3f;
+	public float GrasFieldSize = 32;
+
+	public float StreetRadius = 1f;
+	public float gridElementWidth;
+	public int StreetNeighborOffset;
+	public float CenterStreetNeighborOffset;
+
+	private static string charset = "qwertzuiopü+asdfghjklöä#yxcvbnm,.<1234567890ß!§$%&/()=?`QWERTZUIOPÜASDFGHJKLÖÄ'*>YXCVBNM;:_|²³{[]}^°@€";
+
+	public static long HashString(string input)
+	{
+		byte[] hash_out = new byte[8];
+		using (var sha = new System.Security.Cryptography.SHA256Managed())
+		{
+			byte[] textData = System.Text.Encoding.UTF8.GetBytes(input);
+			byte[] hash = sha.ComputeHash(textData);
+			int i = 0;
+			foreach (byte chunk in hash)
+			{
+				hash_out[i] ^= chunk;
+				i = (i + 1) % 8;
+			}
+			return (long)BitConverter.ToUInt64(hash_out, 0);
+		}
+	}
+	public static string RandomString(int length)
+	{
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < length; i++)
+		{
+
+			System.Random prng = new System.Random();
+			builder.Append(charset[prng.Next(0, charset.Length)]);
+		}
+		return builder.ToString();
+	}
 
 	public void Prepare()
 	{
-		GetSplat();
-		GetTreePrototypes();
-		GetDetail();
+		string WorldSeedString = PlayerPrefs.GetString("GameSeed", "");
+		if (WorldSeedString.Length == 0)
+		{
+			WorldSeedString = RandomString(64);
+			PlayerPrefs.SetString("GameSeed", WorldSeedString);
+		}
+		WorldSeed = HashString(WorldSeedString);
+		// Adjust World to Player Settings.
+		string terrainType = PlayerPrefs.GetString("TerrainType", "Mix");
+		switch (terrainType)
+		{
+			case ("Valley"):
+				Heightmap.BaseWeight = .8f;
+				break;
+			case ("Mountains"):
+				Heightmap.BaseWeight = .3f;
+				break;
+			default:
+				Heightmap.BaseWeight = .55f;
+				break;
+		}
+		string spikiness = PlayerPrefs.GetString("Spikiness", "Normal");
+		switch (spikiness)
+		{
+			case ("Rigid"):
+				Heightmap.Component1.Persistance = .45f;
+				Heightmap.Component2.Persistance = .45f;
+				break;
+			case ("Very Rigid"):
+				Heightmap.Component1.Persistance = .5f;
+				Heightmap.Component2.Persistance = .5f;
+				break;
+			case ("Extreme"):
+				Heightmap.Component1.Persistance = .55f;
+				Heightmap.Component2.Persistance = .55f;
+				break;
+			case ("Smooth"):
+				Heightmap.Component1.Persistance = .35f;
+				Heightmap.Component2.Persistance = .35f;
+				break;
+			default:
+				Heightmap.Component1.Persistance = .45f;
+				Heightmap.Component2.Persistance = .45f;
+				break;
+		}
+		// Calculate some units that are influenced by settings.
+		gridElementWidth = (float)Size / (float)HeightmapResolution;
+		StreetNeighborOffset = Mathf.FloorToInt(StreetRadius / gridElementWidth) + 1;
+		CenterStreetNeighborOffset = gridElementWidth * StreetNeighborOffset;
 
 		float correctionalOffset = .5f / (float)HeightmapResolution; // Put coordinates in the middle of a tile.
 		TileCorrection = new Vector3(correctionalOffset * (float)Size, 0, correctionalOffset * (float)Size);
 		TreeCorrection = new Vector3(correctionalOffset, -TreePlantOffset, correctionalOffset);
 	}
 
-	public SplatPrototype[] GetSplat()
-	{
-		if (SpatProtoTypes == null)
-		{
-			SpatProtoTypes = new SplatPrototype[SplatMaps.Length];
-			for (int i = 0; i < SplatMaps.Length; i++)
-			{
-				SpatProtoTypes[i] = SplatMaps[i].ToSplatPrototype();
-			}
-		}
-		return SpatProtoTypes;
-	}
-
-	public DetailPrototype[] GetDetail()
-	{
-		if (DetailPrototypes == null)
-		{
-			DetailPrototypes = new DetailPrototype[TerrainDetails.Length];
-			for (int i = 0; i < TerrainDetails.Length; i++)
-			{
-				DetailPrototypes[i] = TerrainDetails[i].ToDetailProtoType();
-			}
-		}
-		return DetailPrototypes;
-	}
-
 	public IHeightSource GetHeightMapGenerator(Vector2Int Offset)
 	{
-		if (HeightmapLayers.Length > 1)
-		{
-			var hGen = new ComposedHeightMap(Offset);
-			for (int i = 0; i < HeightmapLayers.Length; i++)
-			{
-				IScannableHeightSource source = HeightmapLayers[i].GetHeightSource(Offset);
-				hGen.AddSource(source, HeightmapLayers[i].Weight);
-			}
-			return hGen;
-		}
-		return HeightmapLayers[0].GetHeightSource(Offset);
-	}
-
-	public TreePrototype[] GetTreePrototypes()
-	{
-		if (TreeProtoTypes == null)
-		{
-			TreeProtoTypes = new TreePrototype[Trees.Length];
-			for (int j = 0; j < Trees.Length; j++)
-			{
-				TreeProtoTypes[j] = new TreePrototype
-				{
-					prefab = Trees[j],
-					bendFactor = .5f
-				};
-			}
-		}
-		return TreeProtoTypes;
+		return Heightmap.GetHeightMapGenerator(Offset, WorldSeed);
 	}
 }

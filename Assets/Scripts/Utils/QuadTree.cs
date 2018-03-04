@@ -138,13 +138,17 @@ namespace Assets.Utils
 
 		public bool ContainsPoint(Vector2 point)
 		{
-			bool approx_intersects = Mathf.Abs((point.x - Origin.x) % Dir.x) <= Error
-					&& Mathf.Abs((point.y - Origin.y) % Dir.y) <= Error;
-			if (approx_intersects)
-			{
-				return (point - Origin).magnitude <= MaxDist;
-			}
-			return false;
+			Vector3 conn = point - Origin;
+			float dx, dy;
+			dx = conn.x / Dir.x;
+			dy = conn.y / Dir.y;
+			// if dx or dy is negative point lies in opposite direction.
+			if (dx < 0 || dy < 0) return false;
+			// avoid cases where dy is zero
+			if (dx <= 1e-20f && dy <= 1e-20f) return true;
+			if (dx <= 1e-20f || dy <= 1e-20f) return false;
+			// no devision by zero as we made sure in the step before.
+			return (Mathf.Abs(dx/dy - 1f) <= Error && conn.magnitude <= MaxDist);
 		}
 
 		public bool Intersects(ref RectangleBound other)

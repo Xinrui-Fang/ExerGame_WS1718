@@ -18,7 +18,7 @@ public static class TerrainLabeler
 	public static void MapTerrain(TerrainChunk terrain, float[,] moisture, float[,] Heights, Vector3[,] Normals, float[,,] SplatMap, int[,] streetMap, float WaterLevel, float VegetationMaxHeight, Vector2 TerrainOffset)
 	{
 		// Splatmap data is stored internally as a 3d array of floats, so declare a new empty array ready for your custom splatmap data:
-		CircleBound streetCollider = new CircleBound(new Vector2(), 1f);
+		CircleBound streetCollider = new CircleBound(new Vector2(), terrain.Settings.StreetRadius);
 		CircleBound treeCollider = new CircleBound(new Vector2(), 1.5f);
 
 		for (int y = 0; y < SplatMap.GetLength(0); y++)
