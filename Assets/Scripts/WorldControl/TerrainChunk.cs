@@ -128,10 +128,10 @@ public class TerrainChunk
 		TerrainEdges = new TerrainChunkEdge[4]
 		{
 			new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(0,-1), WorldSeed, Settings.HeightmapResolution), // S
-            new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(1,0), WorldSeed, Settings.HeightmapResolution), // E
-            new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(0,1), WorldSeed, Settings.HeightmapResolution), // N
-            new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(-1,0), WorldSeed, Settings.HeightmapResolution) // W
-        };
+			new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(1,0), WorldSeed, Settings.HeightmapResolution), // E
+			new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(0,1), WorldSeed, Settings.HeightmapResolution), // N
+			new TerrainChunkEdge(GridCoords, GridCoords + new Vector2Int(-1,0), WorldSeed, Settings.HeightmapResolution) // W
+		};
 
 		Assets.Utils.Debug.Log(string.Format("Took {0} ms to prepare arrays and edges at {1}", stopWatch.ElapsedMilliseconds, GridCoords), LOGLEVEL.META);
 		stopWatch.Reset();
@@ -504,6 +504,30 @@ public class TerrainChunk
 		HasJumps = false;
 	}
 
+	private void GenerateItems(Terrain terrain)
+	{
+		System.Random rnd = new System.Random();
+		for(int i = 0; i < paths.paths.Count; i++)
+		{
+			var points = paths.paths[i].Waypoints;
+			var iter = points.First;
+			while(iter != null)
+			{
+				if(rnd.Next(0, 100) <= 10)
+				{
+					var pos2D = ToWorldCoordinate(iter.Value.x, iter.Value.y);
+					var position = new Vector3(pos2D.x, 0.0f, pos2D.y);
+					
+					position.y = terrain.SampleHeight(position);
+					
+					var o = UnityEngine.Object.Instantiate(Settings.ItemTypes[0].Appearance);
+					o.transform.position = position;
+				}
+				iter = iter.Next;
+			}
+		}
+	}
+	
 	public void Flush(SurfaceManager SM)
 	{
 		ExportDebugImages();
@@ -559,6 +583,9 @@ public class TerrainChunk
 
 		UnityTerrain.SetActive(true);
 
+		// Generate items
+		GenerateItems(terrain);
+		
 		FlushedJumps = 0;
 		// Cleanup
 		Heights = new float[0, 0];

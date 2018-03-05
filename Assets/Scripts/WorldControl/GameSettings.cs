@@ -100,10 +100,18 @@ public class MixedHeightMap
 }
 
 [System.Serializable]
+public class ItemSettings
+{
+	public UnityEngine.GameObject Appearance;
+	public float SomeProperty = 1.0f;
+}
+
+[System.Serializable]
 public class GameSettings
 {
 	public GameObject MainObject;
 	public GameObject[] AIs;
+	public ItemSettings[] ItemTypes;
 	public int ChunkMapSize = 32;
 	public int MaxTreeCount = 64;
 	public float Depth, WaterLevel, VegetationLevel;
