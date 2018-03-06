@@ -32,7 +32,7 @@ public class MotionBlurAdjust : MonoBehaviour
 			{
 				shutterAngle = defaultAngle + speedModifier * state.Speed,
 				sampleCount = defaultSampleCount,
-				frameBlending = 0
+				frameBlending = profile.motionBlur.settings.frameBlending
 			};
 			profile.motionBlur.settings = settings;
 		}

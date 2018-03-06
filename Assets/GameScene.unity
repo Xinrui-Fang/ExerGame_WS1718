@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 1194882777}
-  m_IndirectSpecularColor: {r: 0.6735087, g: 0.62369853, b: 0.537091, a: 1}
+  m_IndirectSpecularColor: {r: 0.6735129, g: 0.623706, b: 0.5370834, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -381,9 +381,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   profile: {fileID: 11400000, guid: 4e0f43a55603c944b83cd54e153611c6, type: 2}
   defaultAngle: 20
-  defaultSampleCount: 20
+  defaultSampleCount: 10
   speedModifier: 1.5
-  refreshInterval: 3
+  refreshInterval: 5
 --- !u!114 &341534124
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -439,13 +439,18 @@ Prefab:
     - target: {fileID: 218475835554716314, guid: efd570237ebf95f48b09c9464273dd84,
         type: 2}
       propertyPath: m_MaterialType
-      value: 3
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 218475835554716314, guid: efd570237ebf95f48b09c9464273dd84,
         type: 2}
       propertyPath: m_MaterialTemplate
       value: 
-      objectReference: {fileID: 2100000, guid: aa92db0d7bc9ac44691bd4558ab97e8d, type: 2}
+      objectReference: {fileID: 0}
+    - target: {fileID: 218475835554716314, guid: efd570237ebf95f48b09c9464273dd84,
+        type: 2}
+      propertyPath: m_ReflectionProbeUsage
+      value: 2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: efd570237ebf95f48b09c9464273dd84, type: 2}
   m_IsPrefabParent: 0
@@ -643,7 +648,6 @@ Camera:
   m_TargetEye: 3
   m_HDR: 1
   m_AllowMSAA: 1
-  m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -788,7 +792,6 @@ Camera:
   m_TargetEye: 3
   m_HDR: 1
   m_AllowMSAA: 1
-  m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -1021,7 +1024,6 @@ Camera:
   m_TargetEye: 3
   m_HDR: 1
   m_AllowMSAA: 1
-  m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -1119,7 +1121,6 @@ Camera:
   m_TargetEye: 3
   m_HDR: 1
   m_AllowMSAA: 1
-  m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -1229,33 +1230,6 @@ MonoBehaviour:
     DetailResolution: 128
     DetailResolutionPerPatch: 64
     Size: 128
-    HeightmapLayers:
-    - Octaves: 8
-      Weight: 0.45
-      Lacunarity: 2
-      Persistance: 0.45
-      FeatureFrequency: 0.4
-      NoiseType: 0
-      FractalType: 1
-      postprocessors:
-      - type: 0
-        value1: 1.5
-        value2: 0
-        value3: 0
-      - type: 2
-        value1: 0
-        value2: 0.85
-        value3: 0
-      HeightmapType: 1
-    - Octaves: 6
-      Weight: 0.55
-      Lacunarity: 2
-      Persistance: 0.45
-      FeatureFrequency: 0.25
-      NoiseType: 0
-      FractalType: 0
-      postprocessors: []
-      HeightmapType: 0
     Heightmap:
       BaseMap:
         Octaves: 8
@@ -1269,12 +1243,12 @@ MonoBehaviour:
         HeightmapType: 0
       BaseWeight: 0.55
       Mixer:
-        Octaves: 3
+        Octaves: 2
         Weight: 1
         Lacunarity: 2
         Persistance: 0.45
-        FeatureFrequency: 0.8
-        NoiseType: 1
+        FeatureFrequency: 1
+        NoiseType: 0
         FractalType: 0
         postprocessors: []
         HeightmapType: 0
@@ -1283,7 +1257,7 @@ MonoBehaviour:
         Weight: 1
         Lacunarity: 2
         Persistance: 0.45
-        FeatureFrequency: 0.3
+        FeatureFrequency: 0.35
         NoiseType: 0
         FractalType: 1
         postprocessors:
@@ -1301,7 +1275,7 @@ MonoBehaviour:
         Weight: 1
         Lacunarity: 2
         Persistance: 0.5
-        FeatureFrequency: 0.2
+        FeatureFrequency: 0.35
         NoiseType: 0
         FractalType: 0
         postprocessors:
@@ -1319,11 +1293,11 @@ MonoBehaviour:
           value3: 0
         HeightmapType: 0
     Moisture:
-      Octaves: 8
+      Octaves: 5
       Weight: 0
       Lacunarity: 2
       Persistance: 0.5
-      FeatureFrequency: 3
+      FeatureFrequency: 0.3
       NoiseType: 0
       FractalType: 0
       postprocessors: []
@@ -1331,13 +1305,13 @@ MonoBehaviour:
     WorldSeed: 0
     TerrainMaterial: {fileID: 2100000, guid: aa92db0d7bc9ac44691bd4558ab97e8d, type: 2}
     TreeBillBoardDistance: 64
-    TreeRenderDistance: 128
+    TreeRenderDistance: 100
     DetailRenderDistance: 32
     TreePlantOffset: 200
     TileCorrection: {x: 0, y: 0, z: 0}
     TreeCorrection: {x: 0, y: 0, z: 0}
-    MaxVegetaionDensity: 5
-    MaxGrasCount: 30000
+    MaxVegetaionDensity: 3
+    MaxGrasCount: 10000
     HealthyGrasColor: {r: 0.07058824, g: 0.49803922, b: 0.078431375, a: 0.78431374}
     DryGrasColor: {r: 0.7019608, g: 0.63529414, b: 0.28235295, a: 0.78431374}
     GrasMaterial: {fileID: 2100000, guid: c730df763a826a14e9c7ab714faca271, type: 2}
@@ -1346,15 +1320,17 @@ MonoBehaviour:
     MaxJumpSpeed: 8
     JumpOffsetY: 2
     JumpOffsetX: 1
-    MinJumpDist: 5
-    MaxJumpDist: 64
+    MinJumpDist: 4
+    MaxJumpDist: 32
     MinGrasDist: 0.3
     GrasFieldSize: 64
-    StreetRadius: 1
+    StreetRadius: 1.1
     gridElementWidth: 0
     StreetNeighborOffset: 0
     CenterStreetNeighborOffset: 0
     StreetMapID: 0
+    SplatMixing: 0.4
+    JumpOffsetDirChange: 0.66
   JumpsPerFrame: 5
 --- !u!4 &1519617107
 Transform:

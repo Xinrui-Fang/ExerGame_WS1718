@@ -89,69 +89,69 @@ namespace Assets.World.Paths
 		}
 
 
-		public static List<Vector2> RampOffsets(Vector2 pos, Vector2 dir, ref TerrainChunk chunk) 
+		public static List<Vector2> RampOffsets(Vector2 pos, Vector2 dir, ref TerrainChunk chunk)
 		{
 			float sr = chunk.Settings.CenterStreetNeighborOffset;
 			float ro = chunk.Settings.JumpOffsetX;
 			List<Vector2> rampOffsets = new List<Vector2>();
 			Vector2 offsetDir = dir;
 			if (!chunk.Objects.Collides(new CircleBound(pos + (sr + ro) * offsetDir, sr))) rampOffsets.Add(offsetDir);
-			offsetDir = new Vector2(dir.y, -dir.x);
+			offsetDir = Quaternion.Euler(0, 0, 45) * dir;
 			if (!chunk.Objects.Collides(new CircleBound(pos + (sr + ro) * offsetDir, sr))) rampOffsets.Add(offsetDir);
-			offsetDir = new Vector2(-dir.y, dir.x);
+			offsetDir = Quaternion.Euler(0, 0, -45) * dir;
+			if (!chunk.Objects.Collides(new CircleBound(pos + (sr + ro) * offsetDir, sr))) rampOffsets.Add(offsetDir);
+			offsetDir = new Vector2(dir.y, -dir.x);
 			if (!chunk.Objects.Collides(new CircleBound(pos + (sr + ro) * offsetDir, sr))) rampOffsets.Add(offsetDir);
 			return rampOffsets;
 		}
 
 		public static bool CheckPoint(ref Vector3 pos, ref Vector3 dir, ref Vector2 relpos, ref Vector2 reldir, float minDist, float maxDist, float minSpeed, float maxSpeed,
-									  float gravity, ref TerrainChunk chunk, ref List<JumpData> JumpList)
+									  float gravity, ref TerrainChunk chunk, ref JumpData data)
 		{
 			float StreetRadius = chunk.Settings.StreetRadius;
 			// start a raycast with minDist distance.
-			QuadTreeData<ObjectData> collision = chunk.Objects.Raycast(relpos + reldir * minDist, reldir, maxDist - minDist, QuadDataType.street, 1e-1f);
-			if (collision != null)
+			RayBound ray = new RayBound(relpos + reldir * minDist, reldir, maxDist - minDist, 5e-1f);
+			List<QuadTreeData<ObjectData>> collisions = new List<QuadTreeData<ObjectData>>();
+			if (chunk.Objects.GetCollisions(ray, QuadDataType.street, collisions))
 			{
-
-				Vector3 JumpStart = pos + Vector3.up * chunk.Settings.JumpOffsetY;
-				NavigationPath colpath = chunk.GetPathFinder().paths[collision.contents.collection];
-				Vector3 colPos = colpath.WorldWaypoints[collision.contents.label];
-
-				int next_label = collision.contents.label + 1;
-				if (collision.contents.label == colpath.WorldWaypoints.Length - 1) { next_label -= 2; }
-				Vector2 colnode = new Vector2(colPos.x, colPos.z);
-				Vector2 colNext = new Vector2(colpath.WorldWaypoints[next_label].x, colpath.WorldWaypoints[next_label].z);
-				Vector3 colDir = (colNext - colnode).normalized;
-				if (Vector3.Distance(colPos, pos) < minDist) return false;
-
-				float jumpdirAngle = Vector2.Angle(reldir, colDir);
-				if (jumpdirAngle > 45 && jumpdirAngle < 135) return false;
-				
-				float v = 0;
-				float t = 0;
-				if (getPerfectSpeed(JumpStart, colPos, gravity, ref v, ref t))
+				// start with the collision that is the furthest away ... we want to favor long spectacular jumps.
+				collisions.Sort((b, a) => (ray.Origin - a.location).magnitude.CompareTo((ray.Origin - b.location).magnitude));
+				foreach (var collision in collisions)
 				{
-					v /= (float)Math.Cos(Math.PI * .25f);
-					if (v < minSpeed || v > maxSpeed) return false;
-					Vector3 rayExactTarget = new Vector3();
-					Vector3 ExactLandingPoint = new Vector3();
-					int rd = CheckPhysics(pos, colPos, v, ref rayExactTarget, ref ExactLandingPoint, gravity);
-					JumpList.Add(
-						new JumpData()
+					Vector3 JumpStart = pos + Vector3.up * chunk.Settings.JumpOffsetY;
+					NavigationPath colpath = chunk.GetPathFinder().paths[collision.contents.collection];
+					Vector3 colPos = colpath.WorldWaypoints[collision.contents.label];
+
+					int next_label = collision.contents.label + 1;
+					if (collision.contents.label == colpath.WorldWaypoints.Length - 1) { next_label -= 2; }
+					Vector2 colnode = new Vector2(colPos.x, colPos.z);
+					Vector2 colNext = new Vector2(colpath.WorldWaypoints[next_label].x, colpath.WorldWaypoints[next_label].z);
+					Vector3 colDir = (colNext - colnode).normalized;
+					if (Vector3.Distance(colPos, pos) < minDist) return false;
+
+					float jumpdirAngle = Vector2.Angle(reldir, colDir);
+					if (jumpdirAngle > 66 && jumpdirAngle < 114) return false;
+
+					float v = 0;
+					float t = 0;
+					if (getPerfectSpeed(JumpStart, colPos, gravity, ref v, ref t))
+					{
+						v /= (float)Math.Cos(Math.PI * .25f);
+						if (v < minSpeed || v > maxSpeed) return false;
+						Vector3 rayExactTarget = new Vector3();
+						Vector3 ExactLandingPoint = new Vector3();
+						int rd = CheckPhysics(pos, colPos, v, ref rayExactTarget, ref ExactLandingPoint, gravity);
+						data = new JumpData()
 						{
 							PerfectSpeed = v,
 							PerfectTime = t,
 							LandingPos = ExactLandingPoint,
 							RayTarget = rayExactTarget,
 							Pos = pos,
-							Dir = (colPos - pos).normalized,
-						}
-					);
-					chunk.Objects.Put(new QuadTreeData<ObjectData>(
-						pos + dir, QuadDataType.jump,
-						new ObjectData() { label = JumpList.Count - 1 }
-						)
-					);
-					return true;
+							Dir = (colPos - pos).normalized
+						};
+						return true;
+					}
 				}
 			}
 			return false;
@@ -180,6 +180,7 @@ namespace Assets.World.Paths
 			Vector3[] vDir = new Vector3[2];
 			Vector2[] vRelDir = new Vector2[2];
 
+			CircleBound ExistingJumpMinDist = new CircleBound(new Vector2(), chunk.Settings.MinJumpDist);
 			List<JumpData> JumpList = new List<JumpData>();
 			for (int i = 0; i < pathCountBefore; i++)
 			{
@@ -203,19 +204,33 @@ namespace Assets.World.Paths
 					vRelDir[1] = (origin - dest).normalized;
 
 					// skip points that are not turning points.
-					float angle = Vector2.Angle(vRelDir[0], vRelDir[1]);
-					if (angle <= 30 || angle >= 150) continue;
+					//float angle = Vector2.Angle(vRelDir[0], vRelDir[1]);
+					//if (angle <= 30 || angle >= 150) continue;
+
+					// skip if there is already a jump closer then minjump distance
+					ExistingJumpMinDist.Center = origin;
+					if (chunk.Objects.Collides(ExistingJumpMinDist, QuadDataType.jump)) continue;
 
 					for (int d = 0; d < vDir.Length; d++)
 					{
-						foreach (Vector2 Offset in RampOffsets(origin, vRelDir[d], ref chunk)) 
+						foreach (Vector2 Offset in RampOffsets(origin, vRelDir[d], ref chunk))
 						{
 							Vector2 pos = origin + (sr + ro) * Offset;
-							Vector2 dir = (vRelDir[d] + Offset).normalized;
+							Vector2 dir = (vRelDir[d] + chunk.Settings.JumpOffsetDirChange * Offset).normalized;
 							Vector3 dir3 = new Vector3(dir.x, vDir[d].y, dir.y);
 							dir3.Normalize();
 							Vector3 pos3 = new Vector3(pos.x, node.y, pos.y);
-							CheckPoint(ref pos3, ref dir3, ref pos, ref dir, minDist, maxDist, minSpeed, maxSpeed, gravity, ref chunk, ref JumpList);
+							JumpData datap = new JumpData();
+							if (CheckPoint(ref pos3, ref dir3, ref pos, ref dir, minDist, maxDist, minSpeed, maxSpeed, gravity, ref chunk, ref datap))
+							{
+								JumpList.Add(datap);
+								chunk.Objects.Put(new QuadTreeData<ObjectData>(
+									pos + dir, QuadDataType.jump,
+									new ObjectData() { label = JumpList.Count - 1 }
+									)
+								);
+								break;
+							}
 						}
 					}
 				}

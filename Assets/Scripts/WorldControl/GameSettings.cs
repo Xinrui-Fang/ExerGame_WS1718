@@ -116,7 +116,6 @@ public class GameSettings
 	public int MaxTreeCount = 64;
 	public float Depth, WaterLevel, VegetationLevel;
 	public int HeightmapResolution, DetailResolution, DetailResolutionPerPatch, Size;
-	public HeightmapSetting[] HeightmapLayers;
 	public MixedHeightMap Heightmap;
 	public HeightmapSetting Moisture;
 	public long WorldSeed;
@@ -154,6 +153,8 @@ public class GameSettings
 	private static string charset = "qwertzuiopü+asdfghjklöä#yxcvbnm,.<1234567890ß!§$%&/()=?`QWERTZUIOPÜASDFGHJKLÖÄ'*>YXCVBNM;:_|²³{[]}^°@€";
 
 	public int StreetMapID;
+	public float SplatMixing = .4f;
+	public float JumpOffsetDirChange = .5f;
 
 	public static long HashString(string input)
 	{

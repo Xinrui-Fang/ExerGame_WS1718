@@ -22,7 +22,7 @@ public static class TerrainLabeler
 		CircleBound treeCollider = new CircleBound(new Vector2(), 1.5f);
 		int N = SplatMap.GetLength(2) -1;
 		int c = Mathf.FloorToInt(Mathf.Pow(N, 1f / 3f));
-		float terrainsmoothing = .3f;
+		float terrainsmoothing = terrain.Settings.SplatMixing;
 		UnityEngine.Debug.LogFormat("N: {0}, c: {1}", N, c);
 		for (int y = 0; y < SplatMap.GetLength(0); y++)
 		{
@@ -54,10 +54,10 @@ public static class TerrainLabeler
 				{
 					Vector3 normal = Normals[y_hm, x_hm];
 					float height = Heights[y_hm, x_hm];
-					height = Mathf.InverseLerp(WaterLevel, 1f, height);
+					//height = Mathf.InverseLerp(WaterLevel, 1f, height);
 					float moist = moisture[y_hm, x_hm];
-					float steepness = (1f - normal.y);
-					steepness = Mathf.InverseLerp(0f, .3f, steepness);
+					float steepness = (1f - (normal.y * normal.y));
+					steepness = Mathf.InverseLerp(0f, .5f, steepness);
 
 					int dh, dm, ds;
 					dh = Mathf.FloorToInt(height * c);
