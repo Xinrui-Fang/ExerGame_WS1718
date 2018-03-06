@@ -20,7 +20,10 @@ public static class TerrainLabeler
 		// Splatmap data is stored internally as a 3d array of floats, so declare a new empty array ready for your custom splatmap data:
 		CircleBound streetCollider = new CircleBound(new Vector2(), terrain.Settings.StreetRadius);
 		CircleBound treeCollider = new CircleBound(new Vector2(), 1.5f);
-
+		int N = SplatMap.GetLength(2) -1;
+		int c = Mathf.FloorToInt(Mathf.Pow(N, 1f / 3f));
+		float terrainsmoothing = .3f;
+		UnityEngine.Debug.LogFormat("N: {0}, c: {1}", N, c);
 		for (int y = 0; y < SplatMap.GetLength(0); y++)
 		{
 
@@ -28,7 +31,6 @@ public static class TerrainLabeler
 			float y_01 = (float)y / ((float)SplatMap.GetLength(0) - 1);
 			float fy_hm = y_01 * (Heights.GetLength(0) - 1);
 			int y_hm = Mathf.CeilToInt(fy_hm);
-
 			for (int x = 0; x < SplatMap.GetLength(1); x++)
 			{
 				float x_01 = (float)x / ((float)SplatMap.GetLength(1) - 1);
@@ -42,79 +44,45 @@ public static class TerrainLabeler
 				streetCollider.Center = terrain.ToWorldCoordinate(x_01, y_01);
 
 				treeCollider.Center = streetCollider.Center;
-
-				Vector3 normal = Normals[y_hm, x_hm];
-				float height = Heights[y_hm, x_hm];
-				float moist = moisture[y_hm, x_hm];
-				if (height <= WaterLevel) // sand
+				
+				if (terrain.Objects.Collides(streetCollider, QuadDataType.street)) // street
 				{
-					splatWeights[3] = 1f;
-				}
-
-				else if (terrain.Objects.Collides(streetCollider, QuadDataType.street)) // street
-				{
-					splatWeights[4] = 1f;
-					splatWeights[8] = .5f;
+					splatWeights[N] = 1f;
 				}
 
 				else
 				{
+					Vector3 normal = Normals[y_hm, x_hm];
+					float height = Heights[y_hm, x_hm];
+					height = Mathf.InverseLerp(WaterLevel, 1f, height);
+					float moist = moisture[y_hm, x_hm];
+					float steepness = (1f - normal.y);
+					steepness = Mathf.InverseLerp(0f, .3f, steepness);
 
-					//Vector3 normal = new Vector3();
-					//NormalsFromHeightMap.InterpolateNormal(fx_hm, fy_hm, normal, Normals);
-
-					float vegetaionLikelihood = Mathf.Sin(Mathf.InverseLerp(WaterLevel, VegetationMaxHeight, height) * Mathf.PI) * moist;
-					float snowCandidate = IsInside(VegetationMaxHeight, 1f, height);
-					float snowLikelikhood = Mathf.Pow(snowCandidate * Mathf.InverseLerp(VegetationMaxHeight, 1f, height), 2) * moist;
-					float slope = Mathf.Pow(1f - Mathf.InverseLerp(.5f, .9f, normal.z), 2);
-					float RockLikelihood = IsInside(WaterLevel + .15f, 1f, height) * Mathf.InverseLerp(WaterLevel * .15f, .9f, height) + IsInside(0f, .8f, normal.y);
-					float SandLikelihood = IsInside(0f, WaterLevel + .15f, height) * (1f - Mathf.InverseLerp(0f, WaterLevel + .15f, height));
-
-					//0 public Texture2D GrasTexture;
-					//1 public Texture2D SnowTexture;
-					//2 public Texture2D RockTexture;
-					//3 public Texture2D SandTexture;
-					//4 public Texture2D PathTexture;
-					//5 public Texture2D CliffTexture;
-					splatWeights[0] = vegetaionLikelihood * Mathf.InverseLerp(.8f, 1f, normal.y);
-					//splatWeights[0] = moisture[y_hm, x_hm] * Mathf.InverseLerp(.6f, 1f, normal.y) * .2f * Mathf.Pow(Mathf.Clamp(0, .2f, .25f - Mathf.Abs(.25f - height)), 2f);
-					//splatWeights[1] = Mathf.InverseLerp(Mathf.Cos(45f * Mathf.Deg2Rad), 1f, normal.y) * Mathf.Pow(Mathf.InverseLerp(.6f, 1f, height), 2f) * moisture[y_hm, x_hm];
-					splatWeights[1] = snowLikelikhood * Mathf.InverseLerp(.8f, 1f, normal.y);
-					splatWeights[2] = slope * moist * RockLikelihood;
-					//splatWeights[2] = 4 * (1f - Mathf.InverseLerp(Mathf.Cos(60 * Mathf.Deg2Rad), Mathf.Cos(45f * Mathf.Deg2Rad), normal.y));
-					splatWeights[3] = SandLikelihood;
-					//splatWeights[3] = (1f - Mathf.InverseLerp(0f, .5f, normal.y)) * Mathf.Pow(Mathf.InverseLerp(.9f - WaterLevel, 1f, 1f - height), 2f) * (1f - moisture[y_hm, x_hm]);
-					//splatWeights[4] = splatWeights[0] * .7f + splatWeights[3] * .5f * (1f-moisture);
-					splatWeights[5] = slope * (1f - moist) * RockLikelihood;
-
-					if (terrain.Objects.Collides(treeCollider, QuadDataType.vegetation)) // tree soil
-					{
-						splatWeights[8] += .25f * normal.y;
-						splatWeights[7] += .25f * normal.y;
-						splatWeights[0] += .21f * normal.y;
-						splatWeights[6] += .5f * (1 - normal.y);
-						splatWeights[2] += .5f * (1 - normal.y);
+					int dh, dm, ds;
+					dh = Mathf.FloorToInt(height * c);
+					dh = dh == c ? c - 1 : dh;
+					dm = Mathf.FloorToInt(moist * c);
+					dm = dm == c ? c - 1 : dm;
+					ds = Mathf.FloorToInt(steepness * c);
+					ds = ds == c ? c - 1 : ds;
+					int id = dh + dm * c + ds * c * c;
+					splatWeights[id] = 1f;
+					if (x > 1) {
+						for (int i = 0; i < N; i++)
+						{
+							splatWeights[i] += terrainsmoothing * SplatMap[y, x-1, i];
+						}
 					}
-
-					if (normal.y > .8f && height >= VegetationMaxHeight) // snow
+					if (y > 1)
 					{
-						float snowlevel = Mathf.Pow(Mathf.InverseLerp(.8f, .95f, normal.y) * Mathf.InverseLerp(VegetationMaxHeight, .9f, height), 2f);
-						splatWeights[1] = snowlevel * splatWeights.GetLength(0) * 20f;
-						//splatWeights[2] = (1f - snowlevel) * moist;
-						//splatWeights[2] = (1f - snowlevel) * (1f - moist);
+						for (int i = 0; i < N; i++)
+						{
+							splatWeights[i] += terrainsmoothing * SplatMap[y-1, x, i];
+						}
 					}
 				}
 
-				//Debug.Log(String.Format("({0}, {1})", x_heightmap, y_heightmap));
-				/**
-                if (splatWeights[1] > .2f)
-                {
-                    splatWeights[0] = splatWeights[0] > splatWeights[1] ? splatWeights[0] - splatWeights[1] : 0;
-                    splatWeights[2] = splatWeights[2] > splatWeights[1] ? splatWeights[2] - splatWeights[1] : 0;
-                    splatWeights[3] = splatWeights[3] > splatWeights[1] ? splatWeights[3] - splatWeights[1] : 0;
-                    splatWeights[5] = splatWeights[5] > splatWeights[1] ? splatWeights[5] - splatWeights[1] : 0;
-                }
-                **/
 				// Sum of all textures weights must add to 1, so calculate normalization factor from sum of weights
 				float z = splatWeights.Sum();
 				// Loop through each terrain texture

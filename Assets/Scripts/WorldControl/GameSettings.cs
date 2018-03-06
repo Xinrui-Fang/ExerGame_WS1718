@@ -153,6 +153,8 @@ public class GameSettings
 
 	private static string charset = "qwertzuiopü+asdfghjklöä#yxcvbnm,.<1234567890ß!§$%&/()=?`QWERTZUIOPÜASDFGHJKLÖÄ'*>YXCVBNM;:_|²³{[]}^°@€";
 
+	public int StreetMapID;
+
 	public static long HashString(string input)
 	{
 		byte[] hash_out = new byte[8];

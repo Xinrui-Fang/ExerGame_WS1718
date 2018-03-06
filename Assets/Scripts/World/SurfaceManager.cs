@@ -93,11 +93,11 @@ public class SurfaceManager : MonoBehaviour
 			if (Chunks.Get(absolutePos) == null)
 			{
 				// swap the commented with the uncommented if some exception is not propagating to the maini thread.
-				/*
+				/**
 				TerrainChunk terrain = new TerrainChunk(Settings);
 				terrain.Build(absolutePos);
 				terrain.Flush(this);
-				*/
+				**/
 				ThreadPool.QueueUserWorkItem((object item) => Build((TerrainChunk)item, absolutePos), new TerrainChunk(Settings));
 			}
 		}
@@ -112,6 +112,7 @@ public class SurfaceManager : MonoBehaviour
 		GameSettings.DetailPrototypes = DummyTerrain.terrainData.detailPrototypes;
 		GameSettings.SpatProtoTypes = DummyTerrain.terrainData.splatPrototypes;
 		GameSettings.TreeProtoTypes = DummyTerrain.terrainData.treePrototypes;
+		PlayerPrefs.SetString("GameSeed", "");
 		Settings.Prepare();
 
 		Vector2Int playerPos = new Vector2Int(2, 2);
