@@ -520,7 +520,7 @@ public class TerrainChunk
 					
 					position.y = terrain.SampleHeight(position);
 					
-					var o = UnityEngine.Object.Instantiate(Settings.ItemTypes[0].Appearance);
+					var o = UnityEngine.Object.Instantiate(Settings.ItemTypes[rnd.Next(0, Settings.ItemTypes.Length)].Appearance);
 					o.transform.position = position;
 				}
 				iter = iter.Next;
