@@ -12,9 +12,10 @@ public class ItemManager : MonoBehaviour
 	private List<GameObject> CurrentlyActive = new List<GameObject>();
 	void OnTriggerEnter(Collider trigger)
 	{
-		if(trigger.tag == "Item")
+		var render = trigger.gameObject.GetComponent<MeshRenderer>();
+		if(trigger.tag == "Item" && render.enabled)
 		{
-			trigger.gameObject.SetActive(false);
+			render.enabled = false;
 			trigger.gameObject.GetComponent<BaseItem>().applyEffect(gameObject);
 			CurrentlyActive.Add(trigger.gameObject);
 		}
@@ -29,7 +30,9 @@ public class ItemManager : MonoBehaviour
 			{
 				item.revertEffect(gameObject);
 				CurrentlyActive.Remove(item.gameObject);
-				Destroy(item.gameObject);
+				
+				item.gameObject.GetComponent<MeshRenderer>().enabled = true;;
+				//Destroy(item.gameObject);
 			}
 		}
 	}

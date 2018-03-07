@@ -8,7 +8,14 @@ public class BaseItem : MonoBehaviour {
 	public float lifespan = 10.0f; // Lifespan in seconds
 	
 	public virtual void applyEffect(GameObject player) 
-	{ 
+	{
+		var sound = GetComponent<AudioSource>();
+		if(sound != null)
+		{
+			Debug.Log("PLAY");
+			sound.Play();
+		}
+		
 		applicationTime = Time.time;
 	}
 	
