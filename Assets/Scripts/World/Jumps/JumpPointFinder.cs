@@ -64,7 +64,7 @@ namespace Assets.World.Paths
 			dir.Normalize();
 			float vx = (float)Math.Cos(Math.PI * 0.25d) * speed;
 			float vy = (float)Math.Sin(Math.PI * 0.25d) * speed;
-			UnityEngine.Debug.LogFormat("{0}, {1}", vx, vy);
+			//UnityEngine.Debug.LogFormat("{0}, {1}", vx, vy);
 			if (vx == 0) return -1;
 
 			float t = x / vx;
@@ -74,7 +74,7 @@ namespace Assets.World.Paths
 			float peak_t = peak_x / vx;
 			float peak_y = jump_y(vy, peak_t, gravity);
 
-			UnityEngine.Debug.LogFormat("peakx {0}, dir {1}, peak_y {2}", peak_x, dir, peak_y);
+			//UnityEngine.Debug.LogFormat("peakx {0}, dir {1}, peak_y {2}", peak_x, dir, peak_y);
 			rayTarget = start + peak_x * dir;
 			rayTarget.y += peak_y;
 
@@ -84,7 +84,7 @@ namespace Assets.World.Paths
 			landingPoint = start + intersection_x * dir;
 			landingPoint.y += intersection_y;
 
-			UnityEngine.Debug.LogFormat("{0}, {1} {2}", start, rayTarget, end);
+			//UnityEngine.Debug.LogFormat("{0}, {1} {2}", start, rayTarget, end);
 			return y > dy ? 1 : (y == dy ? 0 : -1);
 		}
 

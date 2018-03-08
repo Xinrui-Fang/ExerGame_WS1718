@@ -24,6 +24,8 @@ namespace Assets.Scripts.Agents.Behavior
 			if (!dpath.forward)
 			{ // if !forward we reverse the path to make it simplier
 				CurrentPath = dpath.reversed();
+			    ChoicesEnd = CurrentPath.path.End.GetPaths(CurrentPath);
+
 			} else {
 				CurrentPath = dpath;
 			}
@@ -59,9 +61,6 @@ namespace Assets.Scripts.Agents.Behavior
 
 			pointOfComparison = CurrentPath.path.WorldWaypoints[CurrentPath.path.WorldWaypoints.Length - 1];
 
-			Debug.Log("CHOICE_END BEFORE FILTERING");
-			Debug.Log(string.Format("{0} choices found", ChoicesEnd.Count));
-			Debug.Log("CHOICE_END AFTER FILTERING");
 
 			// Filtering of the choices to keep only relevant choices
 			ChoicesEnd = ChoicesFiltering(ChoicesEnd, pointOfComparison);
@@ -110,17 +109,20 @@ namespace Assets.Scripts.Agents.Behavior
 			/* TRAITEMENT Of ChoiceEnd & ChoicesStart */
 			// Suppression of paths that doesn't begin or end at the pointOfComparison (with an error margin)
 
-			Debug.Log(string.Format("Point de comparaison : {0}", pointOfComparison));
+			//Debug.Log(string.Format("Point de comparaison : {0}", pointOfComparison));
 
 			Debug.Log(string.Format("num of path BEFORE filtering : {0} ", choices.Count));
+            if (choices.Count == 1){
+                return new List<PathWithDirection>(choices);
+            }
 			List<PathWithDirection> newChoices = new List<PathWithDirection>(); // List of our new choices
 			int currentPathIndex = -1;
 
 			for (int i = 0; i < choices.Count; i++)
 			{
-				Debug.Log(string.Format("Chemin n°{0}", i));
+				/*Debug.Log(string.Format("Chemin n°{0}", i));
 				Debug.Log(string.Format("Point de départ de ce chemin : {0}", choices[i].path.WorldWaypoints[0]));
-				Debug.Log(string.Format("Point d'arrivée de ce chemin : {0}", choices[i].path.WorldWaypoints[choices[i].path.WorldWaypoints.Length - 1]));
+				Debug.Log(string.Format("Point d'arrivée de ce chemin : {0}", choices[i].path.WorldWaypoints[choices[i].path.WorldWaypoints.Length - 1]));*/
 
 
 				if (MapTools.Aprox(pointOfComparison, choices[i].path.WorldWaypoints[0])
@@ -132,12 +134,12 @@ namespace Assets.Scripts.Agents.Behavior
 					if (choices[i].path.Equals(CurrentPath.path))
 					{
 						Debug.Log("CURRENT PATH FOUND");
-						currentPathIndex = i;
+						currentPathIndex = newChoices.Count-1;
 					}
 				}
 			}
 			// If there's only one solution we keep the previous path (turn around), else we remove it
-			if (newChoices.Count != 1 && currentPathIndex != -1)
+			if (newChoices.Count > 1 && currentPathIndex != -1)
 			{
 				newChoices.RemoveAt(currentPathIndex);
 			}
@@ -187,7 +189,7 @@ namespace Assets.Scripts.Agents.Behavior
 			if (node >= CurrentPath.path.WorldWaypoints.Length - 1)
 			{
 
-				Debug.Log("End of the road, normal");
+				Debug.Log("End of the road");
 				// we find another path 
 				// & we return the number of the next node
 				return GetNextPath(node);

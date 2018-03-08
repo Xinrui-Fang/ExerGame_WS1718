@@ -422,6 +422,7 @@ namespace Assets.World.Paths
 			if (paths.Count > 1)
 			{
 				paths.Remove(ExcPath);
+                paths.Remove(ExcPath.reversed());
 			}
 			return paths;
 		}

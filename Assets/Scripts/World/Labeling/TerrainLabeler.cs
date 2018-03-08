@@ -23,7 +23,7 @@ public static class TerrainLabeler
 		int N = SplatMap.GetLength(2) -1;
 		int c = Mathf.FloorToInt(Mathf.Pow(N, 1f / 3f));
 		float terrainsmoothing = terrain.Settings.SplatMixing;
-		UnityEngine.Debug.LogFormat("N: {0}, c: {1}", N, c);
+		//UnityEngine.Debug.LogFormat("N: {0}, c: {1}", N, c);
 		for (int y = 0; y < SplatMap.GetLength(0); y++)
 		{
 
