@@ -14,15 +14,17 @@ public class SurfaceManager : MonoBehaviour
 
 	int ChunkCount = 0;
 	public int JumpsPerFrame = 5;
+	public Vector3 PlayerPos;
 
 	void Build(TerrainChunk tile, Vector2Int offset)
 	{
-		tile.Build(offset);
+		tile.Build(offset, PlayerPos);
 		FinalizationQueue.Push(tile);
 	}
 
 	public void Update()
 	{
+		PlayerPos = Settings.MainObject.transform.position;
 		var tile = FinalizationQueue.TryPop();
 		if (tile != null)
 		{
@@ -37,7 +39,7 @@ public class SurfaceManager : MonoBehaviour
 			ChunkCount++;
 			Assets.Utils.Debug.Log(string.Format("We now have {0} chunks loaded.", ChunkCount));
 
-			if (tile.GridCoords.x == 2 && tile.GridCoords.y == 2)
+			if (tile.GridCoords.x == 0 && tile.GridCoords.y == 0)
 			{
 				if (!success) Assets.Utils.Debug.Log("WTF!!!", LOGLEVEL.ERROR);
 				GameObject.Find("Camera").SetActive(false);
@@ -95,7 +97,7 @@ public class SurfaceManager : MonoBehaviour
 				// swap the commented with the uncommented if some exception is not propagating to the maini thread.
 				/**
 				TerrainChunk terrain = new TerrainChunk(Settings);
-				terrain.Build(absolutePos);
+				terrain.Build(absolutePos, Settings.MainObject.transform.position);
 				terrain.Flush(this);
 				**/
 				ThreadPool.QueueUserWorkItem((object item) => Build((TerrainChunk)item, absolutePos), new TerrainChunk(Settings));
@@ -115,7 +117,7 @@ public class SurfaceManager : MonoBehaviour
 		PlayerPrefs.SetString("GameSeed", "");
 		Settings.Prepare();
 
-		Vector2Int playerPos = new Vector2Int(2, 2);
+		Vector2Int playerPos = new Vector2Int(0, 0);
 		Settings.MainObject.transform.position.Set(2.5f * Settings.Size, Settings.Depth + 10f, 2.5f * Settings.Size);
 
 		ExtendAt(playerPos);
@@ -128,6 +130,11 @@ public class SurfaceManager : MonoBehaviour
 			int counter = 0;
 			foreach (TerrainChunk chunk in Chunks) {
 				var JumpList = chunk.JumpList;
+				if (JumpList == null)
+				{
+					yield return new WaitForEndOfFrame();
+					continue;
+				}
 				var terrainData = chunk.UnityTerrain.GetComponent<Terrain>().terrainData;
 				for (int i = chunk.FlushedJumps; i < JumpList.Count; i++)
 				{

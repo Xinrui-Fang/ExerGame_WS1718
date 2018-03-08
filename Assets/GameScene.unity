@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 1194882777}
-  m_IndirectSpecularColor: {r: 0.6735129, g: 0.623706, b: 0.5370834, a: 1}
+  m_IndirectSpecularColor: {r: 0.40468282, g: 0.34130898, b: 0.24603592, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -927,7 +927,7 @@ Light:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_Lightmapping: 4
+  m_Lightmapping: 1
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
@@ -1221,14 +1221,67 @@ MonoBehaviour:
     - Appearance: {fileID: 1112475581938456, guid: eee732260f6f54b0f95a683c6d9abe93,
         type: 2}
       SomeProperty: 0
+    TerrainLOD:
+    - minDist: 0
+      HeightmapResolution: 129
+      hasGras: 1
+      MaxGrasCount: 20000
+      HasTrees: 1
+      TreeLevel: 0
+      HasJumps: 1
+      HasStreets: 1
+      HasPowerups: 1
+      gridElementWidth: 0
+      StreetNeighborOffset: 0
+      CenterStreetNeighborOffset: 0
+      TileCorrection: {x: 0, y: 0, z: 0}
+      TreeCorrection: {x: 0, y: 0, z: 0}
+    - minDist: 1
+      HeightmapResolution: 65
+      hasGras: 1
+      MaxGrasCount: 10000
+      HasTrees: 1
+      TreeLevel: 1
+      HasJumps: 0
+      HasStreets: 1
+      HasPowerups: 0
+      gridElementWidth: 0
+      StreetNeighborOffset: 0
+      CenterStreetNeighborOffset: 0
+      TileCorrection: {x: 0, y: 0, z: 0}
+      TreeCorrection: {x: 0, y: 0, z: 0}
+    - minDist: 2
+      HeightmapResolution: 33
+      hasGras: 0
+      MaxGrasCount: 0
+      HasTrees: 1
+      TreeLevel: 2
+      HasJumps: 0
+      HasStreets: 0
+      HasPowerups: 0
+      gridElementWidth: 0
+      StreetNeighborOffset: 0
+      CenterStreetNeighborOffset: 0
+      TileCorrection: {x: 0, y: 0, z: 0}
+      TreeCorrection: {x: 0, y: 0, z: 0}
+    - minDist: 3
+      HeightmapResolution: 33
+      hasGras: 0
+      MaxGrasCount: 0
+      HasTrees: 1
+      TreeLevel: 3
+      HasJumps: 0
+      HasStreets: 0
+      HasPowerups: 0
+      gridElementWidth: 0
+      StreetNeighborOffset: 0
+      CenterStreetNeighborOffset: 0
+      TileCorrection: {x: 0, y: 0, z: 0}
+      TreeCorrection: {x: 0, y: 0, z: 0}
     ChunkMapSize: 16
-    MaxTreeCount: 128
     Depth: 300
     WaterLevel: 0.1
-    VegetationLevel: 0.6
-    HeightmapResolution: 129
-    DetailResolution: 128
-    DetailResolutionPerPatch: 64
+    VegetationLevel: 0.66
     Size: 128
     Heightmap:
       BaseMap:
@@ -1241,13 +1294,13 @@ MonoBehaviour:
         FractalType: 0
         postprocessors: []
         HeightmapType: 0
-      BaseWeight: 0.55
+      BaseWeight: 0.3
       Mixer:
-        Octaves: 2
+        Octaves: 4
         Weight: 1
         Lacunarity: 2
-        Persistance: 0.45
-        FeatureFrequency: 1
+        Persistance: 0.4
+        FeatureFrequency: 1.2
         NoiseType: 0
         FractalType: 0
         postprocessors: []
@@ -1256,10 +1309,10 @@ MonoBehaviour:
         Octaves: 4
         Weight: 1
         Lacunarity: 2
-        Persistance: 0.45
+        Persistance: 0.5
         FeatureFrequency: 0.35
         NoiseType: 0
-        FractalType: 1
+        FractalType: 0
         postprocessors:
         - type: 0
           value1: 1.5
@@ -1277,7 +1330,7 @@ MonoBehaviour:
         Persistance: 0.5
         FeatureFrequency: 0.35
         NoiseType: 0
-        FractalType: 0
+        FractalType: 1
         postprocessors:
         - type: 1
           value1: 0.2
@@ -1297,7 +1350,7 @@ MonoBehaviour:
       Weight: 0
       Lacunarity: 2
       Persistance: 0.5
-      FeatureFrequency: 0.3
+      FeatureFrequency: 1
       NoiseType: 0
       FractalType: 0
       postprocessors: []
@@ -1308,12 +1361,10 @@ MonoBehaviour:
     TreeRenderDistance: 100
     DetailRenderDistance: 32
     TreePlantOffset: 200
-    TileCorrection: {x: 0, y: 0, z: 0}
-    TreeCorrection: {x: 0, y: 0, z: 0}
     MaxVegetaionDensity: 3
     MaxGrasCount: 10000
-    HealthyGrasColor: {r: 0.07058824, g: 0.49803922, b: 0.078431375, a: 0.78431374}
-    DryGrasColor: {r: 0.7019608, g: 0.63529414, b: 0.28235295, a: 0.78431374}
+    HealthyGrasColor: {r: 0.147, g: 0.672, b: 0.103, a: 0.78431374}
+    DryGrasColor: {r: 0.8088235, g: 0.7190408, b: 0.25380328, a: 0.78431374}
     GrasMaterial: {fileID: 2100000, guid: c730df763a826a14e9c7ab714faca271, type: 2}
     Gravity: 6
     MinJumpSpeed: 3
@@ -1324,13 +1375,15 @@ MonoBehaviour:
     MaxJumpDist: 32
     MinGrasDist: 0.3
     GrasFieldSize: 64
-    StreetRadius: 1.1
-    gridElementWidth: 0
-    StreetNeighborOffset: 0
-    CenterStreetNeighborOffset: 0
-    StreetMapID: 0
-    SplatMixing: 0.4
+    StreetRadius: 1.2
+    LODDDistanceUnit: 0
+    SplatMixing: 0.9
     JumpOffsetDirChange: 0.66
+    MaxTreeLevel: 3
+    MaxTreeCount: 300
+    MinTreeHealth: 0.3
+    MinTreeDist: 2
+    MaxTreeDist: 10
   JumpsPerFrame: 5
 --- !u!4 &1519617107
 Transform:

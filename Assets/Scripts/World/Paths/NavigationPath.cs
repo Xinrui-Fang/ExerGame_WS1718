@@ -580,8 +580,8 @@ namespace Assets.World.Paths
 			while (node != null)
 			{
 				chunk.ToWorldCoordinate(
-					(float)node.Value.x / chunk.Settings.HeightmapResolution,
-					(float)node.Value.y / chunk.Settings.HeightmapResolution,
+					node.Value.x,
+					node.Value.y,
 					ref FlatWorldCoordinate
 				);
 

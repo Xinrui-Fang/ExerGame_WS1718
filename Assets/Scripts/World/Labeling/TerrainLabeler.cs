@@ -20,10 +20,18 @@ public static class TerrainLabeler
 		// Splatmap data is stored internally as a 3d array of floats, so declare a new empty array ready for your custom splatmap data:
 		CircleBound streetCollider = new CircleBound(new Vector2(), terrain.Settings.StreetRadius);
 		CircleBound treeCollider = new CircleBound(new Vector2(), 1.5f);
-		int N = SplatMap.GetLength(2) -1;
+		int N = SplatMap.GetLength(2) - 1;
 		int c = Mathf.FloorToInt(Mathf.Pow(N, 1f / 3f));
+		Vector3[] TextureCoords = new Vector3[N];
+		for (int i=0; i<N; i++) {
+			TextureCoords[i].Set(
+				(i % 3) * c,
+				((i / 3) % 3) * c,
+				i / 9 * c
+			);
+		}
+		float triggerdist = 2.75f;
 		float terrainsmoothing = terrain.Settings.SplatMixing;
-		UnityEngine.Debug.LogFormat("N: {0}, c: {1}", N, c);
 		for (int y = 0; y < SplatMap.GetLength(0); y++)
 		{
 
@@ -44,7 +52,7 @@ public static class TerrainLabeler
 				streetCollider.Center = terrain.ToWorldCoordinate(x_01, y_01);
 
 				treeCollider.Center = streetCollider.Center;
-				
+
 				if (terrain.Objects.Collides(streetCollider, QuadDataType.street)) // street
 				{
 					splatWeights[N] = 1f;
@@ -54,35 +62,23 @@ public static class TerrainLabeler
 				{
 					Vector3 normal = Normals[y_hm, x_hm];
 					float height = Heights[y_hm, x_hm];
-					//height = Mathf.InverseLerp(WaterLevel, 1f, height);
 					float moist = moisture[y_hm, x_hm];
 					float steepness = (1f - (normal.y * normal.y));
-					steepness = Mathf.InverseLerp(0f, .5f, steepness);
-
-					int dh, dm, ds;
-					dh = Mathf.FloorToInt(height * c);
-					dh = dh == c ? c - 1 : dh;
-					dm = Mathf.FloorToInt(moist * c);
-					dm = dm == c ? c - 1 : dm;
-					ds = Mathf.FloorToInt(steepness * c);
+					float dh, dm, ds;
+					dh = height * c;
+					dh = dh >= c ? c - 1 : dh;
+					dm = moist * c;
+					dm = dm >= c ? c - 1 : dm;
+					ds = steepness * c;
 					ds = ds == c ? c - 1 : ds;
-					int id = dh + dm * c + ds * c * c;
-					splatWeights[id] = 1f;
-					if (x > 1) {
-						for (int i = 0; i < N; i++)
-						{
-							splatWeights[i] += terrainsmoothing * SplatMap[y, x-1, i];
-						}
-					}
-					if (y > 1)
-					{
-						for (int i = 0; i < N; i++)
-						{
-							splatWeights[i] += terrainsmoothing * SplatMap[y-1, x, i];
-						}
+					Vector3 dataPoint = new Vector3(dh, dm, ds);
+					for (int i=0; i<N; i++) {
+						float d = Vector3.Distance(dataPoint, TextureCoords[i]);
+						if (d + 15e-2 > triggerdist) continue;
+						splatWeights[i] = (triggerdist - d) / triggerdist;
+						splatWeights[i] *= splatWeights[i]; // value high weights over lower values
 					}
 				}
-
 				// Sum of all textures weights must add to 1, so calculate normalization factor from sum of weights
 				float z = splatWeights.Sum();
 				// Loop through each terrain texture

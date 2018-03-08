@@ -100,6 +100,39 @@ public class MixedHeightMap
 }
 
 [System.Serializable]
+public class ChunkLOD
+{
+	public int minDist;
+	public int HeightmapResolution;
+
+	public bool hasGras;
+	public int MaxGrasCount;
+
+	public bool HasTrees;
+	public int TreeLevel;
+
+	public bool HasJumps;
+	public bool HasStreets;
+	public bool HasPowerups;
+
+
+	[HideInInspector]
+	public float gridElementWidth;
+
+	[HideInInspector]
+	public int StreetNeighborOffset;
+
+	[HideInInspector]
+	public float CenterStreetNeighborOffset;
+
+	[HideInInspector]
+	public Vector3 TileCorrection;
+
+	[HideInInspector]
+	public Vector3 TreeCorrection;
+}
+
+[System.Serializable]
 public class ItemSettings
 {
 	public UnityEngine.GameObject Appearance;
@@ -112,10 +145,11 @@ public class GameSettings
 	public GameObject MainObject;
 	public GameObject[] AIs;
 	public ItemSettings[] ItemTypes;
+	public ChunkLOD[] TerrainLOD;
+
 	public int ChunkMapSize = 32;
-	public int MaxTreeCount = 64;
 	public float Depth, WaterLevel, VegetationLevel;
-	public int HeightmapResolution, DetailResolution, DetailResolutionPerPatch, Size;
+	public int Size;
 	public MixedHeightMap Heightmap;
 	public HeightmapSetting Moisture;
 	public long WorldSeed;
@@ -129,8 +163,6 @@ public class GameSettings
 	public float TreeRenderDistance;
 	public float DetailRenderDistance;
 	public float TreePlantOffset;
-	public Vector3 TileCorrection;
-	public Vector3 TreeCorrection;
 
 	public float MaxVegetaionDensity;
 
@@ -146,15 +178,37 @@ public class GameSettings
 	public float GrasFieldSize = 32;
 
 	public float StreetRadius = 1f;
-	public float gridElementWidth;
-	public int StreetNeighborOffset;
-	public float CenterStreetNeighborOffset;
+	public float LODDDistanceUnit;
 
 	private static string charset = "qwertzuiopü+asdfghjklöä#yxcvbnm,.<1234567890ß!§$%&/()=?`QWERTZUIOPÜASDFGHJKLÖÄ'*>YXCVBNM;:_|²³{[]}^°@€";
-
-	public int StreetMapID;
-	public float SplatMixing = .4f;
+	
+	public float SplatMixing = .6f;
 	public float JumpOffsetDirChange = .5f;
+
+	public int MaxTreeLevel = 2;
+	public int MaxTreeCount = 128;
+	public float MinTreeHealth = .5f;
+	public float MinTreeDist = 1f;
+	public float MaxTreeDist = 10f;
+
+	/// <summary>
+	/// Calculates for each tree level how many trees and how to place them.
+	/// </summary>
+	/// <param name="level">input the tree level</param>
+	/// <param name="levelCount">output number of trees to generate</param>
+	/// <param name="minHealth">output minimum health level to place a tree</param>
+	/// <param name="minDist">ouput minimum distance between two trees</param>
+	/// <param name="maxDist">output roughly at this distance there should be the next tree</param>
+	public void TreeLevelParams(int level, ref int levelCount, ref float minHealth, ref float minDist, ref float maxDist)
+	{
+		level = level > MaxTreeLevel ? MaxTreeLevel : level < 0 ? 0 : level;
+		int levelFactor = 1 << (level + 1);
+		levelCount = MaxTreeCount / levelFactor;
+		minHealth = MinTreeHealth + (1f -  MinTreeHealth) / (float)levelFactor;
+		float levelDist = (MaxTreeDist - MinTreeDist) / (float)(levelFactor << 1);
+		minDist = MinTreeDist + levelDist;
+		maxDist = MaxTreeDist - levelDist;
+	}
 
 	public static long HashString(string input)
 	{
@@ -232,17 +286,38 @@ public class GameSettings
 				break;
 		}
 		// Calculate some units that are influenced by settings.
-		gridElementWidth = (float)Size / (float)HeightmapResolution;
-		StreetNeighborOffset = Mathf.FloorToInt(StreetRadius / gridElementWidth) + 1;
-		CenterStreetNeighborOffset = gridElementWidth * StreetNeighborOffset;
+		for (int i = 0; i < TerrainLOD.Length; i++)
+		{
+			int HeightmapResolution = TerrainLOD[i].HeightmapResolution;
+			TerrainLOD[i].gridElementWidth = (float)Size / (float)HeightmapResolution;
+			TerrainLOD[i].StreetNeighborOffset = Mathf.FloorToInt(StreetRadius / TerrainLOD[i].gridElementWidth) + 1;
+			TerrainLOD[i].CenterStreetNeighborOffset = TerrainLOD[i].gridElementWidth * TerrainLOD[i].StreetNeighborOffset;
 
-		float correctionalOffset = .5f / (float)HeightmapResolution; // Put coordinates in the middle of a tile.
-		TileCorrection = new Vector3(correctionalOffset * (float)Size, 0, correctionalOffset * (float)Size);
-		TreeCorrection = new Vector3(correctionalOffset, -TreePlantOffset, correctionalOffset);
+			float correctionalOffset = .5f / (float)HeightmapResolution; // Put coordinates in the middle of a tile.
+			TerrainLOD[i].TileCorrection = new Vector3(correctionalOffset * (float)Size, 0, correctionalOffset * (float)Size);
+			TerrainLOD[i].TreeCorrection = new Vector3(correctionalOffset, -TreePlantOffset, correctionalOffset);
+		}
+		LODDDistanceUnit = (float)Math.Sqrt(1.5f * Size * 1.5f * Size * 2f);
 	}
 
 	public IHeightSource GetHeightMapGenerator(Vector2Int Offset)
 	{
 		return Heightmap.GetHeightMapGenerator(Offset, WorldSeed);
+	}
+
+	public int RetrieveLOD(Vector2 GridCoords, Vector3 PlayerPos)
+	{
+		Vector2 FlatCoord = Size * GridCoords;
+		float Dist = (new Vector2(PlayerPos.x - FlatCoord.x, PlayerPos.z - FlatCoord.y)).magnitude;
+		int units = Mathf.RoundToInt(Dist / LODDDistanceUnit);
+		for (int i = 0; i < TerrainLOD.Length; i++)
+		{
+			if (TerrainLOD[i].minDist > units)
+			{
+				int id = i == 0 ? 0 : i - 1;
+				return id;
+			}
+		}
+		return TerrainLOD.Length - 1;
 	}
 }

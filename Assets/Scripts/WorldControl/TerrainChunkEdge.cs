@@ -6,6 +6,7 @@ public class TerrainChunkEdge
 	public List<int> RoadPoints;
 	public Vector2Int ChunkPos1, ChunkPos2;
 	private readonly long WorldSeed;
+	private readonly float CornerAvoidance;
 	private readonly int ChunkResolution;
 
 	public override int GetHashCode()
@@ -37,17 +38,18 @@ public class TerrainChunkEdge
 		}
 	}
 
-	public TerrainChunkEdge(Vector2Int ChunkPos1, Vector2Int ChunkPos2, long WorldSeed, int ChunkResolution)
+	public TerrainChunkEdge(Vector2Int ChunkPos1, Vector2Int ChunkPos2, long WorldSeed, int ChunkResolution, float cornerAvoidance=.10f)
 	{
 		this.ChunkPos1 = ChunkPos1;
 		this.ChunkPos2 = ChunkPos2;
 		this.ChunkResolution = ChunkResolution;
 		this.WorldSeed = WorldSeed;
+		this.CornerAvoidance = cornerAvoidance;
 		//Debug.Log(string.Format("Got Hash {0} for edge {1} - {2}", this.GetHashCode(), ChunkPos1, ChunkPos2));
 	}
 
 	// Generate points on this edge. Uses the edges hash as seed. IF points are closer to each other then the value indicated by Delta these points will be merged.
-	public void GenerateRoadPoints(int MaxRoads = 5, int Delta = 100, int CornerDistance = 50)
+	public void GenerateRoadPoints(int MaxRoads = 5, int Delta = 100)
 	{
 		System.Random prng = new System.Random(this.GetHashCode());
 		int numRoads = prng.Next(1, MaxRoads);
@@ -55,7 +57,7 @@ public class TerrainChunkEdge
 		int i = 0;
 		while (i < numRoads)
 		{
-			int candidate = prng.Next(CornerDistance, ChunkResolution - CornerDistance - 1); // Only allow points that are not on the corners of the terrain.
+			int candidate = Mathf.RoundToInt(ChunkResolution * (CornerAvoidance + (float)prng.NextDouble() * (1 -  2f * CornerAvoidance))); // Only allow points that are not on the corners of the terrain.
 			if (RoadPoints.Contains(candidate)) continue;
 			RoadPoints.Add(candidate);
 			i++;

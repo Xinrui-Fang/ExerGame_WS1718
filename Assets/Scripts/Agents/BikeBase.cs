@@ -68,7 +68,7 @@ public class BikeBase : MonoBehaviour
 		State = GetComponent<BikeState>();
 		if (ActiveTerrain == null)
 		{
-			ActiveTerrain = SurfaceManager.GetTile(new Vector2Int(2, 2)); // cluster in the middle 
+			ActiveTerrain = SurfaceManager.GetTile(new Vector2Int(0, 0)); // cluster in the middle 
 		}                                                         // Initial Position
 		WayVertex StartingPoint = ActiveTerrain.GetPathFinder().StartingPoint;
 
