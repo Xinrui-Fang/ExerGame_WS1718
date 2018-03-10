@@ -4,6 +4,7 @@ using PathInterfaces;
 using Assets.World.Paths;
 using Assets.Utils;
 using Assets.World;
+using System;
 
 public class PathFinder
 {
@@ -17,7 +18,7 @@ public class PathFinder
 	public int[,] StreetMap;
 	public float[,] Heights;
 	public int Resolution;
-	private int RoadSize, RoadFlatArea, RoadSmoothArea;
+	private int RoadFlatArea, RoadSmoothArea;
 	private PathTools.ConnectivityLabel Connectivity;
 	private IPathSearch SearchAlgo;
 	private DGetStepCost StepCosts;
@@ -26,17 +27,22 @@ public class PathFinder
 	public List<NavigationPath> paths;
 	public WayVertex StartingPoint;
 
-	public PathFinder(DGetStepCost stepCosts, int Resolution, float[,] heights, PathTools.ConnectivityLabel connectivity)
+	private Vector2Int CurrentGoal;
+	private WayVertex GoalVertex;
+	private TerrainChunk Chunk;
+
+	public PathFinder(DGetStepCost stepCosts, TerrainChunk chunk, PathTools.ConnectivityLabel connectivity)
 	{
+		Chunk = chunk;
 		paths = new List<NavigationPath>();
-		Hub = new VertexHub();
+		Hub = new VertexHub(chunk);
+		this.Resolution = chunk.Resolution;
 		StreetMap = new int[Resolution, Resolution];
-		Heights = heights;
+		Heights = chunk.Heights;
 		RoadFlatArea = 4;
 		RoadSmoothArea = 6;
 		LowerLimits = new Vector2Int(0, 0);
 		UpperLimits = new Vector2Int(Resolution - 1, Resolution - 1);
-		this.Resolution = Resolution;
 		SearchPerimeterUpper = UpperLimits;
 		SearchPermieterLower = LowerLimits;
 		StepCosts = stepCosts;
@@ -55,23 +61,39 @@ public class PathFinder
 		SearchAlgo = search;
 	}
 
-	public void MakePath(Vector2Int start, Vector2Int end)
+	public bool MakePath(Vector2Int start, Vector2Int end)
 	{
 		// Check that start and end are on the same label
 		if (Connectivity.Labels[start.y, start.x] != Connectivity.Labels[end.y, end.x])
 		{
 			Assets.Utils.Debug.Log(string.Format("{0} ({2}) and {1} ({3}) are not connected!", start, end, Connectivity.Labels[start.y, start.x], Connectivity.Labels[end.y, end.x]));
-			return;
+			return false;
 		}
+		float dist = Vector2Int.Distance(start, end);
+
+		WayVertex[] start_connects = new WayVertex[Hub.vertices.Count];
+		Hub.vertices.CopyTo(start_connects);
+		WayVertex[] end_connects = new WayVertex[Hub.vertices.Count];
+		Hub.vertices.CopyTo(end_connects);
+		Array.Sort(start_connects, (a, b) => Vector2Int.Distance(a.Pos, start).CompareTo(Vector2Int.Distance(b.Pos, start)));
+		Array.Sort(end_connects, (a, b) => Vector2Int.Distance(a.Pos, end).CompareTo(Vector2Int.Distance(b.Pos, end)));
+
+
 		// Find the path using the search algorithm
+		CurrentGoal = end;
+		GoalVertex = null;
+		if (Hub.Contains(end))
+			GoalVertex = Hub.Get(end);
 		List<Vector2Int> path = SearchAlgo.Search(ref start, ref end);
 
 		if (path.Count == 0)
 		{
-			return;
+			return false;
 		}
 		// Remember Path
 		AddToStreetMap(path);
+		var EndV = Hub.Get(end);
+		return true;
 	}
 
 	/* For use with Pathfinding on heightmap.
@@ -83,9 +105,14 @@ public class PathFinder
 		if (ax == 0 || ay == 0 || ax == Resolution - 1 || ay == Resolution - 1) boundaryFactor *= 4f;
 		if (bx == 0 || by == 0 || bx == Resolution - 1 || by == Resolution - 1) boundaryFactor *= 4f;
 
-		if (StreetMap[ax, ay] > 0 && StreetMap[bx, by] > 0) return boundaryFactor * StepCosts(ax, ay, bx, by);
-		if (StreetMap[ax, ay] > 0 || StreetMap[bx, by] > 0) return boundaryFactor * 2f * StepCosts(ax, ay, bx, by);
-		return 4f * boundaryFactor * StepCosts(ax, ay, bx, by);
+		if (StreetMap[bx, by] > 0) return boundaryFactor * StepCosts(ax, ay, bx, by);
+		if (StreetMap[ax, ay] > 0 && StreetMap[bx, by] < 1) return boundaryFactor * 8 * StepCosts(ax, ay, bx, by);
+		return 8f * boundaryFactor * StepCosts(ax, ay, bx, by);
+	}
+
+	public bool IsGoal(int ax, int ay)
+	{
+		return StreetMap[ax, ay] > 0;
 	}
 
 	/* Smooth terrain around road with the defined Kernels
@@ -103,9 +130,8 @@ public class PathFinder
      */
 	public void AddToStreetMap(List<Vector2Int> path, int width = 1)
 	{
-		// don't bother with empty path
-		if (path.Count == 0) return;
-		PathBranchAutomaton.BranchPaths(path, StreetMap, ref Hub, paths);
+		var WayPoints = new Assets.Utils.LinkedList<Vector2Int>(path);
+		PathBranchAutomaton.BranchPaths(WayPoints, StreetMap, ref Hub, paths, Chunk);
 	}
 
 	public void CreateNetwork(TerrainChunk terrain, TerrainChunkEdge[] terrainEdges)
@@ -141,14 +167,9 @@ public class PathFinder
 
 		for (int i = 0; i < Connectivity.NumLabels; i++)
 		{
-			//Assets.Utils.Debug.Log(string.Format("Looking at Connectivity group {0}", i));
-			if (Points[i].Count == 1)
+			if (Points[i].Count > 0)
 			{
-				DiscardedPoints.Add(Points[i][0]);
-			}
-			else if (Points[i].Count > 1)
-			{
-				ConnectPoints(Points[i]);
+				ConnectPoints(Points[i], terrain.ChunkSeed, i);
 			}
 		}
 		int maxLength = 0; // length of the entry path.
@@ -189,36 +210,41 @@ public class PathFinder
 		//paths.Clear();
 	}
 
-	private void ConnectPoints(List<Vector2Int> Points)
+	private void ConnectPoints(List<Vector2Int> Points, long Seed, int ConnectivityLabel)
 	{
-		if (Points.Count == 2)
+		if (Points.Count == 1)
+			MakePath(Points[0], Points[0]);
+		else if (Points.Count == 2)
 		{
-			//Assets.Utils.Debug.Log("Making paths");
 			MakePath(Points[0], Points[1]);
 		}
 		else
 		{
-			//Assets.Utils.Debug.Log("Sorting points . . .");
-			var comparer = new PointDistanceComparer(Points[0]);
-			Points.Sort((a, b) => -1 * comparer.Compare(a, b));
-			for (int i = 1; i < Points.Count; i++)
+			int hash = ConnectivityLabel;
+			unchecked
 			{
-				MakePath(Points[0], Points[i]);
+				hash += (int)(5039 * Seed);
 			}
-		}
-	}
+			System.Random prng = new System.Random(hash);
+			int r1 = prng.Next(Points.Count);
+			Points.Sort((b, a) => Vector2Int.Distance(a, Points[r1]).CompareTo(Vector2Int.Distance(b, Points[r1])));
+			int f1 = 0;
+			for (int i = 0; i < Points.Count; i++)
+			{
 
-	private class PointDistanceComparer : IComparer<Vector2Int>
-	{
-		private Vector2Int P;
-		public PointDistanceComparer(Vector2Int p)
-		{
-			P = p;
-		}
-		public int Compare(Vector2Int a, Vector2Int b)
-		{
-			//return MapTools.OctileDistance(P.x, P.y, a.x, a.y).CompareTo(MapTools.OctileDistance(P.x, P.y, b.x, b.y));
-			return (Mathf.Sqrt((P.x * a.x) * (P.x - a.x) + (P.y - a.y) * (P.y - a.y)).CompareTo(Mathf.Sqrt((P.x - b.x) * (P.x - b.x) + (P.y - b.y) * (P.y - b.y))));
+				if (i == r1) continue;
+				if (MakePath(Points[r1], Points[i]))
+				{
+					f1 = i;
+					break;
+				}
+			}
+			for (int k = 0; k < Points.Count; k++)
+			{
+
+				if (k == r1 || k == f1) continue;
+				MakePath(Points[k], Points[r1]);
+			}
 		}
 	}
 }

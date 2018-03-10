@@ -52,18 +52,20 @@ public class AStar : IPathSearch
 	private readonly IGetNeighbors NeighborSource;
 	private readonly DGetStepCost RealCosts;
 	private readonly DGetStepCost Heuristic;
+	private readonly DIsGoal GoalTest;
 	private readonly float Epsilon;
 	private PathNode[] Nodes;
 	private uint nextNodeIDx;
 	private bool prepared = false;
 
-	public AStar(DIsWalkable walkable, IGetNeighbors neighbors, DGetStepCost realCosts, DGetStepCost heuristic, float epsilon = 0f)
+	public AStar(DIsWalkable walkable, IGetNeighbors neighbors, DGetStepCost realCosts, DGetStepCost heuristic, DIsGoal goalTest, float epsilon = 0f)
 	{
 		Walkable = walkable;
 		NeighborSource = neighbors;
 		RealCosts = realCosts;
 		Heuristic = heuristic;
 		Epsilon = 1f + epsilon;
+		GoalTest = goalTest;
 	}
 
 	public void PrepareSearch(int ExpectedNodesCount)
@@ -155,6 +157,8 @@ public class AStar : IPathSearch
 			Steps++;
 			current = Opened.Dequeue();
 			if (current == endIdx)
+				return ReconstructPath(current);
+			if (GoalTest(Nodes[current].x, Nodes[current].y))
 				return ReconstructPath(current);
 
 			Nodes[current].Closed = true;

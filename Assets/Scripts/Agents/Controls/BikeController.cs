@@ -1,14 +1,12 @@
-﻿using UnityEngine;
-using System.Collections;
-using System;
+﻿using System;
 using System.IO.Ports;
 using System.Threading;
 
-public class BikeController : MonoBehaviour
+public class BikeController
 {
-	static SerialPort port = null;
+	public static SerialPort port = null;
 	static string portName = "COM3";
-	static byte address = 0;
+	public static byte address = 0;
 	static int rpm = 0;
 
 	static void RequestAddress()
@@ -50,7 +48,6 @@ public class BikeController : MonoBehaviour
 	static int ReadRPM()
 	{
 		int rpm = 0;
-		Console.WriteLine("Reading data.");
 		for (int i = 0; i < 100; ++i)
 		{
 			try
@@ -60,15 +57,16 @@ public class BikeController : MonoBehaviour
 			}
 			catch (TimeoutException)
 			{
+				UnityEngine.Debug.Log("Got Timeout!");
 				break;
 			}
 		}
 		return rpm;
 	}
 
-	static void Run()
+	public static void Run(string portName)
 	{
-		port = new SerialPort("COM3");
+		port = new SerialPort(portName);
 		port.BaudRate = 9600;
 		port.Parity = Parity.None;
 		port.StopBits = StopBits.One;
@@ -80,12 +78,14 @@ public class BikeController : MonoBehaviour
 
 		RequestAddress();
 		address = ReadAddress();
-		for (; ; )
-		{
-			RequestRPM();
-			rpm = ReadRPM();
-			//Console.WriteLine("RPM: " + rpm);
-		}
+		//Console.WriteLine(address);
+	}
+
+	public static void Update()
+	{	
+		RequestRPM();
+		rpm = ReadRPM();
+		UnityEngine.Debug.Log("RPM: " + rpm);
 	}
 
 	public static int getRPM()
@@ -96,7 +96,7 @@ public class BikeController : MonoBehaviour
 	public static void Initialize(string comPort = "COM3")
 	{
 		portName = comPort;
-		Thread thread = new Thread(Run);
-		thread.Start();
+		//Thread thread = new Thread(Run);
+		//thread.Start();
 	}
 }

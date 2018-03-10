@@ -15,7 +15,8 @@ namespace Assets.Utils
 		street,
 		vegetation,
 		building,
-		jump
+		jump,
+		wayvertex
 	}
 
 	public class QuadTreeData<T>
@@ -148,7 +149,7 @@ namespace Assets.Utils
 			if (dx <= 1e-20f && dy <= 1e-20f) return true;
 			if (dx <= 1e-20f || dy <= 1e-20f) return false;
 			// no devision by zero as we made sure in the step before.
-			return (Mathf.Abs(dx/dy - 1f) <= Error && conn.magnitude <= MaxDist);
+			return (Mathf.Abs(dx / dy - 1f) <= Error && conn.magnitude <= MaxDist);
 		}
 
 		public bool Intersects(ref RectangleBound other)
@@ -497,29 +498,31 @@ namespace Assets.Utils
 			return foundSomething;
 		}
 
-		public IEnumerator<T> GetEnumerator() {
+		public IEnumerator<QuadTreeData<T>> GetEnumerator()
+		{
 			foreach (QuadTreeData<T> dataPoint in Data)
 			{
 				if (dataPoint == null) continue;
 				if (dataPoint.contents == null) continue;
-				yield return dataPoint.contents;
+				yield return dataPoint;
 			}
 			if (NW != null)
 			{
-				foreach (T contents in NW) {
-					yield return contents;
-				}
-				foreach (T contents in NE)
+				foreach (QuadTreeData<T> data in NW)
 				{
-					yield return contents;
+					yield return data;
 				}
-				foreach (T contents in SE)
+				foreach (QuadTreeData<T> data in NE)
 				{
-					yield return contents;
+					yield return data;
 				}
-				foreach (T contents in SW)
+				foreach (QuadTreeData<T> data in SE)
 				{
-					yield return contents;
+					yield return data;
+				}
+				foreach (QuadTreeData<T> data in SW)
+				{
+					yield return data;
 				}
 			}
 		}

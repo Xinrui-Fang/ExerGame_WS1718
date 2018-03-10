@@ -49,31 +49,43 @@ public class TerrainChunkEdge
 	}
 
 	// Generate points on this edge. Uses the edges hash as seed. IF points are closer to each other then the value indicated by Delta these points will be merged.
-	public void GenerateRoadPoints(int MaxRoads = 5, int Delta = 100)
+	public void GenerateRoadPoints(int MaxRoads = 5)
 	{
+
+		float Delta = (1f - 2 * CornerAvoidance) / (float)(MaxRoads/2f);
 		System.Random prng = new System.Random(this.GetHashCode());
 		int numRoads = prng.Next(1, MaxRoads);
 		RoadPoints = new List<int>(numRoads);
+		List<float> PointCandidates = new List<float>(numRoads);
 		int i = 0;
 		while (i < numRoads)
 		{
-			int candidate = Mathf.RoundToInt(ChunkResolution * (CornerAvoidance + (float)prng.NextDouble() * (1 -  2f * CornerAvoidance))); // Only allow points that are not on the corners of the terrain.
-			if (RoadPoints.Contains(candidate)) continue;
-			RoadPoints.Add(candidate);
+			float candidate = (CornerAvoidance + (float)prng.NextDouble() * (1 -  2f * CornerAvoidance)); // Only allow points that are not on the corners of the terrain.
+			if (PointCandidates.Contains(candidate)) continue;
+			PointCandidates.Add(candidate);
 			i++;
 		}
 
 		// Merge Points that are close to each other
 		RoadPoints.Sort();
 		i = 1;
-		while (i < RoadPoints.Count)
+		int list_length = PointCandidates.Count;
+		while (i < list_length)
 		{
-			if (RoadPoints[i] <= RoadPoints[i - 1] + Delta)
+			if (PointCandidates[i] <= PointCandidates[i - 1] + Delta)
 			{
-				RoadPoints[i] = (RoadPoints[i] + RoadPoints[i - 1]) / 2;
-				RoadPoints.RemoveAt(i - 1);
+				PointCandidates[i] = (PointCandidates[i] + PointCandidates[i - 1]) / 2f;
+				PointCandidates.RemoveAt(i - 1);
+				list_length--;
 			}
-			else i++;
+			else
+			{
+				i++;
+			}
+		}
+		for (int n=0; n < PointCandidates.Count; n++)
+		{
+			RoadPoints.Add(Mathf.RoundToInt(PointCandidates[n] * ChunkResolution));
 		}
 	}
 }

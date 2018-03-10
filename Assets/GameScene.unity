@@ -836,6 +836,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4bfbbcaac2b14be8a39d9d5a877e6e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  sprite: {fileID: 0}
+  font: {fileID: 0}
 --- !u!1001 &1156342840
 Prefab:
   m_ObjectHideFlags: 0
@@ -1285,7 +1287,7 @@ MonoBehaviour:
     Size: 128
     Heightmap:
       BaseMap:
-        Octaves: 8
+        Octaves: 6
         Weight: 0.55
         Lacunarity: 2
         Persistance: 0.45
@@ -1294,22 +1296,22 @@ MonoBehaviour:
         FractalType: 0
         postprocessors: []
         HeightmapType: 0
-      BaseWeight: 0.3
+      BaseWeight: 0.55
       Mixer:
-        Octaves: 4
+        Octaves: 6
         Weight: 1
         Lacunarity: 2
         Persistance: 0.4
-        FeatureFrequency: 1.2
+        FeatureFrequency: 1.25
         NoiseType: 0
         FractalType: 0
         postprocessors: []
         HeightmapType: 0
       Component1:
-        Octaves: 4
+        Octaves: 6
         Weight: 1
         Lacunarity: 2
-        Persistance: 0.5
+        Persistance: 0.4
         FeatureFrequency: 0.35
         NoiseType: 0
         FractalType: 0
@@ -1324,27 +1326,19 @@ MonoBehaviour:
           value3: 0
         HeightmapType: 1
       Component2:
-        Octaves: 4
+        Octaves: 6
         Weight: 1
         Lacunarity: 2
-        Persistance: 0.5
+        Persistance: 0.4
         FeatureFrequency: 0.35
         NoiseType: 0
         FractalType: 1
         postprocessors:
         - type: 1
-          value1: 0.2
-          value2: 1
-          value3: 0.2
-        - type: 0
-          value1: 2
-          value2: 0
-          value3: 0
-        - type: 2
-          value1: 0
-          value2: 0.8
-          value3: 0
-        HeightmapType: 0
+          value1: 0.05
+          value2: 2
+          value3: 0.05
+        HeightmapType: 1
     Moisture:
       Octaves: 5
       Weight: 0
@@ -1385,6 +1379,7 @@ MonoBehaviour:
     MinTreeDist: 2
     MaxTreeDist: 10
   JumpsPerFrame: 5
+  PlayerPos: {x: 0, y: 0, z: 0}
 --- !u!4 &1519617107
 Transform:
   m_ObjectHideFlags: 0

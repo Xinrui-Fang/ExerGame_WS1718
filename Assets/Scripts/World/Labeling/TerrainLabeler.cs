@@ -6,14 +6,6 @@ using Assets.Utils;
 
 public static class TerrainLabeler
 {
-	private static float IsInside(float lower, float upper, float value)
-	{
-		if (value < lower || value > upper)
-		{
-			return 0;
-		}
-		return 1;
-	}
 
 	public static void MapTerrain(TerrainChunk terrain, float[,] moisture, float[,] Heights, Vector3[,] Normals, float[,,] SplatMap, int[,] streetMap, float WaterLevel, float VegetationMaxHeight, Vector2 TerrainOffset)
 	{
@@ -25,13 +17,20 @@ public static class TerrainLabeler
 		Vector3[] TextureCoords = new Vector3[N];
 		for (int i=0; i<N; i++) {
 			TextureCoords[i].Set(
-				(i % 3) * c,
-				((i / 3) % 3) * c,
-				i / 9 * c
+				(i % 3) + .5f,
+				((i / 3) % 3) + .5f,
+				(i / 9) + .5f
 			);
 		}
-		float triggerdist = 2.75f;
+		float triggerdist = .86f;
 		float terrainsmoothing = terrain.Settings.SplatMixing;
+		float part = 1f / (SplatMap.GetLength(0) * SplatMap.GetLength(1));
+		float meanSteepNess = 0;
+		float meanHeight = 0;
+		float minS = float.PositiveInfinity;
+		float minH = float.PositiveInfinity;
+		float maxS = float.NegativeInfinity;
+		float maxH = float.NegativeInfinity;
 		for (int y = 0; y < SplatMap.GetLength(0); y++)
 		{
 
@@ -64,6 +63,18 @@ public static class TerrainLabeler
 					float height = Heights[y_hm, x_hm];
 					float moist = moisture[y_hm, x_hm];
 					float steepness = (1f - (normal.y * normal.y));
+					height = Mathf.InverseLerp(.1f, .9f, height);
+					//steepness = Mathf.InverseLerp(0f, .9f, steepness);
+					// Debugging
+					/**
+					meanHeight += height * part;
+					meanSteepNess += steepness * part;
+					minH = minH <= height ? minH : height;
+					maxH = maxH >= height ? maxH : height;
+					minS = minS <= steepness ? minS : steepness;
+					maxS = maxS >= steepness ? maxS : steepness;
+					**/
+
 					float dh, dm, ds;
 					dh = height * c;
 					dh = dh >= c ? c - 1 : dh;
@@ -74,7 +85,7 @@ public static class TerrainLabeler
 					Vector3 dataPoint = new Vector3(dh, dm, ds);
 					for (int i=0; i<N; i++) {
 						float d = Vector3.Distance(dataPoint, TextureCoords[i]);
-						if (d + 15e-2 > triggerdist) continue;
+						if (d + 1e-2 > triggerdist) continue;
 						splatWeights[i] = (triggerdist - d) / triggerdist;
 						splatWeights[i] *= splatWeights[i]; // value high weights over lower values
 					}
@@ -93,5 +104,6 @@ public static class TerrainLabeler
 				}
 			}
 		}
+		//UnityEngine.Debug.LogFormat("MeanHeight {0}, MeanSteepness {1}, minH {2}, maxH{3}, minS {4}, maxS {5}", meanHeight, meanSteepNess, minH, maxH, minS, maxS);
 	}
 }

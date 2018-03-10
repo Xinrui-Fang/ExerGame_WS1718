@@ -23,7 +23,7 @@ public class PlacementCorrection : MonoBehaviour {
 		{
 			Ray posRay = new Ray(transform.position + RayOffset * transform.up, -transform.up);
 			RaycastHit posHit;
-			if (Physics.Raycast(posRay, out posHit, RayMaxDist, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+			if (Physics.Raycast(posRay, out posHit, RayMaxDist, 1<<8, QueryTriggerInteraction.Ignore))
 			{
 				transform.position = posHit.point;
 			}
@@ -33,9 +33,9 @@ public class PlacementCorrection : MonoBehaviour {
 			Ray ray1 = new Ray(pos1 + RayOffset * transform.up, -transform.up);
 			Ray ray2 = new Ray(pos2 + RayOffset * transform.up, -transform.up);
 			RaycastHit hit1, hit2;
-			if (Physics.Raycast(ray1, out hit1, RayMaxDist, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+			if (Physics.Raycast(ray1, out hit1, RayMaxDist, 1<<8, QueryTriggerInteraction.Ignore))
 			{
-				if (Physics.Raycast(ray2, out hit2, RayMaxDist, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+				if (Physics.Raycast(ray2, out hit2, RayMaxDist, 1<<8, QueryTriggerInteraction.Ignore))
 				{
 					transform.rotation = Quaternion.LookRotation(hit1.point - hit2.point);
 				}

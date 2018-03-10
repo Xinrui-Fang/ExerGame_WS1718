@@ -6,311 +6,6 @@ using Assets.Utils;
 
 namespace Assets.World.Paths
 {
-	/** A finite Automaton to add a new path to the already exisiting network.
-     * 
-     **/
-	public static class PathBranchAutomaton
-	{
-		public static void BranchPaths(List<Vector2Int> path, int[,] StreetMap, ref VertexHub Hub, List<NavigationPath> pathStorage)
-		{
-			// check sanity
-			int lastLabel, Status;
-			if (path.Count() == 0) return;
-
-			// initialisation
-			NavigationPath rawPath = new NavigationPath() { Waypoints = new Utils.LinkedList<Vector2Int>(path) };
-			Utils.LinkedListNode<Vector2Int> node = rawPath.Waypoints.First;
-			rawPath.Label = pathStorage.Count() + 1;
-			lastLabel = StreetMap[node.Value.x, node.Value.y];
-			Status = lastLabel == 0 ? 0 : 1;
-			if (Status == 0)
-			{
-				rawPath.Start = Hub.Get(node.Value);
-			}
-
-			// Begin traversing automaton
-			while (node != null)
-			{
-				if (Status == -2) break;
-				if (Status == -1) // Status -1 is an upredicted outcome
-				{
-					Assets.Utils.Debug.Log(string.Format("Got Status -1 when branching path {0} -> {1}", path[0], path[path.Count - 1]));
-					//recover to this point.
-					//rawPath.Start.Unmount(rawPath);
-					if (rawPath.Start != null && rawPath.End != null) rawPath.Unmount();
-					rawPath.End = Hub.Get(node.Value);
-					rawPath.Mount();
-					pathStorage.Add(rawPath);
-					break;
-				}
-
-				int label = StreetMap[node.Value.x, node.Value.y];
-				if (Status == 0) // status 1 denotes normal traversal of the path. 
-				{
-					if (label == 0) // we can continue with traversing.
-					{
-						Mark(node, rawPath.Label, StreetMap);
-					}
-					else // we have to follow an existing path.
-					{
-						BranchOn(node, label, rawPath, ref Hub, pathStorage, StreetMap, ref lastLabel, ref Status);
-						if (Status >= 0)
-							node = rawPath.Waypoints.First.Next;
-						continue;
-					}
-				}
-				else if (Status == 1) // we are following an existing path
-				{
-					if (label == 0) // we can continue normal traversal
-					{
-						BranchOff(node, rawPath, Hub, pathStorage, StreetMap, ref lastLabel, ref Status);
-						node = node.Next;
-						continue;
-					}
-					else if (label != lastLabel) // we have to switch to following another path.
-					{
-						BranchSwitch(node, rawPath, Hub, pathStorage, StreetMap, label, ref lastLabel, ref Status);
-						node = node.Next;
-						continue;
-					}
-					else // we continue following the path.
-					{
-						// Trim nodes that are on the branch that we are reusing.
-						if (rawPath.Waypoints.First != node)
-							rawPath.Waypoints.Count--;
-						rawPath.Waypoints.First = node;
-						rawPath.Waypoints.First.Previous = null;
-					}
-				}
-				lastLabel = label;
-				node = node.Next;
-			}
-			// When done add the path to the vertices and pathStorage
-			if (rawPath.Waypoints.Last != null)
-			{
-				rawPath.Start = Hub.Get(rawPath.Waypoints.First.Value);
-				rawPath.End = Hub.Get(rawPath.Waypoints.Last.Value);
-				rawPath.Mount();
-				pathStorage.Add(rawPath);
-			}
-		}
-
-		/* Marks Streetmap at node coordinates as visited by this path.
-         */
-		private static void Mark(Utils.LinkedListNode<Vector2Int> node, int label, int[,] StreetMap)
-		{
-			StreetMap[node.Value.x, node.Value.y] = label;
-		}
-
-		private static void SplitAndRemount(int label, Vector2Int Value, List<NavigationPath> pathStorage, VertexHub Hub, int[,] Streetmap, ref NavigationPath CollisionBranch)
-		{
-			pathStorage[label - 1].Unmount();
-			if (pathStorage[label - 1].Split(Value, ref CollisionBranch, ref Hub))
-			{
-				pathStorage[label - 1].Finalize(Hub);
-				// remember split.
-				CollisionBranch.Label = pathStorage.Count() + 1;
-				Utils.LinkedListNode<Vector2Int> BranchNode = CollisionBranch.Waypoints.First;
-				while (BranchNode != null)
-				{
-					Mark(BranchNode, CollisionBranch.Label, Streetmap);
-					BranchNode = BranchNode.Next;
-				}
-				pathStorage.Add(CollisionBranch);
-				CollisionBranch.Finalize(Hub);
-			}
-			else
-			{
-				pathStorage[label - 1].Finalize(Hub);
-			}
-		}
-
-		/* Called when exiting a path that was previously followed. 
-         * The point of exit needs to be turned to a WayVertex e.g the path we were following needs to be split.
-         * Prepares rawPath for status 0
-         */
-		private static void BranchOff(Utils.LinkedListNode<Vector2Int> node, NavigationPath rawPath, VertexHub Hub, List<NavigationPath> pathStorage, int[,] Streetmap, ref int lastLabel, ref int status)
-		{
-			// TODO: needs to be created a node.previous instead
-			if (node.Previous != null)
-			{
-				// Create WayVertex at node.Previous.Value and split paths.
-				NavigationPath CollisionBranch = new NavigationPath();
-				SplitAndRemount(lastLabel, node.Previous.Value, pathStorage, Hub, Streetmap, ref CollisionBranch);
-
-				// set remainder of path.
-				rawPath.Waypoints.First = node.Previous;
-				rawPath.Waypoints.First.Previous = null;
-				rawPath.Start = Hub.Get(rawPath.Waypoints.First.Value);
-			}
-			else // TODO: investigate is it possible that node.previous is not set?
-			{
-				rawPath.Waypoints.First = node;
-				rawPath.Start = Hub.Get(node.Value);
-			}
-
-			rawPath.Label = pathStorage.Count + 1;
-			status = 0;
-			lastLabel = 0;
-		}
-
-		/* Called when the new path switches from following one existing path to following another existing path. 
-         * Makes sure that the two paths are connected.
-         */
-		private static void BranchSwitch(Utils.LinkedListNode<Vector2Int> node, NavigationPath rawPath, VertexHub Hub, List<NavigationPath> pathStorage, int[,] Streetmap, int label, ref int lastLabel, ref int status)
-		{
-			// init
-			WayVertex V, W;
-			V = W = null;
-
-
-			// Check if one of the points is a WayVertex if so ignore it and continue onwards
-			if (Hub.Contains(node.Value))
-			{
-				V = Hub.Get(node.Value);
-				if (V.Connects(label, lastLabel))
-				{
-					status = 1;
-					lastLabel = label;
-					return;
-				}
-			}
-			if (node.Previous != null && Hub.Contains(node.Value))
-			{
-				W = Hub.Get(node.Previous.Value);
-				if (W.Connects(label, lastLabel))
-				{
-					status = 1;
-					lastLabel = label;
-					return;
-				}
-			}
-			// Obtain missing WayVertices by splitting the two paths.
-			if (V == null)
-			{
-				NavigationPath branch = new NavigationPath();
-				SplitAndRemount(label, node.Value, pathStorage, Hub, Streetmap, ref branch);
-				V = Hub.Get(node.Value);
-			}
-			if (W == null)
-			{
-				NavigationPath branch = new NavigationPath();
-				SplitAndRemount(lastLabel, node.Previous.Value, pathStorage, Hub, Streetmap, ref branch);
-				W = Hub.Get(node.Value);
-			}
-			if (V == null || V == null) return;
-			// Create missing link path.
-			Utils.LinkedList<Vector2Int> pW = new Utils.LinkedList<Vector2Int>();
-			pW.AddLast(W.Pos);
-			pW.AddLast(V.Pos);
-			NavigationPath p = new NavigationPath()
-			{
-				Start = W,
-				End = V,
-				Waypoints = pW,
-				Label = pathStorage.Count + 1
-			};
-			pathStorage.Add(p);
-			p.Mount();
-
-			// Adjust reminder of path.
-			rawPath.Waypoints.First = node;
-			node.Previous = null;
-			rawPath.Label = pathStorage.Count + 1;
-		}
-
-		private static void BranchOn(Utils.LinkedListNode<Vector2Int> node, int label, NavigationPath rawPath, ref VertexHub Hub, List<NavigationPath> pathStorage, int[,] Streetmap, ref int lastLabel, ref int status)
-		{
-			bool WayVertexExists = Hub.Contains(node.Value);
-			// finalize previous path
-			NavigationPath NextRawPath = new NavigationPath();
-			Vector2Int value = new Vector2Int(node.Value.x, node.Value.y);
-			if (rawPath.Start != null && rawPath.End != null) rawPath.Unmount();
-			if (rawPath.SplitAt(ref node, ref NextRawPath, ref Hub))
-			{
-				rawPath.Finalize(Hub);
-				pathStorage.Add(rawPath);
-				rawPath = NextRawPath;
-			}
-			else if (rawPath.Waypoints.Last != null && rawPath.Waypoints.Last.Value == value)
-			{
-				rawPath.Finalize(Hub);
-				pathStorage.Add(rawPath);
-				rawPath = new NavigationPath();
-				status = -2;
-			}
-
-			WayVertex V = Hub.Get(node.Value); // V is Vertex at Node position
-											   // split colision
-			if (!WayVertexExists)
-			{
-				NavigationPath CollisionBranch = new NavigationPath();
-				pathStorage[label - 1].Unmount();
-				SplitAndRemount(label, node.Value, pathStorage, Hub, Streetmap, ref CollisionBranch);
-			}
-
-			if (rawPath.Waypoints.Count > 1)
-			{
-				Vector2Int NextVal = rawPath.Waypoints.First.Next.Value;
-				if (Streetmap[NextVal.x, NextVal.y] == 0)
-				{
-					status = 0;
-					lastLabel = 0;
-					rawPath.Label = pathStorage.Count() + 1;
-					return;
-				}
-
-				foreach (PathWithDirection dp in V.GetPaths())
-				{
-					if (dp.path.Waypoints.First.Next.Value == NextVal)
-					{
-						lastLabel = dp.path.Label;
-						status = 1;
-						return;
-					}
-				}
-
-			}
-			status = -1;
-			return;
-		}
-	}
-
-	/**
-     * Wrapper around a Dictionary Vector2Int -> WayVertex.
-     * Used to Find points to connect paths to.
-     **/
-	public class VertexHub
-	{
-		private Dictionary<Vector2Int, WayVertex> Storage;
-
-		public void Cleanup()
-		{
-			foreach (WayVertex V in Storage.Values)
-			{
-				V.Cleanup();
-			}
-		}
-
-		public VertexHub()
-		{
-			Storage = new Dictionary<Vector2Int, WayVertex>();
-		}
-
-		public WayVertex Get(Vector2Int pos)
-		{
-			if (!Storage.ContainsKey(pos))
-			{
-				Storage[pos] = new WayVertex(pos);
-			}
-			return Storage[pos];
-		}
-
-		public bool Contains(Vector2Int pos)
-		{
-			return Storage.ContainsKey(pos);
-		}
-	}
 
 	public struct PathWithDirection
 	{
@@ -328,50 +23,71 @@ namespace Assets.World.Paths
 			return path.GetHashCode();
 		}
 
-        public void reverse(){
-            forward = true ;
-            NavigationPath newPath = new NavigationPath();
-            newPath.WorldWaypoints = new Vector3[this.path.WorldWaypoints.Length];
-            newPath.Waypoints = new Utils.LinkedList<Vector2Int>();
-            newPath.End = this.path.Start;
-            newPath.Start = this.path.End;
-            Utils.LinkedListNode<Vector2Int> node = this.path.Waypoints.First;
-            for( int i = path.WorldWaypoints.Length-1 ; i >=0 ; i--){
-                newPath.WorldWaypoints[path.WorldWaypoints.Length-1 - i] = this.path.WorldWaypoints[i];
-                newPath.Waypoints.AddLast(node.Value);
-                node = node.Next;
-            } 
-            this.path = newPath;
+		public void reverse()
+		{
+			forward = true;
+			NavigationPath newPath = new NavigationPath();
+			newPath.WorldWaypoints = new Vector3[this.path.WorldWaypoints.Length];
+			newPath.Waypoints = new Utils.LinkedList<Vector2Int>();
+			newPath.End = this.path.Start;
+			newPath.Start = this.path.End;
+			Utils.LinkedListNode<Vector2Int> node = this.path.Waypoints.First;
+			for (int i = path.WorldWaypoints.Length - 1; i >= 0; i--)
+			{
+				newPath.WorldWaypoints[path.WorldWaypoints.Length - 1 - i] = this.path.WorldWaypoints[i];
+				newPath.Waypoints.AddLast(node.Value);
+				node = node.Next;
+			}
+			this.path = newPath;
 
-        }
+		}
 
-        public PathWithDirection reversed(){
-            NavigationPath newPath = new NavigationPath();
-            newPath.WorldWaypoints = new Vector3[path.WorldWaypoints.Length];
-            newPath.Waypoints = new Utils.LinkedList<Vector2Int>();
-            newPath.End = path.Start;
-            newPath.Start = path.End;
-            Utils.LinkedListNode<Vector2Int> node = path.Waypoints.First;
-            for( int i = path.WorldWaypoints.Length-1 ; i >=0 ; i--){
-                newPath.WorldWaypoints[path.WorldWaypoints.Length-1 - i] = path.WorldWaypoints[i];
-                newPath.Waypoints.AddLast(node.Value);
-                node = node.Next;
-            } 
-            return new PathWithDirection(newPath, true);
+		public PathWithDirection reversed()
+		{
+			NavigationPath newPath = new NavigationPath();
+			newPath.WorldWaypoints = new Vector3[path.WorldWaypoints.Length];
+			newPath.Waypoints = new Utils.LinkedList<Vector2Int>();
+			newPath.End = path.Start;
+			newPath.Start = path.End;
+			Utils.LinkedListNode<Vector2Int> node = path.Waypoints.First;
+			for (int i = path.WorldWaypoints.Length - 1; i >= 0; i--)
+			{
+				newPath.WorldWaypoints[path.WorldWaypoints.Length - 1 - i] = path.WorldWaypoints[i];
+				newPath.Waypoints.AddLast(node.Value);
+				node = node.Next;
+			}
+			return new PathWithDirection(newPath, true);
 
-        }
-        
+		}
+
 	}
 
 	public class WayVertex : IEquatable<WayVertex>
 	{
 		public Vector2Int Pos;
+		public Vector2 WPos;
 		private HashSet<PathWithDirection> Paths;
+		public int? LocalId;
+		public int FirstForeignPath = int.MaxValue;
 
-		public WayVertex(Vector2Int pos)
+		public WayVertex(Vector2Int pos, Vector2 wpos, int? id = null)
 		{
 			Pos = pos;
+			WPos = wpos;
 			Paths = new HashSet<PathWithDirection>();
+			LocalId = id;
+		}
+
+		public void UnmountAllAliens()
+		{
+			HashSet<PathWithDirection> NewPaths = new HashSet<PathWithDirection>();
+			int i = 0;
+			foreach (var path in Paths) 
+			{
+				if (i == FirstForeignPath) break;
+				NewPaths.Add(path);
+			}
+			Paths = NewPaths;
 		}
 
 		public bool Unmount(NavigationPath path)
@@ -386,11 +102,12 @@ namespace Assets.World.Paths
 			return false;
 		}
 
-		public bool Mount(NavigationPath path, bool forward = true)
+		public bool Mount(NavigationPath path, bool forward = true, bool foreign = false)
 		{
 			PathWithDirection dpath = new PathWithDirection(path, forward);
 			if (Paths.Contains(dpath)) return false;
 			Paths.Add(dpath);
+			if (foreign) FirstForeignPath = FirstForeignPath > Paths.Count -1 ? Paths.Count - 1: FirstForeignPath;
 			return true;
 		}
 
@@ -517,10 +234,10 @@ namespace Assets.World.Paths
 			Label = -1;
 		}
 
-		public NavigationPath(List<Vector2Int> points)
+		public NavigationPath(List<Vector2Int> points, VertexHub hub)
 		{
-			Start = new WayVertex(points[0]);
-			End = new WayVertex(points[points.Count - 1]);
+			Start = hub.Get(points[0]);
+			End = hub.Get(points[points.Count - 1]);
 			Waypoints = new Utils.LinkedList<Vector2Int>(points);
 			WorldWaypoints = new Vector3[0];
 			Label = -1;

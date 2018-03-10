@@ -128,7 +128,8 @@ public class SurfaceManager : MonoBehaviour
 		GameObject ramp = transform.Find("Platform Template").gameObject;
 		while(true) {
 			int counter = 0;
-			foreach (TerrainChunk chunk in Chunks) {
+			foreach (QuadTreeData<TerrainChunk> chunkdata in Chunks) {
+				TerrainChunk chunk = chunkdata.contents;
 				var JumpList = chunk.JumpList;
 				if (JumpList == null)
 				{

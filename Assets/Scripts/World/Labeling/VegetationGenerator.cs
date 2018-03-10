@@ -24,7 +24,6 @@ public class VegetationGenerator
 		int streetdist = Settings.TerrainLOD[terrain.LOD].StreetNeighborOffset;
 		float elementWidth = Settings.TerrainLOD[terrain.LOD].gridElementWidth;
 		float StreetDistance = elementWidth * (streetdist + 1);
-		UnityEngine.Debug.LogFormat("StreetDistance {0}", StreetDistance);
 		List<TreeInstance> trees = new List<TreeInstance>();
 		CircleBound BigCirc = new CircleBound(new Vector2(), StreetDistance);
 		Vector2Int LowerLimits = new Vector2Int(0, 0);

@@ -3,7 +3,6 @@ using Assets.World;
 using Assets.World.Heightmap;
 using Assets.World.Jumps;
 using Assets.World.Paths;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
@@ -41,13 +40,10 @@ public class TerrainChunk
 	public GameObject UnityTerrain;
 
 	public List<TreeInstance> Trees { get; private set; }
-	public List<int[,]> DetailMapList { get; internal set; }
 	internal List<JumpData> JumpList { get; private set; }
-	public bool HasJumps { get; private set; }
 	public int LOD { get; private set; }
 
 	public bool isFinished = false;
-	public int GrassProgress = 0;
 	public GrasField grasField;
 
 	public TerrainChunk N, E, S, W;
@@ -194,7 +190,7 @@ public class TerrainChunk
 		Vector2Int upperBound = new Vector2Int(Resolution - 1, Resolution - 1);
 		PathTools.Bounded8Neighbours neighbours = new PathTools.Bounded8Neighbours(ref lowerBound, ref upperBound);
 		PathTools.NormalYThresholdWalkable walkable_src = new PathTools.NormalYThresholdWalkable(
-			Mathf.Cos(Mathf.Deg2Rad * 40),
+			Mathf.Cos(Mathf.Deg2Rad * 35),
 			Normals,
 			Resolution, ref lowerBound, ref upperBound);
 		PathTools.CachedWalkable walkable = new PathTools.CachedWalkable(walkable_src.IsWalkable, lowerBound, upperBound, Resolution);
@@ -265,11 +261,11 @@ public class TerrainChunk
 			**/
 
 		}
-		paths = new PathFinder(AStarStepCost.StepCosts, Resolution, Heights, Connectivity);
+		paths = new PathFinder(AStarStepCost.StepCosts, this, Connectivity);
 
 		if (Settings.TerrainLOD[LOD].HasStreets)
 		{
-			AStar search = new AStar(walkable.IsWalkable, neighbours, paths.StepCostsRoad, MapTools.OctileDistance, 2f);
+			AStar search = new AStar(walkable.IsWalkable, neighbours, paths.StepCostsRoad, MapTools.OctileDistance, paths.IsGoal, 2f);
 			paths.SetSearch(search);
 			search.PrepareSearch(Resolution * Resolution);
 			paths.CreateNetwork(this, TerrainEdges);
@@ -305,17 +301,28 @@ public class TerrainChunk
 	public void CheckNeighbors()
 	{
 		UnityTerrain.GetComponent<Terrain>().SetNeighbors(
-			W != null ? W.UnityTerrain.GetComponent<Terrain>() : null,
-			N != null ? N.UnityTerrain.GetComponent<Terrain>() : null,
-			E != null ? E.UnityTerrain.GetComponent<Terrain>() : null,
-			S != null ? S.UnityTerrain.GetComponent<Terrain>() : null
+			W != null && W.Resolution == this.Resolution ? W.UnityTerrain.GetComponent<Terrain>() : null,
+			N != null && N.Resolution == this.Resolution ? N.UnityTerrain.GetComponent<Terrain>() : null,
+			E != null && E.Resolution == this.Resolution ? E.UnityTerrain.GetComponent<Terrain>() : null,
+			S != null && S.Resolution == this.Resolution ? S.UnityTerrain.GetComponent<Terrain>() : null
 		);
 	}
 
-	private static int Small2BigCoord(int coord, float TranslationFactor)
+	/// <summary>
+	/// Translates the index of a grid element on the heightmap from one index to another using a TranslationFactor
+	/// example:
+	/// TranslateHM(0, 2, 128) = 0;
+	/// TranslateHM(2, 2, 128) = 4;
+	/// TranslateHM(64, 2, 128) = 128;
+	/// </summary>
+	/// <param name="coords"></param>
+	/// <param name="TranslationFactor"></param>
+	/// <param name="t_max"></param>
+	/// <returns></returns>
+	private static int TranslateHM(int coords, float TranslationFactor, int t_max)
 	{
-		int coordOut = (int)(coord * TranslationFactor) - 1;
-		coordOut = coordOut < 0 ? 0 : coordOut;
+		int coordOut = Mathf.RoundToInt(coords * TranslationFactor);
+		coordOut = coordOut < 0 ? 0 : coordOut >= t_max ? t_max - 1 : coordOut;
 		return coordOut;
 	}
 
@@ -323,72 +330,131 @@ public class TerrainChunk
 	{
 		var toTerrain = to.UnityTerrain.GetComponent<Terrain>();
 		var fromTerrain = from.UnityTerrain.GetComponent<Terrain>();
+		var fromData = fromTerrain.terrainData.GetHeights(fxbase, fybase, fwidth, fheight);
 		if (from.Resolution == to.Resolution)
 		{
-			toTerrain.terrainData.SetHeights(txbase, tybase, fromTerrain.terrainData.GetHeights(fxbase, fybase, fwidth, fheight));
+			toTerrain.terrainData.SetHeights(txbase, tybase, fromData);
+			return;
 		}
-		return;
-		float TranslationFactor = (from.Resolution - 1) / (float)(to.Resolution - 1);
-		float[,] fromdata = fromTerrain.terrainData.GetHeights(fxbase, fybase, fwidth, fheight);
-		int theight = fheight > 1 ? Mathf.FloorToInt(fheight / TranslationFactor) : 1;
-		int twidth = fwidth > 1 ? Mathf.FloorToInt(fwidth / TranslationFactor) : 1;
-		float[,] todata = new float[theight, twidth];
-		if (fheight == 1)
+		float[,] todata = null;
+		if (from.Resolution <= to.Resolution)
 		{
-			if (TranslationFactor > 1f)
+			int Translation = Mathf.RoundToInt(to.Resolution / (float)from.Resolution);
+			float revTrans = 1f / (float)Translation;
+
+			if (fwidth == 1)
 			{
-				for (int i = 0; i < twidth; i++)
+				int theight = Mathf.RoundToInt((fheight - 1) * Translation);
+				if (theight % 2 == 0) theight += 1;
+				todata = new float[theight, 1];
+
+				UnityEngine.Debug.LogFormat("fromData ({0}, {1}), toData ({2}, {3}), TFactor {4}", fromData.GetLength(0), fromData.GetLength(1), todata.GetLength(0), todata.GetLength(1), Translation);
+				for (int t = 0; t < theight; t++)
 				{
-					todata[0, i] = fromdata[0, Small2BigCoord(i, TranslationFactor)];
-				}
-			}
-			else
-			{
-				for (int i = 0; i < fwidth; i++)
-				{
-					int prev = i > 0 ? i - 1 : 0;
-					int next = i < fwidth - 1 ? i + 1 : fwidth - 1;
-					int Bprev = Small2BigCoord(prev, TranslationFactor);
-					int Bnext = Small2BigCoord(next, TranslationFactor);
-					int n = Bnext - Bprev;
-					for (int k = Bprev; k < Bnext; k++)
-					{
-						todata[0, k] = fromdata[0, i];
+					if (t % 2 == 0) {
+						todata[t, 0] = fromData[TranslateHM(t, revTrans, fheight), 0];
+					} else {
+						int prev = TranslateHM(t - 1, revTrans, fheight);
+						int next = TranslateHM(t + 1, revTrans, fheight);
+						todata[t, 0] = fromData[prev, 0] * .5f + fromData[next, 0] * .5f;
 					}
 				}
 			}
-		}
-		else if (fwidth == 1)
-		{
-			if (TranslationFactor > 1f)
+			else if (fheight == 1)
 			{
-				for (int i = 0; i < theight; i++)
+				int twidth = Mathf.RoundToInt((fwidth - 1) * Translation);
+				if (twidth % 2 == 0) twidth += 1;
+				todata = new float[1, twidth];
+				UnityEngine.Debug.LogFormat("fromData ({0}, {1}), toData ({2}, {3}), TFactor {4}", fromData.GetLength(0), fromData.GetLength(1), todata.GetLength(0), todata.GetLength(1), Translation);
+				for (int t = 0; t < twidth; t++)
 				{
-					todata[i, 0] = fromdata[Small2BigCoord(i, TranslationFactor), 0];
+					if (t % 2 == 0)
+					{
+						todata[0, t] = fromData[0, TranslateHM(t, revTrans, fwidth)];
+					}
+					else
+					{
+						int prev = TranslateHM(t - 1, revTrans, fwidth);
+						int next = TranslateHM(t + 1, revTrans, fwidth);
+						todata[0, t] = fromData[0, prev] * .5f + fromData[0, next] * .5f;
+					}
 				}
 			}
-			else
+			toTerrain.terrainData.SetHeights(txbase, tybase, todata);
+
+		}
+		else // to.Resolution < from.resolution
+		{
+			int Translation = Mathf.RoundToInt(from.Resolution / (float)to.Resolution);
+
+			if (fwidth == 1)
 			{
-				for (int i = 0; i < fheight; i++)
+				int theight = Mathf.RoundToInt(fheight / (float)Translation);
+				if (theight % 2 == 0) theight += 1;
+				todata = new float[theight, 1];
+				UnityEngine.Debug.LogFormat("fromData ({0}, {1}), toData ({2}, {3}), TFactor {4}", fromData.GetLength(0), fromData.GetLength(1), todata.GetLength(0), todata.GetLength(1), Translation);
+				for (int t = 0; t < theight; t++)
 				{
-					int prev = i > 0 ? i - 1 : 0;
-					int next = i < fheight - 1 ? i + 1 : fheight - 1;
-					int Bprev = Small2BigCoord(prev, TranslationFactor);
-					int Bnext = Small2BigCoord(next, TranslationFactor);
-					int n = Bnext - Bprev;
-					for (int k = Bprev; k < Bnext; k++)
-					{
-						todata[k, 0] = fromdata[i, 0];
-					}
+					int curr = TranslateHM(t, Translation, fheight);
+					todata[t, 0] = fromData[curr, 0];
+				}
+			}
+			else if (fheight == 1)
+			{
+				int twidth = Mathf.RoundToInt(fwidth / (float)Translation);
+				if (twidth % 2 == 0) twidth += 1;
+				todata = new float[1, twidth];
+				UnityEngine.Debug.LogFormat("fromData ({0}, {1}), toData ({2}, {3}), TFactor {4}", fromData.GetLength(0), fromData.GetLength(1), todata.GetLength(0), todata.GetLength(1), Translation);
+				for (int t = 0; t < twidth; t++)
+				{
+					int curr = TranslateHM(t, Translation, fwidth);
+					todata[0, t] = fromData[0, curr];
 				}
 			}
 
+			toTerrain.terrainData.SetHeights(txbase, tybase, todata);
 		}
-		else
+	}
+
+	public void PushTopRight(TerrainChunk tile)
+	{
+		var toTerrain = tile.UnityTerrain.GetComponent<Terrain>();
+		var fromTerrain = this.UnityTerrain.GetComponent<Terrain>();
+		toTerrain.terrainData.SetHeights(0, 0, fromTerrain.terrainData.GetHeights(Resolution - 1, Resolution - 1, 1, 1));
+		toTerrain.Flush();
+	}
+
+	public void SyncPahts(TerrainChunk tile, int edgeId)
+	{
+		// mount paths
+		Vector2 WorldCoord = new Vector2();
+		CircleBound WayVertextest = new CircleBound(WorldCoord, 5f);
+		foreach (Vector2Int RoadPoint in this.GetEdgeWayPoints(edgeId))
 		{
-			throw new NotImplementedException();
+			if (!this.paths.Hub.Contains(RoadPoint)) continue;
+			var FamiliarWV = this.paths.Hub.Get(RoadPoint);
+			this.ToWorldCoordinate(RoadPoint.x, RoadPoint.y, ref WorldCoord);
+			WayVertextest.Center = WorldCoord;
+			List<QuadTreeData<ObjectData>> wvList = new List<QuadTreeData<ObjectData>>();
+			if (tile.Objects.GetCollisions(WayVertextest, QuadDataType.wayvertex, wvList))
+			{
+				foreach (var wv in wvList)
+				{
+					var AlienWV = tile.paths.Hub.vertices[wv.contents.label];
+					List<PathWithDirection> fpaths = FamiliarWV.GetPaths();
+					List<PathWithDirection> apaths = AlienWV.GetPaths();
+					foreach (PathWithDirection p in fpaths)
+					{
+						AlienWV.Mount(p.path, p.forward, true);
+					}
+					foreach (PathWithDirection p in apaths)
+					{
+						FamiliarWV.Mount(p.path, p.forward, true);
+					}
+				}
+
+			}
 		}
-		toTerrain.terrainData.SetHeights(txbase, tybase, todata);
 	}
 
 	public void PushTop(TerrainChunk tile)
@@ -398,41 +464,11 @@ public class TerrainChunk
 		var terrain = tile.UnityTerrain.GetComponent<Terrain>();
 		var myterrain = UnityTerrain.GetComponent<Terrain>();
 		//terrain.terrainData.SetHeights(0, 0, myterrain.terrainData.GetHeights(0, Resolution - 1, Resolution - 1, 1));
-		CopyHeightMapEdge(this, 0, Resolution - 1, Resolution - 1, 1, tile, 0, 0);
+		CopyHeightMapEdge(this, 0, Resolution - 1, Resolution, 1, tile, 0, 0);
 		tile.CheckNeighbors();
 		terrain.Flush();
 		N = tile;
-
-		// mount paths
-		Vector2Int familiar, alien;
-		foreach (int roadpoint in TerrainEdges[2].RoadPoints)
-		{
-			familiar = MapTools.UnfoldToPerimeter(roadpoint + 2 * (Resolution - 1), Resolution - 1);
-			if (paths.Hub.Contains(familiar))
-			{
-				alien = MapTools.UnfoldToPerimeter(roadpoint, Resolution - 1);
-
-				Assets.Utils.Debug.Log(string.Format("Point on this side: {0}; Point on other side: {1}", familiar, alien));
-				if (tile.paths.Hub.Contains(alien))
-				{
-					Assets.Utils.Debug.Log("Found both points.");
-					WayVertex fVertex = paths.Hub.Get(familiar);
-					WayVertex aVertex = tile.paths.Hub.Get(alien);
-					List<PathWithDirection> fpaths = fVertex.GetPaths();
-					List<PathWithDirection> apaths = aVertex.GetPaths();
-					foreach (PathWithDirection p in fpaths)
-					{
-						aVertex.Mount(p.path, p.forward);
-					}
-
-					foreach (PathWithDirection p in apaths)
-					{
-						fVertex.Mount(p.path, p.forward);
-					}
-				}
-			}
-		}
-
+		SyncPahts(tile, 2);
 	}
 
 	public void PushRight(TerrainChunk tile)
@@ -443,143 +479,21 @@ public class TerrainChunk
 		var terrain = tile.UnityTerrain.GetComponent<Terrain>();
 		var myterrain = UnityTerrain.GetComponent<Terrain>();
 		//terrain.terrainData.SetHeights(0, 0, myterrain.terrainData.GetHeights(Resolution - 1, 0, 1, Resolution - 1));
-		CopyHeightMapEdge(this, Resolution - 1, 0, 1, Resolution - 1, tile, 0, 0);
+		CopyHeightMapEdge(this, Resolution - 1, 0, 1, Resolution, tile, 0, 0);
 		terrain.Flush();
 
-		// mount paths
-		Vector2Int familiar, alien;
-		foreach (int roadpoint in TerrainEdges[1].RoadPoints)
-		{
-			familiar = MapTools.UnfoldToPerimeter(roadpoint + (Resolution - 1), Resolution - 1);
-			if (paths.Hub.Contains(familiar))
-			{
-				alien = MapTools.UnfoldToPerimeter(roadpoint + 3 * (Resolution - 1), Resolution - 1);
-
-				Assets.Utils.Debug.Log(string.Format("Point on this side: {0}; Point on other side: {1}", familiar, alien));
-				if (tile.paths.Hub.Contains(alien))
-				{
-					Assets.Utils.Debug.Log("Found both points.");
-					WayVertex fVertex = paths.Hub.Get(familiar);
-					WayVertex aVertex = tile.paths.Hub.Get(alien);
-					List<PathWithDirection> fpaths = fVertex.GetPaths();
-					List<PathWithDirection> apaths = aVertex.GetPaths();
-					foreach (PathWithDirection p in fpaths)
-					{
-						aVertex.Mount(p.path, p.forward);
-					}
-
-					foreach (PathWithDirection p in apaths)
-					{
-						fVertex.Mount(p.path, p.forward);
-					}
-				}
-			}
-		}
-	}
-
-	public void PullBotton(TerrainChunk tile)
-	{
-
-		tile.N = this;
-		tile.CheckNeighbors();
-		var terrain = tile.UnityTerrain.GetComponent<Terrain>();
-		var myterrain = UnityTerrain.GetComponent<Terrain>();
-		//myterrain.terrainData.SetHeights(0, 0, terrain.terrainData.GetHeights(0, Resolution - 1, Resolution - 1, 1));
-		CopyHeightMapEdge(tile, 0, tile.Resolution - 1, tile.Resolution - 1, 1, this, 0, 0);
-
-		// mount paths
-		Vector2Int familiar, alien;
-		foreach (int roadpoint in TerrainEdges[0].RoadPoints)
-		{
-			familiar = MapTools.UnfoldToPerimeter(roadpoint, Resolution - 1);
-			if (paths.Hub.Contains(familiar))
-			{
-				alien = MapTools.UnfoldToPerimeter(roadpoint + 2 * (Resolution - 1), Resolution - 1);
-
-				Assets.Utils.Debug.Log(string.Format("Point on this side: {0}; Point on other side: {1}", familiar, alien));
-				if (tile.paths.Hub.Contains(alien))
-				{
-					Assets.Utils.Debug.Log("Found both points.");
-					WayVertex fVertex = paths.Hub.Get(familiar);
-					WayVertex aVertex = tile.paths.Hub.Get(alien);
-					List<PathWithDirection> fpaths = fVertex.GetPaths();
-					List<PathWithDirection> apaths = aVertex.GetPaths();
-					foreach (PathWithDirection p in fpaths)
-					{
-						aVertex.Mount(p.path, p.forward);
-					}
-
-					foreach (PathWithDirection p in apaths)
-					{
-						fVertex.Mount(p.path, p.forward);
-					}
-				}
-			}
-		}
-	}
-
-	public void PUllLeft(TerrainChunk tile)
-	{
-
-		tile.E = this;
-		tile.CheckNeighbors();
-		var terrain = tile.UnityTerrain.GetComponent<Terrain>();
-		var myterrain = UnityTerrain.GetComponent<Terrain>();
-		//myterrain.terrainData.SetHeights(0, 0, terrain.terrainData.GetHeights(Resolution - 1, 0, 1, Resolution - 1));
-		CopyHeightMapEdge(tile, tile.Resolution - 1, 0, 1, tile.Resolution - 1, this, 0, 0);
-		// mount paths
-		Vector2Int familiar, alien;
-		foreach (int roadpoint in TerrainEdges[3].RoadPoints)
-		{
-			familiar = MapTools.UnfoldToPerimeter(roadpoint + 3 * (Resolution - 1), Resolution - 1);
-			if (paths.Hub.Contains(familiar))
-			{
-				alien = MapTools.UnfoldToPerimeter(roadpoint + (Resolution - 1), Resolution - 1);
-				Assets.Utils.Debug.Log(string.Format("Point on this side: {0}; Point on other side: {1}", familiar, alien));
-				if (tile.paths.Hub.Contains(alien))
-				{
-					Assets.Utils.Debug.Log("Found both points.");
-					WayVertex fVertex = paths.Hub.Get(familiar);
-					WayVertex aVertex = tile.paths.Hub.Get(alien);
-					List<PathWithDirection> fpaths = fVertex.GetPaths();
-					List<PathWithDirection> apaths = aVertex.GetPaths();
-					foreach (PathWithDirection p in fpaths)
-					{
-						aVertex.Mount(p.path, p.forward);
-					}
-
-					foreach (PathWithDirection p in apaths)
-					{
-						fVertex.Mount(p.path, p.forward);
-					}
-				}
-			}
-		}
-	}
-
-	public void PullCorner(TerrainChunk tile, int x, int y)
-	{
-		var terrain = tile.UnityTerrain.GetComponent<Terrain>();
-		var myterrain = UnityTerrain.GetComponent<Terrain>();
-		myterrain.terrainData.SetHeights(x, y, terrain.terrainData.GetHeights(tile.Resolution - 1, tile.Resolution - 1, 1, 1));
-	}
-
-	public void PushCroner(TerrainChunk tile, int x, int y)
-	{
-		var terrain = tile.UnityTerrain.GetComponent<Terrain>();
-		var myterrain = UnityTerrain.GetComponent<Terrain>();
-		terrain.terrainData.SetHeights(x, y, myterrain.terrainData.GetHeights(Resolution - 1, Resolution - 1, 1, 1));
+		SyncPahts(tile, 1);
 	}
 
 	public void Synchronize(SurfaceManager SM)
 	{
 		// Push Master Values
-		var N = SM.GetTile(GridCoords + new Vector2Int(0, 1));
-		var E = SM.GetTile(GridCoords + new Vector2Int(1, 0));
-		var S = SM.GetTile(GridCoords + new Vector2Int(0, -1));
-		var W = SM.GetTile(GridCoords + new Vector2Int(-1, 0));
+		N = SM.GetTile(GridCoords + new Vector2Int(0, 1));
+		E = SM.GetTile(GridCoords + new Vector2Int(1, 0));
+		S = SM.GetTile(GridCoords + new Vector2Int(0, -1));
+		W = SM.GetTile(GridCoords + new Vector2Int(-1, 0));
 
-		
+
 		if (N != null && N.isFinished)
 		{
 			PushTop(N);
@@ -590,23 +504,87 @@ public class TerrainChunk
 		}
 		if (S != null && S.isFinished)
 		{
-			PullBotton(S);
+			S.PushTop(this);
 		}
 		if (W != null && W.isFinished)
 		{
-			PUllLeft(W);
+			W.PushRight(this);
 		}
-		
-		CheckNeighbors();
 
 		var NE = SM.GetTile(GridCoords + new Vector2Int(1, 1));
 		var SW = SM.GetTile(GridCoords + new Vector2Int(-1, -1));
-
-		if (NE != null) PushCroner(NE, 0, 0);
-		if (SW != null) PullCorner(SW, 0, 0);
+		if (NE != null && NE.isFinished)
+		{
+			PushTopRight(NE);
+		}
+		if (SW != null && SW.isFinished)
+		{
+			SW.PushTopRight(this);
+		}
+		CheckNeighbors();
 
 		var myterrain = UnityTerrain.GetComponent<Terrain>();
 		myterrain.Flush();
+	}
+
+	public void UnsyncPaths(TerrainChunk tile, int edgeId)
+	{
+		// mount paths
+		Vector2 WorldCoord = new Vector2();
+		CircleBound WayVertextest = new CircleBound(WorldCoord, 5f);
+		foreach (Vector2Int RoadPoint in this.GetEdgeWayPoints(edgeId))
+		{
+			if (!this.paths.Hub.Contains(RoadPoint)) continue;
+			var FamiliarWV = this.paths.Hub.Get(RoadPoint);
+			this.ToWorldCoordinate(RoadPoint.x, RoadPoint.y, ref WorldCoord);
+			WayVertextest.Center = WorldCoord;
+			List<QuadTreeData<ObjectData>> wvList = new List<QuadTreeData<ObjectData>>();
+			if (tile.Objects.GetCollisions(WayVertextest, QuadDataType.wayvertex, wvList))
+			{
+				foreach (var wv in wvList)
+				{
+					var AlienWV = tile.paths.Hub.vertices[wv.contents.label];
+					AlienWV.UnmountAllAliens();
+					FamiliarWV.UnmountAllAliens();
+				}
+			}
+		}
+	}
+
+	public void Unload()
+	{
+		if (N != null)
+		{
+			UnsyncPaths(N, 2);
+			N.S = null;
+			N.CheckNeighbors();
+			this.N = null;
+		}
+
+		if (E != null)
+		{
+			UnsyncPaths(E, 1);
+			E.W = null;
+			E.CheckNeighbors();
+			this.E = null;
+		}
+		if (S != null)
+		{
+			S.UnsyncPaths(this, 2);
+			S.N = null;
+			S.CheckNeighbors();
+			this.S = null;
+		}
+		if (W != null)
+		{
+			UnsyncPaths(W, 1);
+			W.E = null;
+			W.CheckNeighbors();
+			this.W = null;
+		}
+		this.UnityTerrain.SetActive(false);
+		DestroyJumps();
+		GameObject.Destroy(this.UnityTerrain);
 	}
 
 	[Conditional("DEBUG")]
@@ -618,13 +596,13 @@ public class TerrainChunk
 		**/
 		FloatImageExporter HimgExp = new FloatImageExporter(0f, 1f);
 		IntImageExporter CimgExp = new IntImageExporter(-1, Connectivity.NumLabels - 1);
-		IntImageExporter KMimgExp = new IntImageExporter(-1, (ClusterCount - 1));
+		//IntImageExporter KMimgExp = new IntImageExporter(-1, (ClusterCount - 1));
 		IntImageExporter SimgExp = new IntImageExporter(-1, paths.paths.Count + 1);
-		HimgExp.Export(string.Format("HeightmapAt{0}-{1}", GridCoords.x, GridCoords.y), Heights);
-		HimgExp.Export(string.Format("MoistureAt{0}-{1}", GridCoords.x, GridCoords.y), Moisture);
-		CimgExp.Export(string.Format("ConnectivityMapAt{0}-{1}", GridCoords.x, GridCoords.y), Connectivity.Labels);
-		KMimgExp.Export(string.Format("ClusterMapAt{0}-{1}", GridCoords.x, GridCoords.y), ClusterMap);
-		SimgExp.Export(string.Format("StreetMapAt{0}-{1}", GridCoords.x, GridCoords.y), paths.StreetMap);
+		HimgExp.Export(string.Format("HeightmapAtl({0}, {1})", GridCoords.x, GridCoords.y), Heights);
+		HimgExp.Export(string.Format("MoistureAt({0}, {1}))", GridCoords.x, GridCoords.y), Moisture);
+		CimgExp.Export(string.Format("ConnectivityMapAt({0}, {1})", GridCoords.x, GridCoords.y), Connectivity.Labels);
+		//KMimgExp.Export(string.Format("ClusterMapAt({0}, {1})", GridCoords.x, GridCoords.y), ClusterMap);
+		SimgExp.Export(string.Format("StreetMapAt({0}, {1})", GridCoords.x, GridCoords.y), paths.StreetMap);
 
 		/**
 		Assets.Utils.Debug.Log(string.Format("Took {0} ms to export debug Images at {1}", stopWatch.ElapsedMilliseconds, GridCoords), LOGLEVEL.META);
@@ -638,7 +616,7 @@ public class TerrainChunk
 
 	private void DestroyJumps()
 	{
-		if (!HasJumps) return;
+		if (!Settings.TerrainLOD[LOD].HasJumps) return;
 		for (int i = 0; i < JumpList.Count; i++)
 		{
 			if (JumpList[i].Ramp != null)
@@ -646,7 +624,6 @@ public class TerrainChunk
 				GameObject.Destroy(JumpList[i].Ramp.gameObject);
 			}
 		}
-		HasJumps = false;
 	}
 
 	private void GenerateItems(Terrain terrain)
@@ -673,9 +650,36 @@ public class TerrainChunk
 		}
 	}
 
+	public IEnumerable<Vector2Int> GetEdgeWayPoints(int edgeid)
+	{
+		TerrainChunkEdge edge = TerrainEdges[edgeid];
+		edge.GenerateRoadPoints();
+		int Offset = (Resolution - 1) * edgeid;
+		foreach (int roadPoint in edge.RoadPoints)
+		{
+			Vector2Int p = MapTools.UnfoldToPerimeter(roadPoint + Offset, Resolution - 1);
+			int label = Connectivity.Labels[p.y, p.x];
+			if (label >= 0)
+			{
+				yield return p;
+			}
+		}
+	}
+
+	public IEnumerable<Vector2Int> EdgeWayPoints()
+	{
+		for (int i = 0; i < TerrainEdges.Length; i++)
+		{
+			foreach (Vector2Int p in this.GetEdgeWayPoints(i))
+			{
+				yield return p;
+			}
+		}
+	}
+
 	public void Flush(SurfaceManager SM)
 	{
-		//ExportDebugImages();
+		ExportDebugImages();
 		if (UnityTerrain != null)
 		{
 			GameObject.Destroy(UnityTerrain.gameObject);
@@ -741,11 +745,6 @@ public class TerrainChunk
 		Moisture = new float[0, 0];
 		Normals = new Vector3[0, 0];
 		SplatmapData = new float[0, 0, 0];
-	}
-
-	public void DestroyTerrain()
-	{
-		GameObject.Destroy(UnityTerrain);
 	}
 
 	public PathFinder GetPathFinder()

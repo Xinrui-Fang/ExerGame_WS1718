@@ -24,6 +24,13 @@ public class UnionFindNode<ValueType>
 		return this.Parent;
 	}
 
+	public bool IsConnected(UnionFindNode<ValueType> other)
+	{
+		this.Find();
+		other.Find();
+		return (this.Parent == other.Parent || this == other.Parent || this.Parent == other);
+	}
+
 	public static void Union(UnionFindNode<ValueType> x, UnionFindNode<ValueType> y)
 	{
 		UnionFindNode<ValueType> xRoot = x.Find();

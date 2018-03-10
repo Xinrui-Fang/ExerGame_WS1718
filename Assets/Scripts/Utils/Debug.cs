@@ -32,7 +32,7 @@ namespace Assets.Utils
 #elif (DEBUG_LEVEL_0)
             if ((int)level > 0) return;
 #endif
-			UnityEngine.Debug.Log(string.Format("{1}({2}): {0}", msg, level, (int)level));
+			//UnityEngine.Debug.Log(string.Format("{1}({2}): {0}", msg, level, (int)level));
 		}
 	}
 }

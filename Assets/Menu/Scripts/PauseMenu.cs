@@ -6,42 +6,56 @@ using UnityEngine.SceneManagement;
 public class PauseMenu : MonoBehaviour
 {
 
-	private bool isPaused = false; //Lets you know if the game is paused or not.
-	void Start()
-	{
 
-	}
+    public Sprite ButtonSprite;
+    public Font jupiter;
+    private bool isPaused = false; //Lets you know if the game is paused or not.
+    void Start()
+    {
 
-	// Update is called once per frame
-	void Update()
-	{
-		if (Input.GetKeyDown(KeyCode.Escape))
-			isPaused = !isPaused;
+    }
 
-		if (isPaused)
-			Time.timeScale = 0f; //Time stops
-		else
-			Time.timeScale = 1.0f; //Time is resuming
-	}
+    // Update is called once per frame
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+            isPaused = !isPaused;
 
-	void OnGUI()
-	{
-		if (isPaused)
-		{
+        if (isPaused)
+            Time.timeScale = 0f; //Time stops
+        else
+            Time.timeScale = 1.0f; //Time is resuming
+    }
 
-			// If the button "Continue" is pressed, the game is resuming
-			if (GUI.Button(new Rect(Screen.width / 2 - 40, Screen.height / 2 - 20, 80, 40), "Continue"))
-			{
-				isPaused = false;
-			}
+    void OnGUI()
+    {
+        if (isPaused)
+        {
 
-			// If the button "Quit" is pressed, the game returns to the MainMenu
-			if (GUI.Button(new Rect(Screen.width / 2 - 40, Screen.height / 2 + 40, 80, 40), "Quit"))
-			{
-				isPaused = false;
-				SceneManager.LoadScene("MenuPanel");
+            GUIContent buttonSettings = new GUIContent();
 
-			}
-		}
-	}
+            GUI.skin.button.normal.background = (Texture2D)ButtonSprite.texture;
+            GUI.skin.button.hover.background = (Texture2D)ButtonSprite.texture;
+            GUI.skin.button.active.background = (Texture2D)ButtonSprite.texture;
+            GUI.skin.button.fontSize = 65;
+            GUI.skin.button.font = jupiter;
+
+
+            buttonSettings.text = "Continue";
+            // If the button "Continue" is pressed, the game is resuming
+            if (GUI.Button(new Rect(Screen.width / 2 - 300, Screen.height / 2 - 80, 600, 80), buttonSettings))
+            {
+                isPaused = false;
+            }
+
+            buttonSettings.text = "Quit";
+            // If the button "Quit" is pressed, the game returns to the MainMenu
+            if (GUI.Button(new Rect(Screen.width / 2 - 300, Screen.height / 2 + 80, 600, 80), buttonSettings))
+            {
+                isPaused = false;
+                SceneManager.LoadScene("MenuPanel");
+
+            }
+        }
+    }
 }

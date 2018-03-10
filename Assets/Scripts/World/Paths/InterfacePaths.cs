@@ -5,7 +5,7 @@ using UtilsInterface;
 namespace PathInterfaces
 {
 	public delegate bool DIsWalkable(int x, int y);
-	public delegate bool DIsGoal(int ax, int ay, int bx, int by);
+	public delegate bool DIsGoal(int ax, int ay);
 	public delegate float DGetStepCost(int ax, int ay, int bx, int by);
 
 	public interface IPathSearch

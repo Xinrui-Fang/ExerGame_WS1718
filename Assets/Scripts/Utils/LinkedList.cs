@@ -79,6 +79,22 @@ namespace Assets.Utils
 			_count++;
 		}
 
+		public void AddFirst(ValueType value)
+		{
+			if (Count == 0)
+			{
+				First = Last = new LinkedListNode<ValueType>(value);
+			}
+			else 
+			{
+				LinkedListNode<ValueType> V = new LinkedListNode<ValueType>(value);
+				First.Previous = V;
+				V.Next = First;
+				First = V;
+			}
+			_count++;
+		}
+
 		/** Split Path in two at value.
          * Stores path from Start to value in this object, And path from value to End in Branch.
          * returns true if successful false otherwise.
