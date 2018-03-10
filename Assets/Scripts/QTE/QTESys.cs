@@ -32,7 +32,7 @@ public class QTESys : MonoBehaviour
         this.PathChoices = Choices;
         this.CurrentPath = current;
         int QTEGen;
-        Debug.Log("INITIALISATION");
+
         this.runningQTE = true;
         this.numberOfChoices = Choices.Count;
         listOfQTE = new List<int>();
@@ -66,7 +66,6 @@ public class QTESys : MonoBehaviour
 
     public void showMessage(bool pass)
     {
-        Debug.Log("SHOW MESSAGE");
         displayMessage = true;
         this.passMessage = pass;
     }
@@ -87,7 +86,6 @@ public class QTESys : MonoBehaviour
     }
     public void stop()
     {
-        Debug.Log("STOP");
         runningQTE = false;
         hideMessage();
         hideLetter();
@@ -106,7 +104,7 @@ public class QTESys : MonoBehaviour
             {
                 if (Input.GetKey(KeyCode.A) && listOfQTE.Contains(1))
                 {
-                    Debug.Log("A pressed");
+                    //Debug.Log("A pressed");
                     CorrectKey = 1;
                     StartCoroutine(KeyPressing());
                     //StopCoroutine(CountDown());
@@ -115,7 +113,7 @@ public class QTESys : MonoBehaviour
                 }
                 else if (listOfQTE.Contains(2) && Input.GetKey(KeyCode.Z))
                 {
-                    Debug.Log("Z pressed");
+                    //Debug.Log("Z pressed");
                     CorrectKey = 1;
                     StartCoroutine(KeyPressing());
                     //StopCoroutine(CountDown());
@@ -123,7 +121,7 @@ public class QTESys : MonoBehaviour
                 }
                 else if (listOfQTE.Contains(3) && Input.GetKey(KeyCode.E))
                 {
-                    Debug.Log("E pressed");
+                    //Debug.Log("E pressed");
                     CorrectKey = 1;
                     StartCoroutine(KeyPressing());
                     //StopCoroutine(CountDown());
@@ -132,7 +130,7 @@ public class QTESys : MonoBehaviour
                 }
                 else if (listOfQTE.Contains(4) && Input.GetKey(KeyCode.R))
                 {
-                    Debug.Log("R pressed");
+                    //Debug.Log("R pressed");
                     CorrectKey = 1;
                     StartCoroutine(KeyPressing());
                     //StopCoroutine(CountDown());
@@ -210,7 +208,7 @@ public class QTESys : MonoBehaviour
             {
                 QTEGen = listOfQTE[i];
                 float angle = -computeAngle(i); // Degrees
-                                               // Debug.Log(string.Format("Angle {0} in Degree : {1}", i, angle));
+                 // Debug.Log(string.Format("Angle {0} in Degree : {1}", i, angle));
                 float angleRad = angle * Mathf.Deg2Rad;
                 /* Debug.Log(string.Format("Angle {0} in Radian : {1}", i, angle));
                  Debug.Log(string.Format("Cos / Sin -> {0} / {1}", Mathf.Cos(angle), Mathf.Sin(angle)));
@@ -228,25 +226,25 @@ public class QTESys : MonoBehaviour
                 }
                 if (QTEGen == 1)
                 {
-                    Debug.Log(string.Format("A : angle {0}", angle));
+                    //Debug.Log(string.Format("A : angle {0}", angle));
                     buttonSettings.text = buttonSettings.text + "[A]";
                     GUI.Button(new Rect(Screen.width / 2 - Screen.width / 3 * Mathf.Sin(angleRad), Screen.height / 2 - Screen.height / 3 * Mathf.Cos(angleRad), 300, 80), buttonSettings);
                 }
                 if (QTEGen == 2)
                 {
-                    Debug.Log(string.Format("Z : angle {0}", angle));
+                    //Debug.Log(string.Format("Z : angle {0}", angle));
                     buttonSettings.text = buttonSettings.text + "[Z]";
                     GUI.Button(new Rect(Screen.width / 2 - Screen.width / 3 * Mathf.Sin(angleRad), Screen.height / 2 - Screen.height / 3 * Mathf.Cos(angleRad), 300, 80), buttonSettings);
                 }
                 if (QTEGen == 3)
                 {
-                    Debug.Log(string.Format("E : angle {0}", angle));
+                    //Debug.Log(string.Format("E : angle {0}", angle));
                     buttonSettings.text = buttonSettings.text + "[E]";
                     GUI.Button(new Rect(Screen.width / 2 - Screen.width / 3 * Mathf.Sin(angleRad), Screen.height / 2 - Screen.height / 3 * Mathf.Cos(angleRad), 300, 80), buttonSettings);
                 }
                 if (QTEGen == 4)
                 {
-                    Debug.Log(string.Format("R : angle {0}", angle));
+                    //Debug.Log(string.Format("R : angle {0}", angle));
                     buttonSettings.text = buttonSettings.text + "[R]";
                     GUI.Button(new Rect(Screen.width / 2 - Screen.width / 3 * Mathf.Sin(angleRad), Screen.height / 2 - Screen.height / 3 * Mathf.Cos(angleRad), 300, 80), buttonSettings);
                 }

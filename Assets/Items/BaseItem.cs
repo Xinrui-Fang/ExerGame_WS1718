@@ -12,7 +12,7 @@ public class BaseItem : MonoBehaviour {
 		var sound = GetComponent<AudioSource>();
 		if(sound != null)
 		{
-			Debug.Log("PLAY");
+			//Debug.Log("PLAY");
 			sound.Play();
 		}
 		
