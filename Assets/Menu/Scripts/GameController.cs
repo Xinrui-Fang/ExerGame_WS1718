@@ -8,6 +8,7 @@ public class GameController : MonoBehaviour {
     private List<float> scoreList = new List<float>();
     private List<int> durationList = new List<int>();
 
+    private List<string> seedList = new List<string>();
     void Start()
     {
         if (control == null)
@@ -22,10 +23,11 @@ public class GameController : MonoBehaviour {
     }
 
     void Update(){
-        /*for (int i = 0 ; i < scoreList.Count ; i++){
-            Debug.Log(string.Format("scoreList[{0}] = {1}", i, scoreList[i]));
-            Debug.Log(string.Format("durationList[{0}] = {1}", i, durationList[i]));
-        }*/
+
+
+        for (int i = 0 ; i < seedList.Count ; i++){
+            Debug.Log(string.Format("seedList[{0}] = {1}", i, seedList[i]));
+        }
     }
     public List<float> getScoreList(){ 
         
@@ -40,6 +42,14 @@ public class GameController : MonoBehaviour {
     }
      public void setDurationList(List<int> list){
         this.durationList = list;
+    }
+
+    public List<string> getSeedList(){
+        return this.seedList;
+    }
+
+    public void addSeed(string name){
+        this.seedList.Add(name);
     }
 
 }
