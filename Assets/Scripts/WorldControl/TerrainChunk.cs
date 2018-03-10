@@ -727,8 +727,6 @@ public class TerrainChunk
 		terrain.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.BlendProbesAndSkybox;
 
 		UnityTerrain.transform.position = TerrainPos;
-		isFinished = true;
-		Synchronize(SM);
 
 		UnityTerrain.SetActive(true);
 
@@ -745,6 +743,32 @@ public class TerrainChunk
 		Moisture = new float[0, 0];
 		Normals = new Vector3[0, 0];
 		SplatmapData = new float[0, 0, 0];
+		
+		
+		/** // Debug the Placement of WayVertices on Chunk edges.
+		RaycastHit hit;
+		Vector2 WorldCoord = new Vector2();
+		Vector3 RayStart = new Vector3(0, Settings.Depth, 0);
+		foreach(var vertexEdge in this.EdgeWayPoints())
+		{
+			this.ToWorldCoordinate(vertexEdge.x, vertexEdge.y, ref WorldCoord);
+			RayStart.x = WorldCoord.x;
+			RayStart.z = WorldCoord.y;
+			if (Physics.Raycast(RayStart, -Vector3.up, out hit, Settings.Depth, 1 << 8, QueryTriggerInteraction.Ignore)) {
+				GameObject vertexMarker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+				vertexMarker.transform.position = hit.point;
+				vertexMarker.transform.localScale += new Vector3(2, 3, 2);
+				int count = 0;
+				if (paths.Hub.Contains(vertexEdge)){
+					count = paths.Hub.Get(vertexEdge).GetPaths().Count;
+				}
+				vertexMarker.transform.name = string.Format("Vertex of Grid {0}(LOD {4}), at {1}(local), {2}global has {3} native paths", GridCoords, vertexEdge, hit, count, LOD);
+			}
+		}
+		**/
+
+		isFinished = true;
+		Synchronize(SM);
 	}
 
 	public PathFinder GetPathFinder()

@@ -9,7 +9,7 @@ public class SurfaceManager : MonoBehaviour
 	public GameSettings Settings;
 
 	// Contains tiles that need to be finalized on the main thread!
-	ConcurrentQueue<TerrainChunk> FinalizationQueue = new ConcurrentQueue<TerrainChunk>(17);
+	ConcurrentQueue<TerrainChunk> FinalizationQueue = new ConcurrentQueue<TerrainChunk>(24);
 	QuadTree<TerrainChunk> Chunks = new QuadTree<TerrainChunk>(new RectangleBound(new Vector2(0, 0), 5));
 
 	int ChunkCount = 0;
@@ -83,6 +83,16 @@ public class SurfaceManager : MonoBehaviour
 			new Vector2Int(-2, 0),
 			new Vector2Int(0, 2),
 			new Vector2Int(0, -2),
+
+			new Vector2Int(2, 1),
+			new Vector2Int(-2, 1),
+			new Vector2Int(1, 2),
+			new Vector2Int(1, -2),
+
+			new Vector2Int(2, -1),
+			new Vector2Int(-2, -1),
+			new Vector2Int(-1, 2),
+			new Vector2Int(-1, -2),
 			//**/
 			};
 
@@ -100,7 +110,7 @@ public class SurfaceManager : MonoBehaviour
 				terrain.Build(absolutePos, Settings.MainObject.transform.position);
 				terrain.Flush(this);
 				**/
-				ThreadPool.QueueUserWorkItem((object item) => Build((TerrainChunk)item, absolutePos), new TerrainChunk(Settings));
+				 ThreadPool.QueueUserWorkItem((object item) => Build((TerrainChunk)item, absolutePos), new TerrainChunk(Settings));
 			}
 		}
 	}

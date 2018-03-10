@@ -70,12 +70,12 @@ namespace Assets.Scripts.Agents.Behavior
 			}
 			else
 			{
-				Debug.Log(string.Format("QTE CHOICE : {0}", QTE_Sys.getReturn()));
+				//Debug.Log(string.Format("QTE CHOICE : {0}", QTE_Sys.getReturn()));
 				dpath = ChoicesEnd[QTE_Sys.getReturn()];
 				QTE_Sys.stop();
 			}
 
-			Debug.Log(string.Format("Found Path of lenght {0}", dpath.path.WorldWaypoints.Length));
+			//Debug.Log(string.Format("Found Path of lenght {0}", dpath.path.WorldWaypoints.Length));
 
 
 			// Registration/Replacement of the new path 
@@ -133,7 +133,7 @@ namespace Assets.Scripts.Agents.Behavior
 					newChoices.Add(choices[i]);
 					if (choices[i].path.Equals(CurrentPath.path))
 					{
-						Debug.Log("CURRENT PATH FOUND");
+						//Debug.Log("CURRENT PATH FOUND");
 						currentPathIndex = newChoices.Count-1;
 					}
 				}
@@ -144,7 +144,7 @@ namespace Assets.Scripts.Agents.Behavior
 				newChoices.RemoveAt(currentPathIndex);
 			}
 
-			Debug.Log(string.Format("{0} choices found", newChoices.Count));
+			//Debug.Log(string.Format("{0} choices found", newChoices.Count));
 			return newChoices;
 		}
 
@@ -189,7 +189,7 @@ namespace Assets.Scripts.Agents.Behavior
 			if (node >= CurrentPath.path.WorldWaypoints.Length - 1)
 			{
 
-				Debug.Log("End of the road");
+				//Debug.Log("End of the road");
 				// we find another path 
 				// & we return the number of the next node
 				return GetNextPath(node);
