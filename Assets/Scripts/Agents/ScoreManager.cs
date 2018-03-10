@@ -20,6 +20,9 @@ public class ScoreManager : MonoBehaviour
 		LastPosition = gameObject.transform.position;
 		
 		Score += (int) (diff.magnitude * Multiplier);
+
+        PlayerPrefs.SetFloat("CurrentScore", Score);
+        PlayerPrefs.SetInt("CurrentDuration", (int)Time.realtimeSinceStartup);
 	}
 	
 	void OnGUI()
