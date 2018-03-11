@@ -165,10 +165,12 @@ public class SurfaceManager : MonoBehaviour
 							-Vector3.up,
 							out HitInfo,
 							15f,
-							1 << 8)
+							1 << 8,
+							QueryTriggerInteraction.Ignore)
 						)
 					{
 						LittleRamp.transform.position = HitInfo.point;
+						LittleRamp.transform.up = HitInfo.normal;
 					}
 					//LittleRamp.transform.position += LittleRamp.transform.right * -.5f;
 					LittleRamp.transform.parent = chunk.UnityTerrain.transform;

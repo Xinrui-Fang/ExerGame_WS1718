@@ -175,6 +175,8 @@ namespace Assets.Scripts.Agents.Behavior
 			{
 				// Debug.Log("node >= path.WorldWaypoints.Length - 22 && QTE_Sys.isFinished()");
 				//Debug.Log(string.Format("isFinished : {0}", QTE_Sys.isFinished()));
+
+				ChoicesEnd = CurrentPath.path.End.GetPaths(CurrentPath);
 				Vector3 pointOfComparison = CurrentPath.path.WorldWaypoints[CurrentPath.path.WorldWaypoints.Length - 1];
 				// Filtering of the choices to keep only relevant choices
 				ChoicesEnd = ChoicesFiltering(ChoicesEnd, pointOfComparison);
