@@ -66,7 +66,8 @@ namespace Assets.World.Paths
 	{
 		public Vector2Int Pos;
 		public Vector2 WPos;
-		private HashSet<PathWithDirection> Paths;
+		private List<PathWithDirection> Paths;
+		//private HashSet<PathWithDirection> Paths;
 		public int? LocalId;
 		public int FirstForeignPath = int.MaxValue;
 
@@ -74,13 +75,13 @@ namespace Assets.World.Paths
 		{
 			Pos = pos;
 			WPos = wpos;
-			Paths = new HashSet<PathWithDirection>();
+			Paths = new List<PathWithDirection>(4);
 			LocalId = id;
 		}
 
 		public void UnmountAllAliens()
 		{
-			HashSet<PathWithDirection> NewPaths = new HashSet<PathWithDirection>();
+			var NewPaths = new List<PathWithDirection>();
 			int i = 0;
 			foreach (var path in Paths) 
 			{
@@ -90,22 +91,44 @@ namespace Assets.World.Paths
 			Paths = NewPaths;
 		}
 
+		public int Find(NavigationPath path)
+		{
+			int hash = path.GetHashCode();
+			for (int i=0; i < Paths.Count; i++)
+			{
+				if (Paths[i].GetHashCode() == hash)
+					return i;
+			}
+			return -1;
+		}
+
+		public bool Contains(NavigationPath path)
+		{
+			return Find(path) != -1;
+		}
+
 		public bool Unmount(NavigationPath path)
 		{
 			PathWithDirection dpath = new PathWithDirection(path, true);
-			if (Paths.Contains(dpath))
+			int i = Find(path);
+			if (i != -1)
 			{
-				Paths.Remove(dpath);
+				Paths.RemoveAt(i);
 				return true;
 			}
-			Assets.Utils.Debug.Log(string.Format("Could not remove path {0} {1} because it is not in WayVertex", path.Start.Pos, path.End.Pos));
+			string msg = string.Format("Could not remove path {0} -> {1} because it is not in WayVertex {2}, with members:\n", path.Start.Pos, path.End.Pos, this.Pos);
+			foreach (var memberpath in GetPaths())
+			{
+				msg += string.Format("\t * {0} -> {1}\n", memberpath.path.Start.Pos, memberpath.path.End.Pos);
+			}
+			UnityEngine.Debug.Log(msg);
 			return false;
 		}
 
 		public bool Mount(NavigationPath path, bool forward = true, bool foreign = false)
 		{
 			PathWithDirection dpath = new PathWithDirection(path, forward);
-			if (Paths.Contains(dpath)) return false;
+			if (Contains(path)) return false;
 			Paths.Add(dpath);
 			if (foreign) FirstForeignPath = FirstForeignPath > Paths.Count -1 ? Paths.Count - 1: FirstForeignPath;
 			return true;
@@ -208,6 +231,11 @@ namespace Assets.World.Paths
 					p.path.Mount();
 				}
 			}
+		}
+
+		public override int GetHashCode()
+		{
+			return (WPos.x.GetHashCode() + 3989 * WPos.y.GetHashCode());
 		}
 	}
 

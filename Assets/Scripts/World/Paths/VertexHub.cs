@@ -23,7 +23,7 @@ namespace Assets.World.Paths
 			}
 		}
 
-		public VertexHub(TerrainChunk chunk, float lookupRadius = 1f)
+		public VertexHub(TerrainChunk chunk, float lookupRadius = 3f)
 		{
 			this.chunk = chunk;
 			this.bound = new CircleBound(new Vector2(), lookupRadius);
@@ -31,13 +31,14 @@ namespace Assets.World.Paths
 			Storage = new Dictionary<Vector2Int, int>(32);
 		}
 
-		public bool Get(Vector2 Wpos, ref WayVertex V) {
+		public bool Get(Vector2 Wpos, out WayVertex V) {
 
 			bound.Center = Wpos;
 			List<QuadTreeData<ObjectData>> dataps = new List<QuadTreeData<ObjectData>>();
 			chunk.Objects.GetCollisions(bound, QuadDataType.wayvertex, dataps);
 			if (dataps.Count == 0)
 			{
+				V = null;
 				return false;
 			}
 			else
@@ -52,9 +53,16 @@ namespace Assets.World.Paths
 		{
 			if (Storage.ContainsKey(pos)) {
 				return vertices[Storage[pos]];
-			} else {
+			}
+			else {
 				Vector2 WPos = new Vector2();
+				WayVertex V;
 				chunk.ToWorldCoordinate(pos.x, pos.y, ref WPos); 
+				if (this.Get(WPos, out V))
+				{
+					if (V != null)
+						return V;
+				}
 				Storage[pos] = vertices.Count;
 				chunk.Objects.Put(
 					new QuadTreeData<ObjectData>(
@@ -70,7 +78,11 @@ namespace Assets.World.Paths
 
 		public bool Contains(Vector2Int pos)
 		{
-			return Storage.ContainsKey(pos);
+			if (Storage.ContainsKey(pos)) return true;
+			Vector2 WPos = new Vector2();
+			WayVertex V;
+			chunk.ToWorldCoordinate(pos.x, pos.y, ref WPos);
+			return Contains(WPos);
 		}
 
 		public bool Contains(Vector2 Wpos)

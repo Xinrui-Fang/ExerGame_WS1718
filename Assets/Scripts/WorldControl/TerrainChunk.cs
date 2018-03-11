@@ -292,8 +292,6 @@ public class TerrainChunk
 		if (Settings.TerrainLOD[LOD].HasJumps)
 			JumpList = JumpPointFinder.FindJumps(ref paths.paths, 1, Settings.MinJumpDist, Settings.MaxJumpDist, this);
 
-		paths.FinalizePaths(this);
-
 		if (Settings.TerrainLOD[LOD].hasGras)
 			grasField = new GrasField(this, this.GetHashCode());
 	}
@@ -428,7 +426,11 @@ public class TerrainChunk
 	{
 		// mount paths
 		Vector2 WorldCoord = new Vector2();
-		CircleBound WayVertextest = new CircleBound(WorldCoord, 5f);
+		CircleBound WayVertextest = new CircleBound(WorldCoord, 2f);
+		/**
+		Vector3 RayStart = new Vector3(0, this.Settings.Depth, 0);
+		RaycastHit hit;
+		**/
 		foreach (Vector2Int RoadPoint in this.GetEdgeWayPoints(edgeId))
 		{
 			if (!this.paths.Hub.Contains(RoadPoint)) continue;
@@ -440,6 +442,7 @@ public class TerrainChunk
 			{
 				foreach (var wv in wvList)
 				{
+					UnityEngine.Debug.LogFormat("Synching Vertex at {0} with Vertex at {1}", WorldCoord, wv.location);
 					var AlienWV = tile.paths.Hub.vertices[wv.contents.label];
 					List<PathWithDirection> fpaths = FamiliarWV.GetPaths();
 					List<PathWithDirection> apaths = AlienWV.GetPaths();
@@ -451,8 +454,29 @@ public class TerrainChunk
 					{
 						FamiliarWV.Mount(p.path, p.forward, true);
 					}
+					/**
+					RayStart.x = wv.location.x;
+					RayStart.z = wv.location.y; if (Physics.Raycast(RayStart, -Vector3.up, out hit, Settings.Depth, 1 << 8, QueryTriggerInteraction.Ignore))
+					{
+						GameObject vertexMarker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+						vertexMarker.transform.position = hit.point + Vector3.up * 4;
+						vertexMarker.transform.localScale += new Vector3(3, 3, 3);
+						int count = AlienWV.GetPaths().Count - AlienWV.FirstForeignPath;
+						vertexMarker.transform.name = string.Format("Synched Vertex of Grid {0}(LOD {3}), at {1}global has {2} foreign paths", GridCoords, hit.point, count, LOD);
+					}
+					**/
 				}
-
+				/**
+				RayStart.x = WorldCoord.x;
+				RayStart.z = WorldCoord.y; if (Physics.Raycast(RayStart, -Vector3.up, out hit, Settings.Depth, 1 << 8, QueryTriggerInteraction.Ignore))
+				{
+					GameObject vertexMarker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+					vertexMarker.transform.position = hit.point + Vector3.up * 4;
+					vertexMarker.transform.localScale += new Vector3(3, 3, 3);
+					int count = FamiliarWV.GetPaths().Count - FamiliarWV.FirstForeignPath;
+					vertexMarker.transform.name = string.Format("Synched Vertex of Grid {0}(LOD {3}), at {1}global has {2} foreign paths", GridCoords, hit.point, count, LOD);
+				}
+				**/
 			}
 		}
 	}
@@ -679,7 +703,7 @@ public class TerrainChunk
 
 	public void Flush(SurfaceManager SM)
 	{
-		ExportDebugImages();
+		//ExportDebugImages();
 		if (UnityTerrain != null)
 		{
 			GameObject.Destroy(UnityTerrain.gameObject);
@@ -745,28 +769,23 @@ public class TerrainChunk
 		SplatmapData = new float[0, 0, 0];
 		
 		
-		/** // Debug the Placement of WayVertices on Chunk edges.
+		// Debug the Placement of WayVertices on Chunk edges.
+		/**
 		RaycastHit hit;
-		Vector2 WorldCoord = new Vector2();
 		Vector3 RayStart = new Vector3(0, Settings.Depth, 0);
-		foreach(var vertexEdge in this.EdgeWayPoints())
+		foreach(var vertexEdge in this.paths.Hub.vertices)
 		{
-			this.ToWorldCoordinate(vertexEdge.x, vertexEdge.y, ref WorldCoord);
-			RayStart.x = WorldCoord.x;
-			RayStart.z = WorldCoord.y;
+			RayStart.x = vertexEdge.WPos.x;
+			RayStart.z = vertexEdge.WPos.y;
 			if (Physics.Raycast(RayStart, -Vector3.up, out hit, Settings.Depth, 1 << 8, QueryTriggerInteraction.Ignore)) {
 				GameObject vertexMarker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
 				vertexMarker.transform.position = hit.point;
 				vertexMarker.transform.localScale += new Vector3(2, 3, 2);
-				int count = 0;
-				if (paths.Hub.Contains(vertexEdge)){
-					count = paths.Hub.Get(vertexEdge).GetPaths().Count;
-				}
-				vertexMarker.transform.name = string.Format("Vertex of Grid {0}(LOD {4}), at {1}(local), {2}global has {3} native paths", GridCoords, vertexEdge, hit, count, LOD);
+				int count = vertexEdge.GetPaths().Count;
+				vertexMarker.transform.name = string.Format("Vertex of Grid {0}(LOD {4}), at {1}(local), {2}global has {3} native paths", GridCoords, vertexEdge, hit.point, count, LOD);
 			}
 		}
 		**/
-
 		isFinished = true;
 		Synchronize(SM);
 	}

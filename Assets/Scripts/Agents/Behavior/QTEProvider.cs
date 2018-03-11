@@ -125,8 +125,8 @@ namespace Assets.Scripts.Agents.Behavior
 				Debug.Log(string.Format("Point d'arrivée de ce chemin : {0}", choices[i].path.WorldWaypoints[choices[i].path.WorldWaypoints.Length - 1]));*/
 
 
-				if (MapTools.Aprox(pointOfComparison, choices[i].path.WorldWaypoints[0])
-					|| MapTools.Aprox(pointOfComparison, choices[i].path.WorldWaypoints[choices[i].path.WorldWaypoints.Length - 1]))
+				if (MapTools.Aprox(pointOfComparison, choices[i].path.WorldWaypoints[0], 2f)
+					|| MapTools.Aprox(pointOfComparison, choices[i].path.WorldWaypoints[choices[i].path.WorldWaypoints.Length - 1], 2f))
 				{
 
 					// the choice is added to our new choices

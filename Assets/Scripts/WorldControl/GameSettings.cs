@@ -290,7 +290,7 @@ public class GameSettings
 		{
 			int HeightmapResolution = TerrainLOD[i].HeightmapResolution;
 			TerrainLOD[i].gridElementWidth = (float)Size / (float)HeightmapResolution;
-			TerrainLOD[i].StreetNeighborOffset = Mathf.FloorToInt(StreetRadius / TerrainLOD[i].gridElementWidth) + 1;
+			TerrainLOD[i].StreetNeighborOffset = Mathf.CeilToInt(StreetRadius / TerrainLOD[i].gridElementWidth);
 			TerrainLOD[i].CenterStreetNeighborOffset = TerrainLOD[i].gridElementWidth * TerrainLOD[i].StreetNeighborOffset;
 
 			float correctionalOffset = .5f / (float)HeightmapResolution; // Put coordinates in the middle of a tile.
