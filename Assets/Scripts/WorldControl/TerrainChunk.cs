@@ -349,9 +349,12 @@ public class TerrainChunk
 				UnityEngine.Debug.LogFormat("fromData ({0}, {1}), toData ({2}, {3}), TFactor {4}", fromData.GetLength(0), fromData.GetLength(1), todata.GetLength(0), todata.GetLength(1), Translation);
 				for (int t = 0; t < theight; t++)
 				{
-					if (t % 2 == 0) {
+					if (t % 2 == 0)
+					{
 						todata[t, 0] = fromData[TranslateHM(t, revTrans, fheight), 0];
-					} else {
+					}
+					else
+					{
 						int prev = TranslateHM(t - 1, revTrans, fheight);
 						int next = TranslateHM(t + 1, revTrans, fheight);
 						todata[t, 0] = fromData[prev, 0] * .5f + fromData[next, 0] * .5f;
@@ -412,6 +415,40 @@ public class TerrainChunk
 
 			toTerrain.terrainData.SetHeights(txbase, tybase, todata);
 		}
+	}
+
+	public static void MixAlphaMaps(float[,,] target, float[,,] source, float mix = .5f)
+	{
+		for (int y = 0; y < source.GetLength(0); y++)
+		{
+			for (int x = 0; x < source.GetLength(1); x++)
+			{
+				for (int splat = 0; splat < source.GetLength(2); splat++)
+				{
+					float tsplat = target[y, x, splat];
+					float ssplat = source[y, x, splat];
+					target[y, x, splat] = mix * ssplat + (1 - mix) * tsplat;
+					source[y, x, splat] = mix * tsplat + (1 - mix) * ssplat;
+				}
+			}
+		}
+	}
+
+	public static void CopySplatMapEdge(TerrainChunk from, int fxbase, int fybase, int fwidth, int fheight, TerrainChunk to, int txbase, int tybase)
+	{
+		var toTerrain = to.UnityTerrain.GetComponent<Terrain>();
+		var fromTerrain = from.UnityTerrain.GetComponent<Terrain>();
+		var fromData = fromTerrain.terrainData.GetAlphamaps(fxbase, fybase, fwidth, fheight);
+		float[,,] todata = null;
+		if (from.Resolution == to.Resolution)
+		{
+			todata = toTerrain.terrainData.GetAlphamaps(txbase, tybase, fwidth, fheight);
+			MixAlphaMaps(todata, fromData);
+			toTerrain.terrainData.SetAlphamaps(txbase, tybase, todata);
+			fromTerrain.terrainData.SetAlphamaps(fxbase, fybase, fromData);
+			return;
+		}
+		return;
 	}
 
 	public void PushTopRight(TerrainChunk tile)
@@ -489,6 +526,7 @@ public class TerrainChunk
 		var myterrain = UnityTerrain.GetComponent<Terrain>();
 		//terrain.terrainData.SetHeights(0, 0, myterrain.terrainData.GetHeights(0, Resolution - 1, Resolution - 1, 1));
 		CopyHeightMapEdge(this, 0, Resolution - 1, Resolution, 1, tile, 0, 0);
+		CopySplatMapEdge(this, 0, Resolution - 1, Resolution, 1, tile, 0, 0);
 		tile.CheckNeighbors();
 		terrain.Flush();
 		N = tile;
@@ -504,6 +542,7 @@ public class TerrainChunk
 		var myterrain = UnityTerrain.GetComponent<Terrain>();
 		//terrain.terrainData.SetHeights(0, 0, myterrain.terrainData.GetHeights(Resolution - 1, 0, 1, Resolution - 1));
 		CopyHeightMapEdge(this, Resolution - 1, 0, 1, Resolution, tile, 0, 0);
+		CopySplatMapEdge(this, Resolution - 1, 0, 1, Resolution, tile, 0, 0);
 		terrain.Flush();
 
 		SyncPahts(tile, 1);
@@ -767,8 +806,8 @@ public class TerrainChunk
 		Moisture = new float[0, 0];
 		Normals = new Vector3[0, 0];
 		SplatmapData = new float[0, 0, 0];
-		
-		
+
+
 		// Debug the Placement of WayVertices on Chunk edges.
 		/**
 		RaycastHit hit;
