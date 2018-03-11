@@ -584,6 +584,7 @@ GameObject:
   - component: {fileID: 787555969}
   - component: {fileID: 787555968}
   - component: {fileID: 787555967}
+  - component: {fileID: 787555972}
   m_Layer: 0
   m_Name: Camera
   m_TagString: Untagged
@@ -648,6 +649,7 @@ Camera:
   m_TargetEye: 3
   m_HDR: 1
   m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -665,6 +667,19 @@ Transform:
   m_Father: {fileID: 341534116}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 13.2, y: 0, z: 0}
+--- !u!114 &787555972
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 787555966}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7089e5c18243a814b92dcbe5204927de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ButtonSprite: {fileID: 21300000, guid: e5a836f161c824b109f7074e96fd6f78, type: 3}
+  jupiter: {fileID: 12800000, guid: 7cb2912222469634ba17a77055919ea8, type: 3}
 --- !u!1001 &804160108
 Prefab:
   m_ObjectHideFlags: 0
@@ -798,6 +813,7 @@ Camera:
   m_TargetEye: 3
   m_HDR: 1
   m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -842,7 +858,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4bfbbcaac2b14be8a39d9d5a877e6e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  sprite: {fileID: 21300000, guid: e5a836f161c824b109f7074e96fd6f78, type: 3}
   font: {fileID: 12800000, guid: 7cb2912222469634ba17a77055919ea8, type: 3}
 --- !u!1001 &1156342840
 Prefab:
@@ -1032,6 +1048,7 @@ Camera:
   m_TargetEye: 3
   m_HDR: 1
   m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -1129,6 +1146,7 @@ Camera:
   m_TargetEye: 3
   m_HDR: 1
   m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
