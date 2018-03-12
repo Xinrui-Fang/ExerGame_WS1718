@@ -33,12 +33,16 @@ public class GrasField
 		System.Random prng = new System.Random(seed);
 
 		int HeightmapResolution = Terrain.Settings.TerrainLOD[Terrain.LOD].HeightmapResolution;
-		float CenterStreetNeighborOffset = Terrain.Settings.TerrainLOD[Terrain.LOD].CenterStreetNeighborOffset;
 		float gridElementWidth = Terrain.Settings.TerrainLOD[Terrain.LOD].gridElementWidth;
+		float CenterStreetNeighborOffset;
+		if (Terrain.LOD == 0)
+			CenterStreetNeighborOffset = Terrain.Settings.TerrainLOD[Terrain.LOD].CenterStreetNeighborOffset - .5f * gridElementWidth;
+		else
+			CenterStreetNeighborOffset = Terrain.Settings.TerrainLOD[Terrain.LOD].CenterStreetNeighborOffset;
 
 		CircleBound SmallCircle = new CircleBound(
-			new Vector2(), 
-			CenterStreetNeighborOffset - gridElementWidth * .75f
+			new Vector2(),
+			CenterStreetNeighborOffset
 		);
 		CircleBound LargeCircle = new CircleBound(new Vector2(), 3f);
 		Vector2 flatCoord = new Vector2();

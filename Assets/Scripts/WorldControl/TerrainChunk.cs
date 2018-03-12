@@ -292,8 +292,6 @@ public class TerrainChunk
 		if (Settings.TerrainLOD[LOD].HasJumps)
 			JumpList = JumpPointFinder.FindJumps(ref paths.paths, 1, Settings.MinJumpDist, Settings.MaxJumpDist, this);
 
-		paths.FinalizePaths(this);
-
 		if (Settings.TerrainLOD[LOD].hasGras)
 			grasField = new GrasField(this, this.GetHashCode());
 	}
@@ -351,9 +349,12 @@ public class TerrainChunk
 				UnityEngine.Debug.LogFormat("fromData ({0}, {1}), toData ({2}, {3}), TFactor {4}", fromData.GetLength(0), fromData.GetLength(1), todata.GetLength(0), todata.GetLength(1), Translation);
 				for (int t = 0; t < theight; t++)
 				{
-					if (t % 2 == 0) {
+					if (t % 2 == 0)
+					{
 						todata[t, 0] = fromData[TranslateHM(t, revTrans, fheight), 0];
-					} else {
+					}
+					else
+					{
 						int prev = TranslateHM(t - 1, revTrans, fheight);
 						int next = TranslateHM(t + 1, revTrans, fheight);
 						todata[t, 0] = fromData[prev, 0] * .5f + fromData[next, 0] * .5f;
@@ -416,6 +417,40 @@ public class TerrainChunk
 		}
 	}
 
+	public static void MixAlphaMaps(float[,,] target, float[,,] source, float mix = .5f)
+	{
+		for (int y = 0; y < source.GetLength(0); y++)
+		{
+			for (int x = 0; x < source.GetLength(1); x++)
+			{
+				for (int splat = 0; splat < source.GetLength(2); splat++)
+				{
+					float tsplat = target[y, x, splat];
+					float ssplat = source[y, x, splat];
+					target[y, x, splat] = mix * ssplat + (1 - mix) * tsplat;
+					source[y, x, splat] = mix * tsplat + (1 - mix) * ssplat;
+				}
+			}
+		}
+	}
+
+	public static void CopySplatMapEdge(TerrainChunk from, int fxbase, int fybase, int fwidth, int fheight, TerrainChunk to, int txbase, int tybase)
+	{
+		var toTerrain = to.UnityTerrain.GetComponent<Terrain>();
+		var fromTerrain = from.UnityTerrain.GetComponent<Terrain>();
+		var fromData = fromTerrain.terrainData.GetAlphamaps(fxbase, fybase, fwidth, fheight);
+		float[,,] todata = null;
+		if (from.Resolution == to.Resolution)
+		{
+			todata = toTerrain.terrainData.GetAlphamaps(txbase, tybase, fwidth, fheight);
+			MixAlphaMaps(todata, fromData);
+			toTerrain.terrainData.SetAlphamaps(txbase, tybase, todata);
+			fromTerrain.terrainData.SetAlphamaps(fxbase, fybase, fromData);
+			return;
+		}
+		return;
+	}
+
 	public void PushTopRight(TerrainChunk tile)
 	{
 		var toTerrain = tile.UnityTerrain.GetComponent<Terrain>();
@@ -428,7 +463,11 @@ public class TerrainChunk
 	{
 		// mount paths
 		Vector2 WorldCoord = new Vector2();
-		CircleBound WayVertextest = new CircleBound(WorldCoord, 5f);
+		CircleBound WayVertextest = new CircleBound(WorldCoord, 2f);
+		/**
+		Vector3 RayStart = new Vector3(0, this.Settings.Depth, 0);
+		RaycastHit hit;
+		**/
 		foreach (Vector2Int RoadPoint in this.GetEdgeWayPoints(edgeId))
 		{
 			if (!this.paths.Hub.Contains(RoadPoint)) continue;
@@ -440,6 +479,7 @@ public class TerrainChunk
 			{
 				foreach (var wv in wvList)
 				{
+					UnityEngine.Debug.LogFormat("Synching Vertex at {0} with Vertex at {1}", WorldCoord, wv.location);
 					var AlienWV = tile.paths.Hub.vertices[wv.contents.label];
 					List<PathWithDirection> fpaths = FamiliarWV.GetPaths();
 					List<PathWithDirection> apaths = AlienWV.GetPaths();
@@ -451,8 +491,29 @@ public class TerrainChunk
 					{
 						FamiliarWV.Mount(p.path, p.forward, true);
 					}
+					/**
+					RayStart.x = wv.location.x;
+					RayStart.z = wv.location.y; if (Physics.Raycast(RayStart, -Vector3.up, out hit, Settings.Depth, 1 << 8, QueryTriggerInteraction.Ignore))
+					{
+						GameObject vertexMarker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+						vertexMarker.transform.position = hit.point + Vector3.up * 4;
+						vertexMarker.transform.localScale += new Vector3(3, 3, 3);
+						int count = AlienWV.GetPaths().Count - AlienWV.FirstForeignPath;
+						vertexMarker.transform.name = string.Format("Synched Vertex of Grid {0}(LOD {3}), at {1}global has {2} foreign paths", GridCoords, hit.point, count, LOD);
+					}
+					**/
 				}
-
+				/**
+				RayStart.x = WorldCoord.x;
+				RayStart.z = WorldCoord.y; if (Physics.Raycast(RayStart, -Vector3.up, out hit, Settings.Depth, 1 << 8, QueryTriggerInteraction.Ignore))
+				{
+					GameObject vertexMarker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+					vertexMarker.transform.position = hit.point + Vector3.up * 4;
+					vertexMarker.transform.localScale += new Vector3(3, 3, 3);
+					int count = FamiliarWV.GetPaths().Count - FamiliarWV.FirstForeignPath;
+					vertexMarker.transform.name = string.Format("Synched Vertex of Grid {0}(LOD {3}), at {1}global has {2} foreign paths", GridCoords, hit.point, count, LOD);
+				}
+				**/
 			}
 		}
 	}
@@ -465,6 +526,7 @@ public class TerrainChunk
 		var myterrain = UnityTerrain.GetComponent<Terrain>();
 		//terrain.terrainData.SetHeights(0, 0, myterrain.terrainData.GetHeights(0, Resolution - 1, Resolution - 1, 1));
 		CopyHeightMapEdge(this, 0, Resolution - 1, Resolution, 1, tile, 0, 0);
+		CopySplatMapEdge(this, 0, Resolution - 1, Resolution, 1, tile, 0, 0);
 		tile.CheckNeighbors();
 		terrain.Flush();
 		N = tile;
@@ -480,6 +542,7 @@ public class TerrainChunk
 		var myterrain = UnityTerrain.GetComponent<Terrain>();
 		//terrain.terrainData.SetHeights(0, 0, myterrain.terrainData.GetHeights(Resolution - 1, 0, 1, Resolution - 1));
 		CopyHeightMapEdge(this, Resolution - 1, 0, 1, Resolution, tile, 0, 0);
+		CopySplatMapEdge(this, Resolution - 1, 0, 1, Resolution, tile, 0, 0);
 		terrain.Flush();
 
 		SyncPahts(tile, 1);
@@ -679,7 +742,7 @@ public class TerrainChunk
 
 	public void Flush(SurfaceManager SM)
 	{
-		ExportDebugImages();
+		//ExportDebugImages();
 		if (UnityTerrain != null)
 		{
 			GameObject.Destroy(UnityTerrain.gameObject);
@@ -743,30 +806,25 @@ public class TerrainChunk
 		Moisture = new float[0, 0];
 		Normals = new Vector3[0, 0];
 		SplatmapData = new float[0, 0, 0];
-		
-		
-		/** // Debug the Placement of WayVertices on Chunk edges.
+
+
+		// Debug the Placement of WayVertices on Chunk edges.
+		/**
 		RaycastHit hit;
-		Vector2 WorldCoord = new Vector2();
 		Vector3 RayStart = new Vector3(0, Settings.Depth, 0);
-		foreach(var vertexEdge in this.EdgeWayPoints())
+		foreach(var vertexEdge in this.paths.Hub.vertices)
 		{
-			this.ToWorldCoordinate(vertexEdge.x, vertexEdge.y, ref WorldCoord);
-			RayStart.x = WorldCoord.x;
-			RayStart.z = WorldCoord.y;
+			RayStart.x = vertexEdge.WPos.x;
+			RayStart.z = vertexEdge.WPos.y;
 			if (Physics.Raycast(RayStart, -Vector3.up, out hit, Settings.Depth, 1 << 8, QueryTriggerInteraction.Ignore)) {
 				GameObject vertexMarker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
 				vertexMarker.transform.position = hit.point;
 				vertexMarker.transform.localScale += new Vector3(2, 3, 2);
-				int count = 0;
-				if (paths.Hub.Contains(vertexEdge)){
-					count = paths.Hub.Get(vertexEdge).GetPaths().Count;
-				}
-				vertexMarker.transform.name = string.Format("Vertex of Grid {0}(LOD {4}), at {1}(local), {2}global has {3} native paths", GridCoords, vertexEdge, hit, count, LOD);
+				int count = vertexEdge.GetPaths().Count;
+				vertexMarker.transform.name = string.Format("Vertex of Grid {0}(LOD {4}), at {1}(local), {2}global has {3} native paths", GridCoords, vertexEdge, hit.point, count, LOD);
 			}
 		}
 		**/
-
 		isFinished = true;
 		Synchronize(SM);
 	}

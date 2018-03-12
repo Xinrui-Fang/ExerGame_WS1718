@@ -45,7 +45,7 @@ public class QTESys : MonoBehaviour
                 QTEGen = UnityEngine.Random.Range(1, 5);
             }
             listOfQTE.Add(QTEGen);
-            Debug.Log(listOfQTE.ToString());
+            //Debug.Log(listOfQTE.ToString());
         }
         this.displayLetter = true;
         this.ReturnQTE = 0;

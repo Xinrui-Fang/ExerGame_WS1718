@@ -71,14 +71,6 @@ public class PathFinder
 		}
 		float dist = Vector2Int.Distance(start, end);
 
-		WayVertex[] start_connects = new WayVertex[Hub.vertices.Count];
-		Hub.vertices.CopyTo(start_connects);
-		WayVertex[] end_connects = new WayVertex[Hub.vertices.Count];
-		Hub.vertices.CopyTo(end_connects);
-		Array.Sort(start_connects, (a, b) => Vector2Int.Distance(a.Pos, start).CompareTo(Vector2Int.Distance(b.Pos, start)));
-		Array.Sort(end_connects, (a, b) => Vector2Int.Distance(a.Pos, end).CompareTo(Vector2Int.Distance(b.Pos, end)));
-
-
 		// Find the path using the search algorithm
 		CurrentGoal = end;
 		GoalVertex = null;
@@ -92,7 +84,6 @@ public class PathFinder
 		}
 		// Remember Path
 		AddToStreetMap(path);
-		var EndV = Hub.Get(end);
 		return true;
 	}
 
@@ -176,7 +167,6 @@ public class PathFinder
 		foreach (NavigationPath path in paths)
 		{
 			path.Finalize(Hub);
-			path.Mount();
 			if (maxLength < path.Waypoints.Count)
 			{
 				StartingPoint = path.Start;

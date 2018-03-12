@@ -10,11 +10,21 @@ namespace Assets.World.Paths
      **/
 	public static class PathBranchAutomaton
 	{
+		/// <summary>
+		/// Stores the given path up to the node n and connects it to its WayVertices.
+		/// Returns the remainder (starting from n) of the path.
+		/// </summary>
+		/// <param name="V"></param>
+		/// <param name="n"></param>
+		/// <param name="label"></param>
+		/// <param name="path"></param>
+		/// <param name="Hub"></param>
+		/// <param name="paths"></param>
+		/// <returns></returns>
 		public static Utils.LinkedList<Vector2Int> EndPathAt(WayVertex V, Utils.LinkedListNode<Vector2Int> n, int label, Utils.LinkedList<Vector2Int> path, ref VertexHub Hub, List<NavigationPath> paths)
 		{
 			if (path == null) return null;
 			Utils.LinkedList<Vector2Int> newPath = null;
-			Utils.LinkedListNode<Vector2Int> VertexNode;
 			if (n.Next != null)
 			{
 				newPath = new Utils.LinkedList<Vector2Int>();
@@ -29,12 +39,13 @@ namespace Assets.World.Paths
 				}
 				path.AddLast(V.Pos);
 			}
-			WayVertex Start, End;
+			WayVertex Start;
 			Start = Hub.Get(path.First.Value);
 			var navpath = new NavigationPath(Start)
 			{
 				Waypoints = path,
-				Label = label
+				Label = label,
+				End = V
 			};
 			navpath.Finalize(Hub);
 			paths.Add(navpath);

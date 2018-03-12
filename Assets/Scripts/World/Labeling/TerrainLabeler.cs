@@ -22,15 +22,17 @@ public static class TerrainLabeler
 				(i / 9) + .5f
 			);
 		}
-		float triggerdist = .86f;
+		float triggerdist = .9f;
 		float terrainsmoothing = terrain.Settings.SplatMixing;
 		float part = 1f / (SplatMap.GetLength(0) * SplatMap.GetLength(1));
+		/**
 		float meanSteepNess = 0;
 		float meanHeight = 0;
 		float minS = float.PositiveInfinity;
 		float minH = float.PositiveInfinity;
 		float maxS = float.NegativeInfinity;
 		float maxH = float.NegativeInfinity;
+		**/
 		for (int y = 0; y < SplatMap.GetLength(0); y++)
 		{
 
