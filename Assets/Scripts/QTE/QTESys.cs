@@ -10,6 +10,7 @@ public class QTESys : MonoBehaviour
 
     public Sprite sprite;
     public Font font;
+    public Camera m_Camera;
 
     private Vector3 IntersectionPoint;
     private List<PathWithDirection> PathChoices;
@@ -192,8 +193,8 @@ public class QTESys : MonoBehaviour
         int QTEGen;
         if (displayLetter)
         {
-            
-            
+
+
 
             GUIContent buttonSettings = new GUIContent();
             GUI.skin.button.normal.background = (Texture2D)sprite.texture;
@@ -208,7 +209,7 @@ public class QTESys : MonoBehaviour
             {
                 QTEGen = listOfQTE[i];
                 float angle = -computeAngle(i); // Degrees
-                 // Debug.Log(string.Format("Angle {0} in Degree : {1}", i, angle));
+                                                // Debug.Log(string.Format("Angle {0} in Degree : {1}", i, angle));
                 float angleRad = angle * Mathf.Deg2Rad;
                 /* Debug.Log(string.Format("Angle {0} in Radian : {1}", i, angle));
                  Debug.Log(string.Format("Cos / Sin -> {0} / {1}", Mathf.Cos(angle), Mathf.Sin(angle)));
@@ -221,7 +222,9 @@ public class QTESys : MonoBehaviour
                 if (i == 0)
                 {
                     buttonSettings.text = "Default : ";
-                }else{
+                }
+                else
+                {
                     buttonSettings.text = "";
                 }
                 if (QTEGen == 1)
@@ -278,7 +281,9 @@ public class QTESys : MonoBehaviour
 
     private float computeAngle(int i)
     {
-        Vector3 v_player = IntersectionPoint - CurrentPath.path.WorldWaypoints[Mathf.Max(CurrentPath.path.WorldWaypoints.Length - 11, 0)] ;
+
+        //Vector3 v_player = IntersectionPoint - CurrentPath.path.WorldWaypoints[Mathf.Max(CurrentPath.path.WorldWaypoints.Length - 11, 0)] ;
+        Vector3 v_player = m_Camera.transform.forward;
 
         Vector3 v_path = new Vector3();
 
