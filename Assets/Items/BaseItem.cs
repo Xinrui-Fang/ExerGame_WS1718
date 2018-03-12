@@ -5,6 +5,7 @@ using UnityEngine;
 public class BaseItem : MonoBehaviour {
 	
 	private float applicationTime = 0;
+	public GameObject visibleMesh = null; // The GameObject holding the graphics so it can be hidden
 	public float lifespan = 10.0f; // Lifespan in seconds
 	
 	public virtual void applyEffect(GameObject player) 

@@ -448,6 +448,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd93d5ad3f9754586b68f1d30bcdaec8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  visibleMesh: {fileID: 1147286504361162}
   lifespan: 10
   Multiplier: 1.1
 --- !u!114 &114507954584265060

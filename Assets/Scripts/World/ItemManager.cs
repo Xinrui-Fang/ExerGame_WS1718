@@ -12,10 +12,11 @@ public class ItemManager : MonoBehaviour
 	private List<GameObject> CurrentlyActive = new List<GameObject>();
 	void OnTriggerEnter(Collider trigger)
 	{
-		if(trigger.tag == "Item")
+		var baseItem = trigger.gameObject.GetComponent<BaseItem>();
+		if(trigger.tag == "Item" && baseItem.visibleMesh.activeSelf)
 		{
-			trigger.gameObject.SetActive(false);
-			trigger.gameObject.GetComponent<BaseItem>().applyEffect(gameObject);
+			baseItem.visibleMesh.SetActive(false);
+			baseItem.applyEffect(gameObject);
 			CurrentlyActive.Add(trigger.gameObject);
 		}
 	}
@@ -29,7 +30,9 @@ public class ItemManager : MonoBehaviour
 			{
 				item.revertEffect(gameObject);
 				CurrentlyActive.Remove(item.gameObject);
-				Destroy(item.gameObject);
+				
+				item.visibleMesh.SetActive(true);
+				//Destroy(item.gameObject);
 			}
 		}
 	}

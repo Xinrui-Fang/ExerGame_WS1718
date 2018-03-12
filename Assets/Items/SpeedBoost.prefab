@@ -25,7 +25,7 @@ GameObject:
   - component: {fileID: 114033711168624584}
   - component: {fileID: 54727325184883776}
   - component: {fileID: 114867308238426214}
-  - component: {fileID: 82444801464254434}
+  - component: {fileID: 82422811265094806}
   m_Layer: 0
   m_Name: SpeedBoost
   m_TagString: Item
@@ -250,7 +250,7 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.020000007, y: 0.020000014, z: 0.020000005}
   m_Center: {x: -4.656613e-10, y: -9.313228e-10, z: 0}
---- !u!82 &82444801464254434
+--- !u!82 &82422811265094806
 AudioSource:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -258,8 +258,7 @@ AudioSource:
   m_GameObject: {fileID: 1185015552148328}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 24368626, guid: faa5d63fc44b7934da13fa4307dcad1e,
-    type: 2}
+  OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: c4f0b0d0d32d949d8a3e9336af06f1c9, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
@@ -318,7 +317,7 @@ AudioSource:
       tangentMode: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
-    m_RotationOrder: 0
+    m_RotationOrder: 4
   reverbZoneMixCustomCurve:
     serializedVersion: 2
     m_Curve:
@@ -443,5 +442,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd93d5ad3f9754586b68f1d30bcdaec8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  visibleMesh: {fileID: 1778381838328876}
   lifespan: 10
   Multiplier: 1.1

@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 1194882777}
-  m_IndirectSpecularColor: {r: 0.40468282, g: 0.34130898, b: 0.24603592, a: 1}
+  m_IndirectSpecularColor: {r: 0.40467227, g: 0.3412983, b: 0.24602336, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -620,7 +620,7 @@ AudioListener:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 787555966}
-  m_Enabled: 0
+  m_Enabled: 1
 --- !u!124 &787555969
 Behaviour:
   m_ObjectHideFlags: 0
@@ -659,6 +659,7 @@ Camera:
   m_TargetEye: 3
   m_HDR: 0
   m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -765,6 +766,7 @@ Camera:
   m_TargetEye: 3
   m_HDR: 1
   m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -970,6 +972,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sprite: {fileID: 21300000, guid: e5a836f161c824b109f7074e96fd6f78, type: 3}
   font: {fileID: 12800000, guid: 7cb2912222469634ba17a77055919ea8, type: 3}
+  m_Camera: {fileID: 787555970}
 --- !u!1 &1194882776
 GameObject:
   m_ObjectHideFlags: 0
@@ -1112,6 +1115,7 @@ Camera:
   m_TargetEye: 3
   m_HDR: 1
   m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -1209,6 +1213,7 @@ Camera:
   m_TargetEye: 3
   m_HDR: 1
   m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -1623,8 +1628,7 @@ GameObject:
 --- !u!82 &1940811495
 AudioSource:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 82444801464254434, guid: e6699a4ffd4e34bdf991fcb8300f0d63,
-    type: 2}
+  m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1940811494}
   m_Enabled: 1
@@ -1714,6 +1718,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd93d5ad3f9754586b68f1d30bcdaec8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  visibleMesh: {fileID: 0}
   lifespan: 10
   Multiplier: 1.1
 --- !u!54 &1940811497
