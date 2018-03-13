@@ -50,6 +50,7 @@ public class TerrainChunk
 	public TerrainChunk N, E, S, W;
 	private int FlushStep;
 	internal bool needsUnload;
+	internal bool isReplacement;
 
 	public override int GetHashCode()
 	{
@@ -763,7 +764,7 @@ public class TerrainChunk
 		}
 	}
 
-	public IEnumerable<string> Flush(SurfaceManager SM)
+	public IEnumerable<int> Flush(SurfaceManager SM)
 	{
 		if (FlushStep < 1)
 		{
@@ -788,106 +789,107 @@ public class TerrainChunk
 			Trees.Clear();
 			FlushStep = 1;
 
-			yield return string.Format("Prepare new TerrainData at {0}, LOD {1}", GridCoords, LOD);
+			yield return 1;
 		}
-
-		if (FlushStep < 2)
-		{
-			//ExportDebugImages();
-			if (UnityTerrain != null)
+			if (FlushStep < 2)
 			{
-				//GameObject.Destroy(UnityTerrain.gameObject);
-				Terrain.Destroy(UnityTerrain);
+				//ExportDebugImages();
+				if (UnityTerrain != null)
+				{
+					//GameObject.Destroy(UnityTerrain.gameObject);
+					Terrain.Destroy(UnityTerrain);
+				}
+				UnityTerrain = Terrain.CreateTerrainGameObject(ChunkTerrainData);
+				UnityTerrain.layer = 8;
+				UnityTerrain.name = string.Format("TerrainChunk at {0} LOD:{1}", GridCoords, LOD);
+
+				GameObject SurfaceManagerObject = GameObject.Find("Surface Manager");
+				if (SurfaceManagerObject != null)
+					UnityTerrain.transform.SetParent(SurfaceManagerObject.transform);
+
+
+				Terrain terrain = UnityTerrain.GetComponent<Terrain>();
+				terrain.castShadows = true;
+				terrain.heightmapPixelError = 6;
+				terrain.materialType = Terrain.MaterialType.Custom;
+				terrain.materialTemplate = Settings.TerrainMaterial;
+				terrain.treeBillboardDistance = Settings.TreeBillBoardDistance;
+				terrain.treeDistance = Settings.TreeRenderDistance;
+				terrain.detailObjectDistance = Settings.DetailRenderDistance;
+				terrain.heightmapPixelError = 12;
+				terrain.castShadows = true;
+				terrain.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.BlendProbesAndSkybox;
+
+				UnityTerrain.transform.position = TerrainPos;
+
+				UnityTerrain.SetActive(true);
+				FlushStep = 2;
+
+				yield return FlushStep;
 			}
-			UnityTerrain = Terrain.CreateTerrainGameObject(ChunkTerrainData);
-			UnityTerrain.layer = 8;
-			UnityTerrain.name = string.Format("TerrainChunk at {0} LOD:{1}", GridCoords, LOD);
 
-			GameObject SurfaceManagerObject = GameObject.Find("Surface Manager");
-			if (SurfaceManagerObject != null)
-				UnityTerrain.transform.SetParent(SurfaceManagerObject.transform);
-
-
-			Terrain terrain = UnityTerrain.GetComponent<Terrain>();
-			terrain.castShadows = true;
-			terrain.heightmapPixelError = 6;
-			terrain.materialType = Terrain.MaterialType.Custom;
-			terrain.materialTemplate = Settings.TerrainMaterial;
-			terrain.treeBillboardDistance = Settings.TreeBillBoardDistance;
-			terrain.treeDistance = Settings.TreeRenderDistance;
-			terrain.detailObjectDistance = Settings.DetailRenderDistance;
-			terrain.heightmapPixelError = 12;
-			terrain.castShadows = true;
-			terrain.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.BlendProbesAndSkybox;
-
-			UnityTerrain.transform.position = TerrainPos;
-
-			UnityTerrain.SetActive(true);
-			FlushStep = 2;
-			yield return string.Format("Flushed new Terrain at {0}, LOD {1}", GridCoords, LOD);
-		}
-
-		if (FlushStep < 3)
-		{
-			Terrain terrain = UnityTerrain.GetComponent<Terrain>();
-			// Generate items
-
-			FlushStep = 3;
-			if (Settings.TerrainLOD[LOD].HasPowerups)
+			if (FlushStep < 3)
 			{
-				GenerateItems(terrain);
+				Terrain terrain = UnityTerrain.GetComponent<Terrain>();
+				// Generate items
 
-				yield return string.Format("Flushed Items at {0}, LOD {1}", GridCoords, LOD);
-			}
-		}
-		if (FlushStep < 4)
-		{
-
-			FlushStep = 4;
-			// Flush Gras
-			if (Settings.TerrainLOD[LOD].hasGras)
-			{
-				grasField.Flush();
-				yield return string.Format("Flushed grassfield at {0}, LOD {1}", GridCoords, LOD);
-			}
-		}
-
-		if (FlushStep < 5)
-		{
-			FlushedJumps = 0;
-			// Cleanup
-			Heights = new float[0, 0];
-			Moisture = new float[0, 0];
-			Normals = new Vector3[0, 0];
-			SplatmapData = new float[0, 0, 0];
+				FlushStep = 3;
+				if (Settings.TerrainLOD[LOD].HasPowerups)
+				{
+					GenerateItems(terrain);
 
 
-			// Debug the Placement of WayVertices on Chunk edges.
-			/**
-			RaycastHit hit;
-			Vector3 RayStart = new Vector3(0, Settings.Depth, 0);
-			foreach(var vertexEdge in this.paths.Hub.vertices)
-			{
-				RayStart.x = vertexEdge.WPos.x;
-				RayStart.z = vertexEdge.WPos.y;
-				if (Physics.Raycast(RayStart, -Vector3.up, out hit, Settings.Depth, 1 << 8, QueryTriggerInteraction.Ignore)) {
-					GameObject vertexMarker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-					vertexMarker.transform.position = hit.point;
-					vertexMarker.transform.localScale += new Vector3(2, 3, 2);
-					int count = vertexEdge.GetPaths().Count;
-					vertexMarker.transform.name = string.Format("Vertex of Grid {0}(LOD {4}), at {1}(local), {2}global has {3} native paths", GridCoords, vertexEdge, hit.point, count, LOD);
+					yield return FlushStep;
 				}
 			}
-			**/
-			Synchronize(SM);
-			FlushStep = 5;
-			yield return string.Format("Finished flushing terrain at {0}, LOD {1}", GridCoords, LOD);
-		}
-		isFinished = true;
-	}
+			if (FlushStep < 4)
+			{
 
-	public PathFinder GetPathFinder()
-	{
-		return paths;
+				FlushStep = 4;
+				// Flush Gras
+				if (Settings.TerrainLOD[LOD].hasGras)
+				{
+					grasField.Flush();
+					yield return FlushStep;
+				}
+			}
+
+			if (FlushStep < 5)
+			{
+				FlushedJumps = 0;
+				// Cleanup
+				Heights = new float[0, 0];
+				Moisture = new float[0, 0];
+				Normals = new Vector3[0, 0];
+				SplatmapData = new float[0, 0, 0];
+
+
+				// Debug the Placement of WayVertices on Chunk edges.
+				/**
+				RaycastHit hit;
+				Vector3 RayStart = new Vector3(0, Settings.Depth, 0);
+				foreach(var vertexEdge in this.paths.Hub.vertices)
+				{
+					RayStart.x = vertexEdge.WPos.x;
+					RayStart.z = vertexEdge.WPos.y;
+					if (Physics.Raycast(RayStart, -Vector3.up, out hit, Settings.Depth, 1 << 8, QueryTriggerInteraction.Ignore)) {
+						GameObject vertexMarker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+						vertexMarker.transform.position = hit.point;
+						vertexMarker.transform.localScale += new Vector3(2, 3, 2);
+						int count = vertexEdge.GetPaths().Count;
+						vertexMarker.transform.name = string.Format("Vertex of Grid {0}(LOD {4}), at {1}(local), {2}global has {3} native paths", GridCoords, vertexEdge, hit.point, count, LOD);
+					}
+				}
+				**/
+				Synchronize(SM);
+				FlushStep = 5;
+				yield return FlushStep;
+			}
+			isFinished = true;
+		}
+
+		public PathFinder GetPathFinder()
+		{
+			return paths;
+		}
 	}
-}

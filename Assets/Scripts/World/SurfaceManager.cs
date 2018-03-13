@@ -41,11 +41,15 @@ public class SurfaceManager : MonoBehaviour
 			StopCoroutine("FlushJumps");
 			StopCoroutine("TerrainFlusher");
 			var oldChunk = Chunks.Get(tile.GridCoords);
+
+			Chunks = Chunks.PutAndGrow(ref success, tile.GridCoords, 0, tile);
 			if (oldChunk != null)
 			{
+				Chunks.Remove(oldChunk);
+				oldChunk.contents.Unload();
+				// old code chunk needs to be unloaded 
 				oldChunk.contents.needsUnload = true;
 			}
-			Chunks = Chunks.PutAndGrow(ref success, tile.GridCoords, 0, tile);
 
 			// TODO: Error checking
 			ChunkCount++;
@@ -129,10 +133,6 @@ public class SurfaceManager : MonoBehaviour
 		foreach (var data in Chunks)
 		{
 			if ((data.location - offset).magnitude >= 2)
-			{
-				toBeRemoved.Add(data);
-			}
-			else if (data.contents.needsUnload)
 			{
 				toBeRemoved.Add(data);
 			}
@@ -243,9 +243,8 @@ public class SurfaceManager : MonoBehaviour
 			{
 				Stopwatch stopWatch = new Stopwatch();
 				stopWatch.Start();
-				foreach (string msg in chunk.Flush(this))
+				foreach (int lvl in chunk.Flush(this))
 				{
-					UnityEngine.Debug.Log(msg);
 					yield return new WaitForEndOfFrame();
 				}
 				yield return new WaitForEndOfFrame();
