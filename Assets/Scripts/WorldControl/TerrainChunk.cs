@@ -49,6 +49,7 @@ public class TerrainChunk
 
 	public TerrainChunk N, E, S, W;
 	private int FlushStep;
+	internal bool needsUnload;
 
 	public override int GetHashCode()
 	{
@@ -767,7 +768,7 @@ public class TerrainChunk
 		if (FlushStep < 1)
 		{
 
-			ChunkTerrainData = new TerrainData
+			ChunkTerrainData = new TerrainData()
 			{
 				heightmapResolution = Resolution,
 				size = new Vector3(Settings.Size, Settings.Depth, Settings.Size),
@@ -775,6 +776,7 @@ public class TerrainChunk
 				alphamapResolution = Resolution,
 				treePrototypes = GameSettings.TreeProtoTypes,
 				treeInstances = Trees.ToArray(),
+				baseMapResolution = 512,
 			};
 
 			ChunkTerrainData.SetDetailResolution(0, 8);
@@ -794,7 +796,8 @@ public class TerrainChunk
 			//ExportDebugImages();
 			if (UnityTerrain != null)
 			{
-				GameObject.Destroy(UnityTerrain.gameObject);
+				//GameObject.Destroy(UnityTerrain.gameObject);
+				Terrain.Destroy(UnityTerrain);
 			}
 			UnityTerrain = Terrain.CreateTerrainGameObject(ChunkTerrainData);
 			UnityTerrain.layer = 8;
