@@ -156,7 +156,7 @@ public class GameSettings
 	public Material TerrainMaterial;
 
 	public static TreePrototype[] TreeProtoTypes;
-	public static SplatPrototype[] SpatProtoTypes;
+	public static SplatPrototype[] SplatPrototypes;
 	public static DetailPrototype[] DetailPrototypes;
 
 	public float TreeBillBoardDistance;

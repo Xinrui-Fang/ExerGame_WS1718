@@ -48,6 +48,8 @@ public class TerrainChunk
 	public GrasField grasField;
 
 	public TerrainChunk N, E, S, W;
+	private int FlushStep;
+
 	public override int GetHashCode()
 	{
 		unchecked
@@ -140,6 +142,7 @@ public class TerrainChunk
 		Resolution = Settings.TerrainLOD[LOD].HeightmapResolution;
 		Objects = new QuadTree<ObjectData>(GetBoundary());
 		isFinished = false;
+		FlushStep = 0;
 		/**
 		Stopwatch stopWatch = new Stopwatch();
 		stopWatch.Start();
@@ -148,7 +151,7 @@ public class TerrainChunk
 		Heights = new float[Resolution, Resolution];
 		Normals = new Vector3[Resolution, Resolution];
 		Moisture = new float[Resolution, Resolution];
-		SplatmapData = new float[Resolution, Resolution, GameSettings.SpatProtoTypes.Length];
+		SplatmapData = new float[Resolution, Resolution, GameSettings.SplatPrototypes.Length];
 		;
 		TerrainEdges = new TerrainChunkEdge[4]
 		{
@@ -300,10 +303,10 @@ public class TerrainChunk
 	public void CheckNeighbors()
 	{
 		UnityTerrain.GetComponent<Terrain>().SetNeighbors(
-			W != null && W.Resolution == this.Resolution ? W.UnityTerrain.GetComponent<Terrain>() : null,
-			N != null && N.Resolution == this.Resolution ? N.UnityTerrain.GetComponent<Terrain>() : null,
-			E != null && E.Resolution == this.Resolution ? E.UnityTerrain.GetComponent<Terrain>() : null,
-			S != null && S.Resolution == this.Resolution ? S.UnityTerrain.GetComponent<Terrain>() : null
+			W != null && W.Resolution == this.Resolution && W.UnityTerrain != null ? W.UnityTerrain.GetComponent<Terrain>() : null,
+			N != null && N.Resolution == this.Resolution && N.UnityTerrain != null ? N.UnityTerrain.GetComponent<Terrain>() : null,
+			E != null && E.Resolution == this.Resolution && E.UnityTerrain != null ? E.UnityTerrain.GetComponent<Terrain>() : null,
+			S != null && S.Resolution == this.Resolution && S.UnityTerrain != null ? S.UnityTerrain.GetComponent<Terrain>() : null
 		);
 	}
 
@@ -690,14 +693,14 @@ public class TerrainChunk
 			}
 		}
 	}
-	
+
 	private void DestroyItems()
 	{
 		for (int i = 0; i < Items.Count; i++)
 		{
 			GameObject.Destroy(Items[i]);
 		}
-		
+
 		Items = new List<GameObject>();
 	}
 
@@ -721,7 +724,7 @@ public class TerrainChunk
 
 					var o = UnityEngine.Object.Instantiate(Settings.ItemTypes[rnd.Next(0, Settings.ItemTypes.Length)].Appearance);
 					o.transform.position = position;
-					
+
 					Items.Add(o);
 				}
 				iter = iter.Next;
@@ -756,93 +759,125 @@ public class TerrainChunk
 		}
 	}
 
-	public void Flush(SurfaceManager SM)
+	public IEnumerable<string> Flush(SurfaceManager SM)
 	{
-		//ExportDebugImages();
-		if (UnityTerrain != null)
+		if (FlushStep < 1)
 		{
-			GameObject.Destroy(UnityTerrain.gameObject);
+
+			ChunkTerrainData = new TerrainData
+			{
+				heightmapResolution = Resolution,
+				size = new Vector3(Settings.Size, Settings.Depth, Settings.Size),
+				splatPrototypes = GameSettings.SplatPrototypes,
+				alphamapResolution = Resolution,
+				treePrototypes = GameSettings.TreeProtoTypes,
+				treeInstances = Trees.ToArray(),
+			};
+
+			ChunkTerrainData.SetDetailResolution(0, 8);
+
+			ChunkTerrainData.SetHeights(0, 0, Heights);
+			ChunkTerrainData.SetAlphamaps(0, 0, SplatmapData);
+
+
+			Trees.Clear();
+			FlushStep = 1;
+
+			yield return string.Format("Prepare new TerrainData at {0}, LOD {1}", GridCoords, LOD);
 		}
 
-		ChunkTerrainData = new TerrainData
+		if (FlushStep < 2)
 		{
-			heightmapResolution = Resolution,
-			size = new Vector3(Settings.Size, Settings.Depth, Settings.Size),
-			splatPrototypes = GameSettings.SpatProtoTypes,
-			alphamapResolution = Resolution,
-			detailPrototypes = GameSettings.DetailPrototypes,
-			treePrototypes = GameSettings.TreeProtoTypes,
-			treeInstances = Trees.ToArray(),
-			thickness = 10f
-		};
+			//ExportDebugImages();
+			if (UnityTerrain != null)
+			{
+				GameObject.Destroy(UnityTerrain.gameObject);
+			}
+			UnityTerrain = Terrain.CreateTerrainGameObject(ChunkTerrainData);
+			UnityTerrain.layer = 8;
+			UnityTerrain.name = string.Format("TerrainChunk at {0} LOD:{1}", GridCoords, LOD);
 
-		ChunkTerrainData.SetDetailResolution(0, 8);
-		ChunkTerrainData.RefreshPrototypes();
-
-		ChunkTerrainData.SetHeights(0, 0, Heights);
-		ChunkTerrainData.SetAlphamaps(0, 0, SplatmapData);
-
-		Trees.Clear();
-
-		UnityTerrain = Terrain.CreateTerrainGameObject(ChunkTerrainData);
-		UnityTerrain.layer = 8;
-		UnityTerrain.name = string.Format("TerrainChunk at {0} LOD:{1}", GridCoords, LOD);
-
-		GameObject SurfaceManagerObject = GameObject.Find("Surface Manager");
-		if (SurfaceManagerObject != null)
-			UnityTerrain.transform.SetParent(SurfaceManagerObject.transform);
+			GameObject SurfaceManagerObject = GameObject.Find("Surface Manager");
+			if (SurfaceManagerObject != null)
+				UnityTerrain.transform.SetParent(SurfaceManagerObject.transform);
 
 
-		Terrain terrain = UnityTerrain.GetComponent<Terrain>();
-		terrain.castShadows = true;
-		terrain.heightmapPixelError = 6;
-		terrain.materialType = Terrain.MaterialType.Custom;
-		terrain.materialTemplate = Settings.TerrainMaterial;
-		terrain.treeBillboardDistance = Settings.TreeBillBoardDistance;
-		terrain.treeDistance = Settings.TreeRenderDistance;
-		terrain.detailObjectDistance = Settings.DetailRenderDistance;
-		terrain.heightmapPixelError = 12;
-		terrain.castShadows = true;
-		terrain.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.BlendProbesAndSkybox;
+			Terrain terrain = UnityTerrain.GetComponent<Terrain>();
+			terrain.castShadows = true;
+			terrain.heightmapPixelError = 6;
+			terrain.materialType = Terrain.MaterialType.Custom;
+			terrain.materialTemplate = Settings.TerrainMaterial;
+			terrain.treeBillboardDistance = Settings.TreeBillBoardDistance;
+			terrain.treeDistance = Settings.TreeRenderDistance;
+			terrain.detailObjectDistance = Settings.DetailRenderDistance;
+			terrain.heightmapPixelError = 12;
+			terrain.castShadows = true;
+			terrain.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.BlendProbesAndSkybox;
 
-		UnityTerrain.transform.position = TerrainPos;
+			UnityTerrain.transform.position = TerrainPos;
 
-		UnityTerrain.SetActive(true);
+			UnityTerrain.SetActive(true);
+			FlushStep = 2;
+			yield return string.Format("Flushed new Terrain at {0}, LOD {1}", GridCoords, LOD);
+		}
 
-		// Generate items
-		GenerateItems(terrain);
-
-		// Flush Gras
-		if (Settings.TerrainLOD[LOD].hasGras)
-			grasField.Flush();
-
-		FlushedJumps = 0;
-		// Cleanup
-		Heights = new float[0, 0];
-		Moisture = new float[0, 0];
-		Normals = new Vector3[0, 0];
-		SplatmapData = new float[0, 0, 0];
-
-
-		// Debug the Placement of WayVertices on Chunk edges.
-		/**
-		RaycastHit hit;
-		Vector3 RayStart = new Vector3(0, Settings.Depth, 0);
-		foreach(var vertexEdge in this.paths.Hub.vertices)
+		if (FlushStep < 3)
 		{
-			RayStart.x = vertexEdge.WPos.x;
-			RayStart.z = vertexEdge.WPos.y;
-			if (Physics.Raycast(RayStart, -Vector3.up, out hit, Settings.Depth, 1 << 8, QueryTriggerInteraction.Ignore)) {
-				GameObject vertexMarker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-				vertexMarker.transform.position = hit.point;
-				vertexMarker.transform.localScale += new Vector3(2, 3, 2);
-				int count = vertexEdge.GetPaths().Count;
-				vertexMarker.transform.name = string.Format("Vertex of Grid {0}(LOD {4}), at {1}(local), {2}global has {3} native paths", GridCoords, vertexEdge, hit.point, count, LOD);
+			Terrain terrain = UnityTerrain.GetComponent<Terrain>();
+			// Generate items
+
+			FlushStep = 3;
+			if (Settings.TerrainLOD[LOD].HasPowerups)
+			{
+				GenerateItems(terrain);
+
+				yield return string.Format("Flushed Items at {0}, LOD {1}", GridCoords, LOD);
 			}
 		}
-		**/
+		if (FlushStep < 4)
+		{
+
+			FlushStep = 4;
+			// Flush Gras
+			if (Settings.TerrainLOD[LOD].hasGras)
+			{
+				grasField.Flush();
+				yield return string.Format("Flushed grassfield at {0}, LOD {1}", GridCoords, LOD);
+			}
+		}
+
+		if (FlushStep < 5)
+		{
+			FlushedJumps = 0;
+			// Cleanup
+			Heights = new float[0, 0];
+			Moisture = new float[0, 0];
+			Normals = new Vector3[0, 0];
+			SplatmapData = new float[0, 0, 0];
+
+
+			// Debug the Placement of WayVertices on Chunk edges.
+			/**
+			RaycastHit hit;
+			Vector3 RayStart = new Vector3(0, Settings.Depth, 0);
+			foreach(var vertexEdge in this.paths.Hub.vertices)
+			{
+				RayStart.x = vertexEdge.WPos.x;
+				RayStart.z = vertexEdge.WPos.y;
+				if (Physics.Raycast(RayStart, -Vector3.up, out hit, Settings.Depth, 1 << 8, QueryTriggerInteraction.Ignore)) {
+					GameObject vertexMarker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+					vertexMarker.transform.position = hit.point;
+					vertexMarker.transform.localScale += new Vector3(2, 3, 2);
+					int count = vertexEdge.GetPaths().Count;
+					vertexMarker.transform.name = string.Format("Vertex of Grid {0}(LOD {4}), at {1}(local), {2}global has {3} native paths", GridCoords, vertexEdge, hit.point, count, LOD);
+				}
+			}
+			**/
+			Synchronize(SM);
+			FlushStep = 5;
+			yield return string.Format("Finished flushing terrain at {0}, LOD {1}", GridCoords, LOD);
+		}
 		isFinished = true;
-		Synchronize(SM);
 	}
 
 	public PathFinder GetPathFinder()

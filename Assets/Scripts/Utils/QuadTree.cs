@@ -187,56 +187,31 @@ namespace Assets.Utils
 			Data = new List<QuadTreeData<T>>(NodeCapacity);
 		}
 
-		// Removes all elements residing in the node at the given position
-		// Deletes only the lowest level! All upper nodes still exist!
-		public void Remove(Vector2 position)
+		/// <summary>
+		/// Removes all occurences of a given data object from the tree. 
+		/// (There can be more then one occurence if object lies on the edge of more then one subtree (e.g mid point of 4 quads))
+		/// </summary>
+		/// <param name="dataPoint">The object to delete. Retrieve it for example with Get</param>
+		/// <returns></returns>
+		public bool Remove(QuadTreeData<T> dataPoint)
 		{
-			QuadTree<T> parent = null;
-			var root = this;
-			while(root.NW != null 
-				&& root.NE != null 
-				&& root.SW != null 
-				&& root.SE != null)
+			if (!Boundary.ContainsPoint(dataPoint.location)) return false;
+			bool success = false;
+			if (Data.Contains(dataPoint))
 			{
-				parent = root;
-				if (root.NW != null && root.NW.Boundary.ContainsPoint(position))
-				{
-					root = root.NW;
-				}
-				else if (root.NE != null && root.NE.Boundary.ContainsPoint(position))
-				{
-					root = root.NE;
-				}
-				else if (root.SW != null && root.SW.Boundary.ContainsPoint(position))
-				{
-					root = root.SW;
-				}
-				else if (root.SE != null && root.SE.Boundary.ContainsPoint(position))
-				{
-					root = root.SE;
-				}
+				Data.Remove(dataPoint);
+				success = true;
 			}
-			
-			if(parent != null)
-			{
-				if (parent.NW == root)
-				{
-					parent.NW = null;
-				}
-				else if (parent.NE == root)
-				{
-					parent.NE = null;
-				}
-				else if (parent.SW == root)
-				{
-					parent.SW = null;
-				}
-				else if (parent.SE == root)
-				{
-					parent.SE = null;
-				}
-				
-			}
+			if (NW != null)
+				success |= NW.Remove(dataPoint);
+			if (NE != null)
+				success |= NE.Remove(dataPoint);
+			if (SW != null)
+				success |= SW.Remove(dataPoint);
+			if (SE != null)
+				success |= SE.Remove(dataPoint);
+
+			return success;
 		}
 		
 		public bool Put(Vector2 location, QuadDataType type, T label)

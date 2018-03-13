@@ -3,6 +3,7 @@ using System.Threading;
 using Assets.Utils;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 public class SurfaceManager : MonoBehaviour
 {
@@ -16,8 +17,12 @@ public class SurfaceManager : MonoBehaviour
 	int ChunkCount = 0;
 	public int JumpsPerFrame = 5;
 	public Vector3 PlayerPos;
-	
+
 	private Vector2Int CurrentPlayerTile = new Vector2Int(0, 0); // The tile on which the player stood in the last frame.
+	public bool GameHasStarted;
+	public bool GameReady;
+
+	public TerrainData TerrainDataTemplate;
 
 	void Build(TerrainChunk tile, Vector2Int offset)
 	{
@@ -31,56 +36,37 @@ public class SurfaceManager : MonoBehaviour
 		var tile = FinalizationQueue.TryPop();
 		if (tile != null)
 		{
-			tile.Flush(this);
-
 			bool success = false;
 
 			StopCoroutine("FlushJumps");
+			StopCoroutine("TerrainFlusher");
 			Chunks = Chunks.PutAndGrow(ref success, tile.GridCoords, 0, tile);
 
 			// TODO: Error checking
 			ChunkCount++;
 			Assets.Utils.Debug.Log(string.Format("We now have {0} chunks loaded.", ChunkCount));
 
-			if (tile.GridCoords.x == 0 && tile.GridCoords.y == 0)
-			{
-				if (!success) Assets.Utils.Debug.Log("WTF!!!", LOGLEVEL.ERROR);
-				GameObject.Find("Camera").SetActive(false);
-
-				Settings.MainObject.GetComponent<BikeBase>().Init();
-				Settings.MainObject.GetComponent<BikeBase>().enabled = true;
-				Settings.MainObject.GetComponent<PlacementCorrection>().enabled = true;
-				Settings.MainObject.GetComponent<BikeAnimation>().enabled = true;
-				Settings.MainObject.SetActive(true);
-
-				foreach (GameObject AI in Settings.AIs)
-				{
-					AI.GetComponent<BikeBase>().Init();
-					AI.GetComponent<BikeBase>().enabled = true;
-					AI.GetComponent<PlacementCorrection>().enabled = true;
-					AI.GetComponent<BikeAnimation>().enabled = true;
-					AI.SetActive(true);
-				}
-			}
 			StartCoroutine("FlushJumps");
+			StartCoroutine("TerrainFlusher");
 		}
-		
-		
+
+
 		if (Input.GetKeyDown("space"))
 		{
 			UnloadAt(new Vector2Int(1, 1));
 		}
-		
+
 		// Extend!
-		Vector2Int playerPosition = new Vector2Int((int) PlayerPos.x / Settings.Size, (int) PlayerPos.z / Settings.Size);
-		if(playerPosition != CurrentPlayerTile)
+		Vector2Int playerPosition = new Vector2Int((int)PlayerPos.x / Settings.Size, (int)PlayerPos.z / Settings.Size);
+		if (playerPosition != CurrentPlayerTile)
 		{
 			StopCoroutine("FlushJumps");
+			StopCoroutine("TerrainFlusher");
 			UnloadAt(playerPosition);
 			ExtendAt(playerPosition);
-			StartCoroutine("FlushJumps");
-
 			CurrentPlayerTile = playerPosition;
+			StartCoroutine("FlushJumps");
+			StartCoroutine("TerrainFlusher");
 		}
 	}
 
@@ -131,30 +117,30 @@ public class SurfaceManager : MonoBehaviour
 				terrain.Build(absolutePos, Settings.MainObject.transform.position);
 				terrain.Flush(this);
 				**/
-				 ThreadPool.QueueUserWorkItem((object item) => Build((TerrainChunk)item, absolutePos), new TerrainChunk(Settings));
+				ThreadPool.QueueUserWorkItem((object item) => Build((TerrainChunk)item, absolutePos), new TerrainChunk(Settings));
 			}
 		}
 	}
-	
+
 	public void UnloadAt(Vector2Int offset)
 	{
 		List<QuadTreeData<TerrainChunk>> toBeRemoved = new List<QuadTreeData<TerrainChunk>>();
-		foreach(var data in Chunks)
+		foreach (var data in Chunks)
 		{
-			if((data.location - offset).magnitude >= 2)
+			if ((data.location - offset).magnitude >= 2)
 			{
 				toBeRemoved.Add(data);
 			}
 		}
-		
-		foreach(var data in toBeRemoved)
+
+		foreach (var data in toBeRemoved)
 		{
 			// FIXME: Infinite loop!
-			Chunks.Remove(data.location);
+			Chunks.Remove(data);
 			data.contents.Unload();
 		}
 	}
-	
+
 	void OnEnable() // TODO Maybe even when player moves?
 	{
 		GameObject DummyTerrainObj = GameObject.Find("Terrain Template");
@@ -163,32 +149,38 @@ public class SurfaceManager : MonoBehaviour
 		DummyTerrain.terrainData.size = new Vector3(.01f, .01f, .01f);
 		DummyTerrain.terrainData.heightmapResolution = 0;
 		GameSettings.DetailPrototypes = DummyTerrain.terrainData.detailPrototypes;
-		GameSettings.SpatProtoTypes = DummyTerrain.terrainData.splatPrototypes;
+		GameSettings.SplatPrototypes = DummyTerrain.terrainData.splatPrototypes;
 		GameSettings.TreeProtoTypes = DummyTerrain.terrainData.treePrototypes;
-		PlayerPrefs.SetString("GameSeed", "");
+		//PlayerPrefs.SetString("GameSeed", "");
 		Settings.Prepare();
+
 
 		Vector2Int playerPos = new Vector2Int(0, 0);
 		Settings.MainObject.transform.position.Set(2.5f * Settings.Size, Settings.Depth + 10f, 2.5f * Settings.Size);
 
 		ExtendAt(playerPos);
 		StartCoroutine("FlushJumps");
+		StartCoroutine("TerrainFlusher");
+		StartCoroutine("IsReady");
 	}
 
-	IEnumerator FlushJumps() {
+	IEnumerator FlushJumps()
+	{
 		GameObject ramp = transform.Find("Platform Template").gameObject;
-		while(true) {
+		while (true)
+		{
 			int counter = 0;
-			
-			foreach (QuadTreeData<TerrainChunk> chunkdata in Chunks) {
+
+			foreach (QuadTreeData<TerrainChunk> chunkdata in Chunks)
+			{
 				TerrainChunk chunk = chunkdata.contents;
 				var JumpList = chunk.JumpList;
-				if (JumpList == null)
+				if (JumpList == null || !chunk.isFinished)
 				{
 					yield return new WaitForEndOfFrame();
 					continue;
 				}
-				
+
 				var terrainData = chunk.UnityTerrain.GetComponent<Terrain>().terrainData;
 				for (int i = chunk.FlushedJumps; i < JumpList.Count; i++)
 				{
@@ -197,7 +189,7 @@ public class SurfaceManager : MonoBehaviour
 					GameObject LittleRamp = GameObject.Instantiate(ramp);
 					Vector3 JumpDir = -(jump.LandingPos - jump.Pos);
 					float refDot = Vector3.Dot(JumpDir, JumpDir);
-					Vector3 Forward = Vector3.forward * (Vector3.Dot(Vector3.forward, JumpDir)/refDot);
+					Vector3 Forward = Vector3.forward * (Vector3.Dot(Vector3.forward, JumpDir) / refDot);
 					Vector3 Left = Vector3.left * (Vector3.Dot(Vector3.left, JumpDir) / refDot);
 					Vector3 LookRot = (Forward + Left).normalized;
 					LittleRamp.transform.rotation = Quaternion.LookRotation(LookRot, TerrainNormals);
@@ -232,7 +224,79 @@ public class SurfaceManager : MonoBehaviour
 			}
 			yield return new WaitForEndOfFrame();
 		}
-	} 
+	}
+
+	IEnumerator TerrainFlusher()
+	{
+		foreach (QuadTreeData<TerrainChunk> chunkdata in Chunks)
+		{
+			TerrainChunk chunk = chunkdata.contents;
+			if (!chunk.isFinished)
+			{
+				Stopwatch stopWatch = new Stopwatch();
+				stopWatch.Start();
+				foreach (string msg in chunk.Flush(this))
+				{
+					stopWatch.Stop();
+					string ext = msg + string.Format(" took {0} ms", stopWatch.ElapsedMilliseconds);
+					UnityEngine.Debug.Log(ext);
+					stopWatch.Reset();
+					stopWatch.Start();
+					//yield return new WaitForEndOfFrame();
+				}
+				stopWatch.Stop();
+				yield return new WaitForEndOfFrame();
+			}
+		}
+	}
+
+	IEnumerator IsReady()
+	{
+		Vector2Int start = new Vector2Int(0, 0);
+		TerrainChunk tile = null;
+		while (true)
+		{
+			if (tile == null)
+			{
+				tile = GetTile(start);
+			}
+			if (tile != null)
+			{
+				GameReady = tile.isFinished;
+			}
+			yield return new WaitForEndOfFrame();
+			if (GameReady) break;
+		}
+		StartGame();
+	}
+
+	public bool StartGame()
+	{
+
+		if (!GameReady) return false;
+		var tile = GetTile(new Vector2Int(0, 0));
+		if (tile == null || !tile.isFinished) return false;
+		if (tile.GridCoords.x == 0 && tile.GridCoords.y == 0)
+		{
+			GameObject.Find("Camera").SetActive(false);
+
+			Settings.MainObject.GetComponent<BikeBase>().Init();
+			Settings.MainObject.GetComponent<BikeBase>().enabled = true;
+			Settings.MainObject.GetComponent<PlacementCorrection>().enabled = true;
+			Settings.MainObject.GetComponent<BikeAnimation>().enabled = true;
+			Settings.MainObject.SetActive(true);
+
+			foreach (GameObject AI in Settings.AIs)
+			{
+				AI.GetComponent<BikeBase>().Init();
+				AI.GetComponent<BikeBase>().enabled = true;
+				AI.GetComponent<PlacementCorrection>().enabled = true;
+				AI.GetComponent<BikeAnimation>().enabled = true;
+				AI.SetActive(true);
+			}
+		}
+		return true;
+	}
 
 	public TerrainChunk GetTile(Vector2Int pos)
 	{
