@@ -40,6 +40,11 @@ public class SurfaceManager : MonoBehaviour
 
 			StopCoroutine("FlushJumps");
 			StopCoroutine("TerrainFlusher");
+			var oldChunk = Chunks.Get(tile.GridCoords);
+			if (oldChunk != null)
+			{
+				oldChunk.contents.needsUnload = true;
+			}
 			Chunks = Chunks.PutAndGrow(ref success, tile.GridCoords, 0, tile);
 
 			// TODO: Error checking
@@ -48,12 +53,6 @@ public class SurfaceManager : MonoBehaviour
 
 			StartCoroutine("FlushJumps");
 			StartCoroutine("TerrainFlusher");
-		}
-
-
-		if (Input.GetKeyDown("space"))
-		{
-			UnloadAt(new Vector2Int(1, 1));
 		}
 
 		// Extend!
@@ -109,7 +108,8 @@ public class SurfaceManager : MonoBehaviour
 			//Vector2Int windowPos = absolutePos + WindowOffset;
 
 			// Generate tile, if it does not exist yet
-			if (Chunks.Get(absolutePos) == null)
+			var tile = Chunks.Get(absolutePos);
+			if ((tile == null || tile.contents == null) || (tile.contents.isFinished && tile.contents.LOD != Settings.RetrieveLOD(tile.contents.GridCoords, Settings.MainObject.transform.position)))
 			{
 				// swap the commented with the uncommented if some exception is not propagating to the maini thread.
 				/**
@@ -117,6 +117,7 @@ public class SurfaceManager : MonoBehaviour
 				terrain.Build(absolutePos, Settings.MainObject.transform.position);
 				terrain.Flush(this);
 				**/
+
 				ThreadPool.QueueUserWorkItem((object item) => Build((TerrainChunk)item, absolutePos), new TerrainChunk(Settings));
 			}
 		}
@@ -128,6 +129,10 @@ public class SurfaceManager : MonoBehaviour
 		foreach (var data in Chunks)
 		{
 			if ((data.location - offset).magnitude >= 2)
+			{
+				toBeRemoved.Add(data);
+			}
+			else if (data.contents.needsUnload)
 			{
 				toBeRemoved.Add(data);
 			}
@@ -154,9 +159,8 @@ public class SurfaceManager : MonoBehaviour
 		//PlayerPrefs.SetString("GameSeed", "");
 		Settings.Prepare();
 
-
 		Vector2Int playerPos = new Vector2Int(0, 0);
-		Settings.MainObject.transform.position.Set(2.5f * Settings.Size, Settings.Depth + 10f, 2.5f * Settings.Size);
+		Settings.MainObject.transform.position.Set(0, Settings.Depth + 10f, 0);
 
 		ExtendAt(playerPos);
 		StartCoroutine("FlushJumps");
@@ -237,14 +241,9 @@ public class SurfaceManager : MonoBehaviour
 				stopWatch.Start();
 				foreach (string msg in chunk.Flush(this))
 				{
-					stopWatch.Stop();
-					string ext = msg + string.Format(" took {0} ms", stopWatch.ElapsedMilliseconds);
-					UnityEngine.Debug.Log(ext);
-					stopWatch.Reset();
-					stopWatch.Start();
-					//yield return new WaitForEndOfFrame();
+					UnityEngine.Debug.Log(msg);
+					yield return new WaitForEndOfFrame();
 				}
-				stopWatch.Stop();
 				yield return new WaitForEndOfFrame();
 			}
 		}
