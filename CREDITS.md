@@ -8,3 +8,4 @@
 | Casual Game Sounds | Dustyroom | CC Zero | http://dustyroom.com/free-casual-game-sounds/ | https://creativecommons.org/publicdomain/zero/1.0/ |
 | Unity Samples : UI | Font by IsurusLabs | Public Domain | https://unity3d.com/ |
 | Downhill background picture | Gjin Attribution nedich | CC0 | https://wallpaperdata.com/mountain-bike-wallpaper.html/beautiful-mountain-bike-wallpaper-1920x1080-wtg20049537?lang=fy |
+| Character Suit |Punkduck | CC-BY - Creative Commons Attribution | http://www.makehumancommunity.org/clothes/bicycle_helmet_time_trial_aero_helmet.html |
