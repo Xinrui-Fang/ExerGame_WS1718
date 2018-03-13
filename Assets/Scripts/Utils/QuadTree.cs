@@ -187,6 +187,58 @@ namespace Assets.Utils
 			Data = new List<QuadTreeData<T>>(NodeCapacity);
 		}
 
+		// Removes all elements residing in the node at the given position
+		// Deletes only the lowest level! All upper nodes still exist!
+		public void Remove(Vector2 position)
+		{
+			QuadTree<T> parent = null;
+			var root = this;
+			while(root.NW != null 
+				&& root.NE != null 
+				&& root.SW != null 
+				&& root.SE != null)
+			{
+				parent = root;
+				if (root.NW != null && root.NW.Boundary.ContainsPoint(position))
+				{
+					root = root.NW;
+				}
+				else if (root.NE != null && root.NE.Boundary.ContainsPoint(position))
+				{
+					root = root.NE;
+				}
+				else if (root.SW != null && root.SW.Boundary.ContainsPoint(position))
+				{
+					root = root.SW;
+				}
+				else if (root.SE != null && root.SE.Boundary.ContainsPoint(position))
+				{
+					root = root.SE;
+				}
+			}
+			
+			if(parent != null)
+			{
+				if (parent.NW == root)
+				{
+					parent.NW = null;
+				}
+				else if (parent.NE == root)
+				{
+					parent.NE = null;
+				}
+				else if (parent.SW == root)
+				{
+					parent.SW = null;
+				}
+				else if (parent.SE == root)
+				{
+					parent.SE = null;
+				}
+				
+			}
+		}
+		
 		public bool Put(Vector2 location, QuadDataType type, T label)
 		{
 			return Put(new QuadTreeData<T>(location, type, label));
@@ -276,6 +328,7 @@ namespace Assets.Utils
 					return dataPoint;
 				}
 			}
+			
 			QuadTreeData<T> finding;
 			if (NW != null && NW.Boundary.ContainsPoint(position))
 			{

@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Threading;
 using Assets.Utils;
 using System.Collections;
+using System.Collections.Generic;
 
 public class SurfaceManager : MonoBehaviour
 {
@@ -15,6 +16,8 @@ public class SurfaceManager : MonoBehaviour
 	int ChunkCount = 0;
 	public int JumpsPerFrame = 5;
 	public Vector3 PlayerPos;
+	
+	private Vector2Int CurrentPlayerTile = new Vector2Int(0, 0); // The tile on which the player stood in the last frame.
 
 	void Build(TerrainChunk tile, Vector2Int offset)
 	{
@@ -60,6 +63,24 @@ public class SurfaceManager : MonoBehaviour
 				}
 			}
 			StartCoroutine("FlushJumps");
+		}
+		
+		
+		if (Input.GetKeyDown("space"))
+		{
+			UnloadAt(new Vector2Int(1, 1));
+		}
+		
+		// Extend!
+		Vector2Int playerPosition = new Vector2Int((int) PlayerPos.x / Settings.Size, (int) PlayerPos.z / Settings.Size);
+		if(playerPosition != CurrentPlayerTile)
+		{
+			StopCoroutine("FlushJumps");
+			UnloadAt(playerPosition);
+			ExtendAt(playerPosition);
+			StartCoroutine("FlushJumps");
+
+			CurrentPlayerTile = playerPosition;
 		}
 	}
 
@@ -114,6 +135,26 @@ public class SurfaceManager : MonoBehaviour
 			}
 		}
 	}
+	
+	public void UnloadAt(Vector2Int offset)
+	{
+		List<QuadTreeData<TerrainChunk>> toBeRemoved = new List<QuadTreeData<TerrainChunk>>();
+		foreach(var data in Chunks)
+		{
+			if((data.location - offset).magnitude >= 2)
+			{
+				toBeRemoved.Add(data);
+			}
+		}
+		
+		foreach(var data in toBeRemoved)
+		{
+			// FIXME: Infinite loop!
+			Chunks.Remove(data.location);
+			data.contents.Unload();
+		}
+	}
+	
 	void OnEnable() // TODO Maybe even when player moves?
 	{
 		GameObject DummyTerrainObj = GameObject.Find("Terrain Template");
@@ -138,6 +179,7 @@ public class SurfaceManager : MonoBehaviour
 		GameObject ramp = transform.Find("Platform Template").gameObject;
 		while(true) {
 			int counter = 0;
+			
 			foreach (QuadTreeData<TerrainChunk> chunkdata in Chunks) {
 				TerrainChunk chunk = chunkdata.contents;
 				var JumpList = chunk.JumpList;
@@ -146,6 +188,7 @@ public class SurfaceManager : MonoBehaviour
 					yield return new WaitForEndOfFrame();
 					continue;
 				}
+				
 				var terrainData = chunk.UnityTerrain.GetComponent<Terrain>().terrainData;
 				for (int i = chunk.FlushedJumps; i < JumpList.Count; i++)
 				{

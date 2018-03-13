@@ -41,6 +41,7 @@ public class TerrainChunk
 
 	public List<TreeInstance> Trees { get; private set; }
 	internal List<JumpData> JumpList { get; private set; }
+	internal List<GameObject> Items { get; private set; }
 	public int LOD { get; private set; }
 
 	public bool isFinished = false;
@@ -647,6 +648,7 @@ public class TerrainChunk
 		}
 		this.UnityTerrain.SetActive(false);
 		DestroyJumps();
+		DestroyItems();
 		GameObject.Destroy(this.UnityTerrain);
 	}
 
@@ -688,9 +690,21 @@ public class TerrainChunk
 			}
 		}
 	}
+	
+	private void DestroyItems()
+	{
+		for (int i = 0; i < Items.Count; i++)
+		{
+			GameObject.Destroy(Items[i]);
+		}
+		
+		Items = new List<GameObject>();
+	}
+
 
 	private void GenerateItems(Terrain terrain)
 	{
+		Items = new List<GameObject>();
 		System.Random rnd = new System.Random();
 		for (int i = 0; i < paths.paths.Count; i++)
 		{
@@ -707,6 +721,8 @@ public class TerrainChunk
 
 					var o = UnityEngine.Object.Instantiate(Settings.ItemTypes[rnd.Next(0, Settings.ItemTypes.Length)].Appearance);
 					o.transform.position = position;
+					
+					Items.Add(o);
 				}
 				iter = iter.Next;
 			}
