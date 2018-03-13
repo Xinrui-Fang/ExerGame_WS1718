@@ -24,8 +24,8 @@ GameObject:
   - component: {fileID: 65909418529637798}
   - component: {fileID: 114033711168624584}
   - component: {fileID: 54727325184883776}
-  - component: {fileID: 114867308238426214}
   - component: {fileID: 82422811265094806}
+  - component: {fileID: 114708344773743736}
   m_Layer: 0
   m_Name: SpeedBoost
   m_TagString: Item
@@ -299,7 +299,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Speed: 45
---- !u!114 &114867308238426214
+--- !u!114 &114708344773743736
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -307,9 +307,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1185015552148328}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bd93d5ad3f9754586b68f1d30bcdaec8, type: 3}
+  m_Script: {fileID: 11500000, guid: b3b1fa4d4c5294ce7a6497ba216e82d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   visibleMesh: {fileID: 1778381838328876}
-  lifespan: 10
-  Multiplier: 1.1
+  lifespan: 2
+  Multiplier: 1.5
