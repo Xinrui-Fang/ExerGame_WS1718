@@ -11,7 +11,7 @@ public class SurfaceManager : MonoBehaviour
 	public GameSettings Settings;
 
 	// Contains tiles that need to be finalized on the main thread!
-	ConcurrentQueue<TerrainChunk> FinalizationQueue = new ConcurrentQueue<TerrainChunk>(24);
+	ConcurrentQueue<TerrainChunk> FinalizationQueue = new ConcurrentQueue<TerrainChunk>(32);
 	QuadTree<TerrainChunk> Chunks = new QuadTree<TerrainChunk>(new RectangleBound(new Vector2(0, 0), 5));
 
 	int ChunkCount = 0;
@@ -48,12 +48,6 @@ public class SurfaceManager : MonoBehaviour
 
 			StartCoroutine("FlushJumps");
 			StartCoroutine("TerrainFlusher");
-		}
-
-
-		if (Input.GetKeyDown("space"))
-		{
-			UnloadAt(new Vector2Int(1, 1));
 		}
 
 		// Extend!
@@ -169,8 +163,6 @@ public class SurfaceManager : MonoBehaviour
 		GameObject ramp = transform.Find("Platform Template").gameObject;
 		while (true)
 		{
-			int counter = 0;
-
 			foreach (QuadTreeData<TerrainChunk> chunkdata in Chunks)
 			{
 				TerrainChunk chunk = chunkdata.contents;
@@ -186,8 +178,10 @@ public class SurfaceManager : MonoBehaviour
 				{
 					var jump = JumpList[i];
 					var TerrainNormals = terrainData.GetInterpolatedNormal(jump.Pos.x, jump.Pos.y);
+					
 					GameObject LittleRamp = GameObject.Instantiate(ramp);
 					Vector3 JumpDir = -(jump.LandingPos - jump.Pos);
+					
 					float refDot = Vector3.Dot(JumpDir, JumpDir);
 					Vector3 Forward = Vector3.forward * (Vector3.Dot(Vector3.forward, JumpDir) / refDot);
 					Vector3 Left = Vector3.left * (Vector3.Dot(Vector3.left, JumpDir) / refDot);
@@ -195,6 +189,7 @@ public class SurfaceManager : MonoBehaviour
 					LittleRamp.transform.rotation = Quaternion.LookRotation(LookRot, TerrainNormals);
 					LittleRamp.transform.position = jump.Pos;
 					RaycastHit HitInfo;
+					
 					if (Physics.Raycast(
 							LittleRamp.transform.position + TerrainNormals * 10f,
 							-Vector3.up,
@@ -207,17 +202,20 @@ public class SurfaceManager : MonoBehaviour
 						LittleRamp.transform.position = HitInfo.point;
 						LittleRamp.transform.up = HitInfo.normal;
 					}
+					
+					
 					//LittleRamp.transform.position += LittleRamp.transform.right * -.5f;
 					LittleRamp.transform.parent = chunk.UnityTerrain.transform;
 					LittleRamp.transform.name = string.Format("Jump {0}", i);
 					jump.Ramp = LittleRamp;
+					
 					UnityEngine.Debug.DrawLine(jump.Pos, jump.RayTarget, Color.magenta, 1000f, false);
 					UnityEngine.Debug.DrawLine(jump.RayTarget, jump.LandingPos, Color.magenta, 1000f, false);
+					
 					chunk.FlushedJumps++;
-					counter++;
-					if (counter == JumpsPerFrame)
+
+					if ((i % JumpsPerFrame) == 0)
 					{
-						counter = 0;
 						yield return new WaitForEndOfFrame();
 					}
 				}
