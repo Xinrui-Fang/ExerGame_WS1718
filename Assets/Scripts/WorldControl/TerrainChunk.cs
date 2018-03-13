@@ -696,12 +696,15 @@ public class TerrainChunk
 
 	private void DestroyItems()
 	{
-		for (int i = 0; i < Items.Count; i++)
+		if (Settings.TerrainLOD[LOD].HasPowerups)
 		{
-			GameObject.Destroy(Items[i]);
-		}
+			for (int i = 0; i < Items.Count; i++)
+			{
+				GameObject.Destroy(Items[i]);
+			}
 
-		Items = new List<GameObject>();
+			Items = new List<GameObject>();
+		}
 	}
 
 
